@@ -314,10 +314,14 @@ test("nullable draft-level fields accept null and reject wrong types", () => {
 
 test("selectedCategories must be canonical and duplicate-free", () => {
   const set = (v: unknown) => withDraft((d) => { (d.serviceSelection as Record<string, unknown>).selectedCategories = v; });
-  assert.equal(set(["coating", "ppf", "window", "maintenance", "carwash", "roomclean", "other"]).ok, true, "all seven canonical ids");
+  assert.equal(set(["coating", "ppf", "window", "maintenance", "carwash", "roomclean", "wheel", "glass", "other_coating", "other"]).ok, true, "all ten canonical ids");
+  assert.equal(set(["other_coating"]).ok, true, "C1: 'other_coating' is a canonical dedicated category");
+  assertRejected(set(["otherCoating"]), "invalid-literal", "C1: the draft SECTION key is not a category id");
   assert.equal(set([]).ok, true, "empty is structurally valid");
-  assertRejected(set(["wheel"]), "invalid-literal", "non-canonical 'wheel'");
+  assert.equal(set(["wheel"]).ok, true, "B5b1: 'wheel' is a canonical dedicated category");
+  assert.equal(set(["glass"]).ok, true, "B5b1: 'glass' is a canonical dedicated category");
   assertRejected(set(["tire"]), "invalid-literal", "non-canonical 'tire'");
+  assertRejected(set(["wheel_menu"]), "invalid-literal", "a catalogue KIND is not a category id");
   assertRejected(set(["Coating"]), "invalid-literal", "case-sensitive");
   assertRejected(set(["coating", "coating"]), "duplicate-value", "duplicate");
   assertRejected(set([1]), "invalid-type", "numeric element");
@@ -695,6 +699,184 @@ test("EVERY returned path is schema-derived: only known segments and the wildcar
   }
 });
 
+// ── B5b1: OPTIONAL dedicated wheel / glass menu sections ─────────────────────
+//
+// Both sections are optional at the boundary so older 2.2 snapshots stay readable. When present
+// they carry EXACTLY selectedMenuIds / unitPricesByMenu / quantitiesByMenu, with the same string-array,
+// string-record and count-record readers as the eight original sections, whose strictness is unchanged.
+
+const CFG = "intent.draft.serviceConfiguration";
+const wheelSection = (): Record<string, unknown> => ({
+  selectedMenuIds: ["wm-1", "wm-2"],
+  unitPricesByMenu: { "wm-1": "12000", "wm-2": "8000" },
+  quantitiesByMenu: { "wm-1": 4, "wm-2": 4 },
+});
+const glassSection = (): Record<string, unknown> => ({
+  selectedMenuIds: ["gm-1"],
+  unitPricesByMenu: { "gm-1": "30000" },
+  quantitiesByMenu: { "gm-1": 1 },
+});
+
+test("wheel/glass ABSENT: an older 2.2 draft is accepted and the sections stay ABSENT in the reconstruction", () => {
+  const r = validateWizardSaveIntent(validIntent());
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.equal("wheel" in r.intent.draft.serviceConfiguration, false, "not materialised as undefined");
+  assert.equal("glass" in r.intent.draft.serviceConfiguration, false, "not materialised as undefined");
+  assert.equal(withConfig((c) => { delete c.wheel; delete c.glass; }).ok, true, "deleting the optional sections is never an error");
+});
+
+test("wheel/glass PRESENT: reconstructed exactly and independently of each other", () => {
+  const both = withConfig((c) => { c.wheel = wheelSection(); c.glass = glassSection(); });
+  assert.equal(both.ok, true);
+  if (!both.ok) return;
+  assert.deepEqual(both.intent.draft.serviceConfiguration.wheel, wheelSection());
+  assert.deepEqual(both.intent.draft.serviceConfiguration.glass, glassSection());
+
+  const onlyWheel = withConfig((c) => { c.wheel = wheelSection(); });
+  assert.equal(onlyWheel.ok, true);
+  if (!onlyWheel.ok) return;
+  assert.deepEqual(onlyWheel.intent.draft.serviceConfiguration.wheel, wheelSection());
+  assert.equal("glass" in onlyWheel.intent.draft.serviceConfiguration, false, "absent glass stays absent");
+
+  const onlyGlass = withConfig((c) => { c.glass = glassSection(); });
+  assert.equal(onlyGlass.ok, true);
+  if (!onlyGlass.ok) return;
+  assert.deepEqual(onlyGlass.intent.draft.serviceConfiguration.glass, glassSection());
+  assert.equal("wheel" in onlyGlass.intent.draft.serviceConfiguration, false, "absent wheel stays absent");
+
+  const empty = withConfig((c) => {
+    c.wheel = { selectedMenuIds: [], unitPricesByMenu: {}, quantitiesByMenu: {} };
+    c.glass = { selectedMenuIds: [], unitPricesByMenu: {}, quantitiesByMenu: {} };
+  });
+  assert.equal(empty.ok, true, "the new-draft empty sections are valid");
+});
+
+test("wheel/glass selections are accepted as canonical categories alongside their sections", () => {
+  const r = withDraft((d) => {
+    (d.serviceSelection as Record<string, unknown>).selectedCategories = ["wheel", "glass"];
+    const c = d.serviceConfiguration as Record<string, unknown>;
+    c.wheel = wheelSection();
+    c.glass = glassSection();
+  });
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.deepEqual(r.intent.draft.serviceSelection.selectedCategories, ["wheel", "glass"]);
+});
+
+test("wheel/glass reconstruction shares NO mutable reference with the input", () => {
+  const input = validIntent();
+  const cfg = (input.draft as Record<string, unknown>).serviceConfiguration as Record<string, unknown>;
+  const wheel = wheelSection();
+  cfg.wheel = wheel;
+  const r = validateWizardSaveIntent(input);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  const out = r.intent.draft.serviceConfiguration.wheel;
+  assert.ok(out !== undefined);
+  assert.notEqual(out, wheel, "section object is fresh");
+  assert.notEqual(out.selectedMenuIds, wheel.selectedMenuIds, "array copied");
+  assert.notEqual(out.unitPricesByMenu, wheel.unitPricesByMenu, "record copied");
+  assert.notEqual(out.quantitiesByMenu, wheel.quantitiesByMenu, "record copied");
+  (wheel.quantitiesByMenu as Record<string, number>)["wm-1"] = 99;
+  (wheel.selectedMenuIds as string[]).push("late");
+  assert.equal(out.quantitiesByMenu["wm-1"], 4, "output unaffected by later input mutation");
+  assert.deepEqual(out.selectedMenuIds, ["wm-1", "wm-2"]);
+});
+
+test("wheel/glass present-but-null / non-object is rejected at the exact section path", () => {
+  for (const k of ["wheel", "glass"]) {
+    const nul = withConfig((c) => { c[k] = null; });
+    assertRejected(nul, "invalid-type", `${k} null`);
+    assert.ok(paths(nul).includes(`${CFG}.${k}`), `exact path for ${k}`);
+    assertRejected(withConfig((c) => { c[k] = []; }), "invalid-type", `${k} array`);
+    assertRejected(withConfig((c) => { c[k] = "x"; }), "invalid-type", `${k} string`);
+    assertRejected(withConfig((c) => { c[k] = 4; }), "invalid-type", `${k} number`);
+  }
+});
+
+test("wheel/glass nested keys are EXACT: missing keys keep fixed paths, unexpected keys collapse to the wildcard", () => {
+  for (const k of ["wheel", "glass"]) {
+    for (const field of ["selectedMenuIds", "unitPricesByMenu", "quantitiesByMenu"]) {
+      const r = withConfig((c) => { const s = wheelSection(); delete s[field]; c[k] = s; });
+      assertRejected(r, "missing-field", `${k}.${field} missing`);
+      assert.ok(paths(r).includes(`${CFG}.${k}.${field}`), `exact path for ${k}.${field}, got ${JSON.stringify(paths(r))}`);
+    }
+    for (const extra of ["durationMinutes", "unitPrice", "dealerId", "minQuantity", SENTINELS[0], SENTINELS[3]]) {
+      const r = withConfig((c) => { c[k] = { ...wheelSection(), [extra]: 1 }; });
+      assertRejected(r, "unexpected-field", `${k}.${extra}`);
+      assert.ok(paths(r).includes(`${CFG}.${k}.*`), "stable wildcard path");
+      assert.equal(JSON.stringify(r.ok ? [] : r.issues).includes(extra), false, `key text "${extra}" never echoed`);
+    }
+  }
+});
+
+test("wheel/glass quantitiesByMenu accepts only finite non-negative safe integers (no coercion)", () => {
+  for (const k of ["wheel", "glass"]) {
+    const set = (q: unknown) => withConfig((c) => { c[k] = { ...wheelSection(), quantitiesByMenu: q }; });
+    for (const good of [{}, { a: 0 }, { a: 1 }, { a: 4 }, { a: 12 }]) {
+      assert.equal(set(good).ok, true, `${k} ${JSON.stringify(good)} valid`);
+    }
+    for (const bad of [-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1]) {
+      const r = set({ a: bad });
+      assertRejected(r, "invalid-number", `${k} quantity ${String(bad)}`);
+      assert.ok(paths(r).includes(`${CFG}.${k}.quantitiesByMenu.*`), "wildcard entry path");
+    }
+    for (const bad of ["4", true, null, {}, []]) {
+      assertRejected(set({ a: bad }), "invalid-type", `${k} quantity ${JSON.stringify(bad)}`);
+    }
+    assertRejected(set([4]), "invalid-type", `${k} quantities array`);
+    assertRejected(set(null), "invalid-type", `${k} quantities null`);
+    const leak = set({ [SENTINELS[1]]: "4" });
+    assertNoSentinelLeak(leak, `${k} quantity key`);
+  }
+});
+
+test("wheel/glass unitPricesByMenu and selectedMenuIds are string-only, with wildcard entry paths", () => {
+  for (const k of ["wheel", "glass"]) {
+    const setPrices = (v: unknown) => withConfig((c) => { c[k] = { ...wheelSection(), unitPricesByMenu: v }; });
+    assert.equal(setPrices({}).ok, true);
+    assert.equal(setPrices({ a: "1000" }).ok, true);
+    assertRejected(setPrices({ a: 12000 }), "invalid-type", `${k} numeric price`);
+    assertRejected(setPrices({ a: null }), "invalid-type", `${k} null price`);
+    assertRejected(setPrices([]), "invalid-type", `${k} price array`);
+    const priceLeak = setPrices({ [SENTINELS[2]]: 1 });
+    assertNoSentinelLeak(priceLeak, `${k} price key`);
+    assert.ok(paths(priceLeak).includes(`${CFG}.${k}.unitPricesByMenu.*`), "wildcard entry path");
+
+    const setIds = (v: unknown) => withConfig((c) => { c[k] = { ...wheelSection(), selectedMenuIds: v }; });
+    assert.equal(setIds([]).ok, true);
+    assert.equal(setIds(["a", "b"]).ok, true);
+    assertRejected(setIds([1]), "invalid-type", `${k} numeric id`);
+    assertRejected(setIds([null]), "invalid-type", `${k} null id`);
+    assertRejected(setIds({}), "invalid-type", `${k} ids not an array`);
+    assert.ok(paths(setIds([1])).includes(`${CFG}.${k}.selectedMenuIds[*]`), "wildcard element path");
+  }
+});
+
+test("wheel/glass prototype-pollution keys are rejected at the wildcard path and never copied", () => {
+  for (const k of ["wheel", "glass"]) {
+    const r = withConfig((c) => { c[k] = { ...wheelSection(), quantitiesByMenu: JSON.parse('{"__proto__":4}') }; });
+    assert.equal(r.ok, false, `${k} __proto__ rejected`);
+    assert.ok(paths(r).includes(`${CFG}.${k}.quantitiesByMenu.*`), "wildcard, not __proto__");
+    assert.equal(paths(r).some((p) => p.includes("__proto__")), false, "the pollution key never appears in a path");
+  }
+  const probe: Record<string, unknown> = {};
+  assert.equal(probe.polluted, undefined, "Object.prototype was not polluted");
+});
+
+test("the eight original sections remain STRICTLY required even when wheel/glass are present", () => {
+  for (const k of [
+    "coating", "ppf", "windowFilm", "bodyMaintenance",
+    "carWash", "roomCleaning", "otherWork", "storeGlobalOptions",
+  ]) {
+    const r = withConfig((c) => { c.wheel = wheelSection(); c.glass = glassSection(); delete c[k]; });
+    assertRejected(r, "missing-field", `serviceConfiguration.${k} with wheel/glass present`);
+    assert.ok(paths(r).includes(`${CFG}.${k}`), `exact path for ${k}`);
+  }
+  assertRejected(withConfig((c) => { c.wheel = wheelSection(); c.tire = wheelSection(); }), "unexpected-field", "a third dedicated section is not accepted");
+});
+
 // ── Source guards: no shortcut was taken ─────────────────────────────────────
 
 const codeOf = (path: string): string =>
@@ -797,4 +979,96 @@ test("the validator is readable as UTF-8 text and greppable", () => {
   assert.ok(raw.includes("ANY_KEY"), "wildcard constant is greppable");
   assert.ok(raw.includes("validateWizardSaveIntent"), "public entry point is greppable");
   assert.equal(raw.includes("\u0000"), false, "no U+0000 in the decoded source");
+});
+
+// ── GDA-OTHER-COATINGS-R1 (C1): OPTIONAL `otherCoating` section (same shape/rule as wheel/glass) ──
+//
+// Older 2.2 snapshots (and the B5 snapshots that carry wheel/glass but no otherCoating) stay readable:
+// absent ⇒ valid and ABSENT in the reconstruction. Present ⇒ exactly the three canonical keys.
+
+const otherCoatingSection = (): Record<string, unknown> => ({
+  selectedMenuIds: ["oc-trim", "oc-engine"],
+  unitPricesByMenu: { "oc-trim": "15000", "oc-engine": "30000" },
+  quantitiesByMenu: { "oc-trim": 1, "oc-engine": 1 },
+});
+
+test("C1: otherCoating ABSENT — an older snapshot (with or without wheel/glass) is accepted and the section stays ABSENT", () => {
+  const none = validateWizardSaveIntent(validIntent());
+  assert.equal(none.ok, true);
+  if (!none.ok) return;
+  assert.equal("otherCoating" in none.intent.draft.serviceConfiguration, false, "not materialised as undefined");
+
+  const b5 = withConfig((c) => { c.wheel = wheelSection(); c.glass = glassSection(); });
+  assert.equal(b5.ok, true, "a B5-era snapshot carrying only wheel/glass is still valid");
+  if (!b5.ok) return;
+  assert.equal("otherCoating" in b5.intent.draft.serviceConfiguration, false, "absent otherCoating stays absent");
+  assert.deepEqual(b5.intent.draft.serviceConfiguration.wheel, wheelSection());
+  assert.deepEqual(b5.intent.draft.serviceConfiguration.glass, glassSection());
+  assert.equal(withConfig((c) => { delete c.otherCoating; }).ok, true, "deleting the optional section is never an error");
+});
+
+test("C1: otherCoating PRESENT — reconstructed exactly, independently of wheel/glass, with no shared reference", () => {
+  const only = withConfig((c) => { c.otherCoating = otherCoatingSection(); });
+  assert.equal(only.ok, true);
+  if (!only.ok) return;
+  assert.deepEqual(only.intent.draft.serviceConfiguration.otherCoating, otherCoatingSection());
+  assert.equal("wheel" in only.intent.draft.serviceConfiguration, false, "absent wheel stays absent");
+  assert.equal("glass" in only.intent.draft.serviceConfiguration, false, "absent glass stays absent");
+
+  const all = withConfig((c) => { c.wheel = wheelSection(); c.glass = glassSection(); c.otherCoating = otherCoatingSection(); });
+  assert.equal(all.ok, true);
+  if (!all.ok) return;
+  assert.deepEqual(all.intent.draft.serviceConfiguration.otherCoating, otherCoatingSection());
+  assert.deepEqual(all.intent.draft.serviceConfiguration.wheel, wheelSection());
+  assert.deepEqual(all.intent.draft.serviceConfiguration.glass, glassSection());
+
+  const empty = withConfig((c) => { c.otherCoating = { selectedMenuIds: [], unitPricesByMenu: {}, quantitiesByMenu: {} }; });
+  assert.equal(empty.ok, true, "the new-draft empty section is valid");
+
+  const input = validIntent();
+  const cfg = (input.draft as Record<string, unknown>).serviceConfiguration as Record<string, unknown>;
+  const section = otherCoatingSection();
+  cfg.otherCoating = section;
+  const r = validateWizardSaveIntent(input);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  const out = r.intent.draft.serviceConfiguration.otherCoating;
+  assert.ok(out !== undefined);
+  assert.notEqual(out, section, "section object is fresh");
+  assert.notEqual(out.selectedMenuIds, section.selectedMenuIds, "array copied");
+  assert.notEqual(out.unitPricesByMenu, section.unitPricesByMenu, "record copied");
+  assert.notEqual(out.quantitiesByMenu, section.quantitiesByMenu, "record copied");
+  (section.quantitiesByMenu as Record<string, number>)["oc-trim"] = 99;
+  assert.equal(out.quantitiesByMenu["oc-trim"], 1, "output unaffected by later input mutation");
+});
+
+test("C1: other_coating selection is accepted as a canonical category alongside its section", () => {
+  const r = withDraft((d) => {
+    (d.serviceSelection as Record<string, unknown>).selectedCategories = ["coating", "other_coating"];
+    (d.serviceConfiguration as Record<string, unknown>).otherCoating = otherCoatingSection();
+  });
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.deepEqual(r.intent.draft.serviceSelection.selectedCategories, ["coating", "other_coating"]);
+});
+
+test("C1: otherCoating present-but-null / non-object / wrong nested shape is rejected at exact, schema-derived paths", () => {
+  const nul = withConfig((c) => { c.otherCoating = null; });
+  assertRejected(nul, "invalid-type", "otherCoating null");
+  assert.ok(paths(nul).includes(`${CFG}.otherCoating`), "exact section path");
+  assertRejected(withConfig((c) => { c.otherCoating = []; }), "invalid-type", "otherCoating array");
+  assertRejected(withConfig((c) => { c.otherCoating = "x"; }), "invalid-type", "otherCoating string");
+  for (const field of ["selectedMenuIds", "unitPricesByMenu", "quantitiesByMenu"]) {
+    const r = withConfig((c) => { const s = otherCoatingSection(); delete s[field]; c.otherCoating = s; });
+    assertRejected(r, "missing-field", `otherCoating.${field} missing`);
+    assert.ok(paths(r).includes(`${CFG}.otherCoating.${field}`), `exact path for ${field}`);
+  }
+  const extra = withConfig((c) => { c.otherCoating = { ...otherCoatingSection(), fixedOne: true }; });
+  assertRejected(extra, "unexpected-field", "unknown nested key");
+  assert.ok(paths(extra).includes(`${CFG}.otherCoating.*`), "unknown key collapses to the wildcard");
+  assert.equal(JSON.stringify(extra).includes("fixedOne"), false, "caller key text never echoed");
+  assertRejected(withConfig((c) => { c.otherCoating = { ...otherCoatingSection(), quantitiesByMenu: { "oc-trim": -1 } }; }), "invalid-number", "negative quantity (same count reader as wheel/glass)");
+  assertRejected(withConfig((c) => { c.otherCoating = { ...otherCoatingSection(), unitPricesByMenu: { "oc-trim": 15000 } }; }), "invalid-type", "numeric unit price");
+  // An invalid otherCoating never leaks into a partially reconstructed draft; wheel/glass strictness unchanged.
+  assertRejected(withConfig((c) => { c.wheel = null; c.otherCoating = otherCoatingSection(); }), "invalid-type", "wheel null still rejected");
 });

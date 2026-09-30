@@ -70,6 +70,8 @@ const CATEGORY_LABEL: Record<string, string> = {
   window:      "ウィンドウ",
   interior:    "インテリア",
   glass:       "ガラス",
+  wheel:       "ホイール",
+  other_coating: "その他コーティング",
   other:       "その他",
   maintenance: "メンテナンス",   // Plan A (migration 093)
   carwash:     "洗車",

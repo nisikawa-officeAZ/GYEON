@@ -49,7 +49,7 @@ export type WizardVehicleDraft = {
 };
 
 // ── Service selection (Screen 3) ────────────────────────────────────────────────
-export type WizardServiceCategory = ServiceCategoryId; // coating|ppf|window|maintenance|carwash|roomclean|other
+export type WizardServiceCategory = ServiceCategoryId; // coating|ppf|window|maintenance|carwash|roomclean|wheel|glass|other_coating|other
 
 export type WizardServiceSelectionDraft = {
   selectedCategories: WizardServiceCategory[];
@@ -104,6 +104,23 @@ export type WizardStoreGlobalOptionsDraft = {
   unitPricesByOption: Record<string, string>;
   quantitiesByOption: Record<string, number>;
 };
+/** B5b1 — Dedicated wheel / glass service menus (GYEON_DA_COMPLETION_PLAN §24.1). ONE shape for both
+ *  Screen-3 categories: the operator may select MULTIPLE dealer-authored menu items, each carrying
+ *  its own editable unit-price text (string preserves live input, as roomCleaning does) and its own
+ *  quantity. Records operator intent only — no calculation, no default price, no fabricated menu.
+ *  Initial quantities (wheel 4 / glass 1) and bounds are wired by B5b2; pricing/save by B5c. */
+export type WizardDedicatedMenuDraft = {
+  selectedMenuIds: string[];
+  unitPricesByMenu: Record<string, string>;
+  quantitiesByMenu: Record<string, number>;
+};
+export type WizardWheelDraft = WizardDedicatedMenuDraft;
+export type WizardGlassDraft = WizardDedicatedMenuDraft;
+/** GDA-OTHER-COATINGS-R1 (C1) — Non-body coatings (resin trim / seat / engine room / future dealer-
+ *  added items) reuse the SAME dedicated-menu shape: selected dealer item ids, editable unit-price
+ *  text and a quantity per item (fixed-one vs editable-quantity items are distinguished by the dealer
+ *  item definition in C2+, never inferred here). Records operator intent only — no calculation. */
+export type WizardOtherCoatingDraft = WizardDedicatedMenuDraft;
 
 export type WizardServiceConfigurationDraft = {
   coating: WizardCoatingDraft;
@@ -114,6 +131,15 @@ export type WizardServiceConfigurationDraft = {
   roomCleaning: WizardRoomCleaningDraft;
   otherWork: WizardOtherWorkDraft;
   storeGlobalOptions: WizardStoreGlobalOptionsDraft;
+  /** OPTIONAL solely so older/restored 2.2 drafts and protected fixtures that predate B5 remain
+   *  valid. Every NEW draft initialises both as empty sections. Absence is a legacy/wiring state that
+   *  fails closed — no wheel/glass service is ever implied by it — and is NOT evidence that a dealer
+   *  has no menus. */
+  wheel?: WizardWheelDraft;
+  glass?: WizardGlassDraft;
+  /** C1: OPTIONAL for the same reason as wheel/glass — drafts/snapshots that predate it stay valid and
+   *  fail closed (no other-coating service is ever implied by its absence). New drafts initialise it. */
+  otherCoating?: WizardOtherCoatingDraft;
 };
 
 // ── Discount / coupon (Screen 5) — records selections ONLY (no calculation) ──────

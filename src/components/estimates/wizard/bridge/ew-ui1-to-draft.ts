@@ -9,6 +9,7 @@ import type {
   WizardDiscountDraft, WizardNotesDraft, WizardServiceConfigurationDraft,
   WizardCoatingDraft, WizardPpfDraft, WizardWindowFilmDraft, WizardBodyMaintenanceDraft,
   WizardCarWashDraft, WizardRoomCleaningDraft, WizardOtherWorkDraft, WizardStoreGlobalOptionsDraft,
+  WizardDedicatedMenuDraft,
 } from "../draft/wizard-draft-types";
 import type { NewCustomerDraft, NewVehicleDraft } from "../screens/step-types";
 import {
@@ -112,6 +113,47 @@ function copyStoreGlobalOptions(p: Partial<WizardStoreGlobalOptionsDraft>): Part
   return out;
 }
 
+// ── B5b1: dedicated wheel/glass menu sections ──
+// These two sections are OPTIONAL on the canonical draft (older drafts may lack them), so their patch
+// is validated at runtime — fail-closed, before anything is applied — and then copied FIELD-BY-FIELD:
+// only `selectedMenuIds`, `unitPricesByMenu` and `quantitiesByMenu` can ever reach canonical state.
+// Unit prices stay operator text; quantities must be finite non-negative safe integers (no coercion —
+// initial 4/1 values and configured bounds are B5b2/B5c concerns, not this adapter's). An unknown or
+// malformed field rejects the WHOLE patch with the exact (schema-derived) field path.
+
+const DEDICATED_MENU_FIELDS: readonly string[] = ["selectedMenuIds", "unitPricesByMenu", "quantitiesByMenu"];
+
+const isPlainRecord = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+const isStringArray = (v: unknown): v is readonly string[] =>
+  Array.isArray(v) && v.every((x) => typeof x === "string");
+const isStringRecord = (v: unknown): v is Record<string, string> =>
+  isPlainRecord(v) && Object.values(v).every((x) => typeof x === "string");
+const isCountRecord = (v: unknown): v is Record<string, number> =>
+  isPlainRecord(v) && Object.values(v).every((x) => typeof x === "number" && Number.isSafeInteger(x) && x >= 0);
+
+/** Invalid field paths of one dedicated-menu section patch (empty ⇒ valid; absent section ⇒ valid). */
+function invalidDedicatedMenuPaths(p: unknown, prefix: string): string[] {
+  if (p === undefined) return [];
+  if (!isPlainRecord(p)) return [prefix];
+  const bad: string[] = [];
+  // Unknown keys collapse to one wildcard path: the key text is caller-supplied, never echoed.
+  if (Object.keys(p).some((k) => !DEDICATED_MENU_FIELDS.includes(k))) bad.push(`${prefix}.*`);
+  if (p.selectedMenuIds !== undefined && !isStringArray(p.selectedMenuIds)) bad.push(`${prefix}.selectedMenuIds`);
+  if (p.unitPricesByMenu !== undefined && !isStringRecord(p.unitPricesByMenu)) bad.push(`${prefix}.unitPricesByMenu`);
+  if (p.quantitiesByMenu !== undefined && !isCountRecord(p.quantitiesByMenu)) bad.push(`${prefix}.quantitiesByMenu`);
+  return bad;
+}
+
+function copyDedicatedMenu(p: Partial<WizardDedicatedMenuDraft>): Partial<WizardDedicatedMenuDraft> {
+  // Field-by-field (NOT `{ ...p }`): only the three canonical fields are ever carried across.
+  const out: Partial<WizardDedicatedMenuDraft> = {};
+  if (p.selectedMenuIds !== undefined) out.selectedMenuIds = [...p.selectedMenuIds];
+  if (p.unitPricesByMenu !== undefined) out.unitPricesByMenu = { ...p.unitPricesByMenu };
+  if (p.quantitiesByMenu !== undefined) out.quantitiesByMenu = { ...p.quantitiesByMenu };
+  return out;
+}
+
 /** Apply the service-config patch section-by-section via the official reducer, with copy-on-apply. */
 function applyServiceConfigPatch(draft: EstimateWizardDraftV22, sp: WizardServiceConfigPatch): EstimateWizardDraftV22 {
   let d = draft;
@@ -123,6 +165,11 @@ function applyServiceConfigPatch(draft: EstimateWizardDraftV22, sp: WizardServic
   if (sp.roomCleaning !== undefined) d = updateServiceConfiguration(d, "roomCleaning", copyRoomCleaning(sp.roomCleaning));
   if (sp.otherWork !== undefined) d = updateServiceConfiguration(d, "otherWork", copyOtherWork(sp.otherWork));
   if (sp.storeGlobalOptions !== undefined) d = updateServiceConfiguration(d, "storeGlobalOptions", copyStoreGlobalOptions(sp.storeGlobalOptions));
+  // B5b1 (validated in applyEwUi1StorePatch before this runs; the reducer completes an absent section).
+  if (sp.wheel !== undefined) d = updateServiceConfiguration(d, "wheel", copyDedicatedMenu(sp.wheel));
+  if (sp.glass !== undefined) d = updateServiceConfiguration(d, "glass", copyDedicatedMenu(sp.glass));
+  // GDA-OTHER-COATINGS-R1 (C1): same optional dedicated-menu shape, same validated field-by-field copy.
+  if (sp.otherCoating !== undefined) d = updateServiceConfiguration(d, "otherCoating", copyDedicatedMenu(sp.otherCoating));
   return d;
 }
 
@@ -148,6 +195,18 @@ export function applyEwUi1StorePatch(draft: EstimateWizardDraftV22, patch: Wizar
       return err("EW_UI_INVALID_CATEGORY", "unknown service category id(s)", invalid.map((id) => `categories:${id}`));
     }
     categories = patch.categories.filter(isServiceCategoryId);
+  }
+  // B5b1: the optional dedicated wheel/glass sections are checked field-by-field (fail-closed).
+  // C1: the optional other-coating section is checked by the same rule.
+  if (patch.services !== undefined) {
+    const badMenu = [
+      ...invalidDedicatedMenuPaths(patch.services.wheel, "services.wheel"),
+      ...invalidDedicatedMenuPaths(patch.services.glass, "services.glass"),
+      ...invalidDedicatedMenuPaths(patch.services.otherCoating, "services.otherCoating"),
+    ];
+    if (badMenu.length > 0) {
+      return err("EW_UI_INVALID_PATCH", "invalid wheel/glass/otherCoating menu section field(s)", badMenu);
+    }
   }
 
   // ── 2. Apply via official immutable reducers only ──

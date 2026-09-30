@@ -32,7 +32,7 @@
 //   2. A selected NOT-PRICEABLE option BLOCKS instead of being dropped with a warning
 //      (Phase 8-B2F-BH). A selected option is billed, or the apply stops. Never silently discarded.
 
-import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
+import type { EstimateWizardDraftV22, WizardDedicatedMenuDraft } from "../draft/wizard-draft-types";
 import type { WizardManualPricingLineInput } from "./wizard-pricing-identity";
 import type { WizardPricingIssue } from "./wizard-pricing-types";
 import { WIZARD_PRICING_ERRORS, WIZARD_PRICING_WARNINGS } from "./wizard-pricing-types";
@@ -61,6 +61,15 @@ export const WIZARD_PRICING_CONFIG_ERRORS = {
    * apply outright.
    */
   NON_PRICEABLE_SELECTED_ITEM: "NON_PRICEABLE_SELECTED_ITEM",
+  /**
+   * GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c1): a wheel / glass category is selected but the resolved
+   * configuration carries NO authoritative dealer-authored menu collection for it — absent (a
+   * caller that never ran the resolver) or empty (the dealer authored none). BLOCKING: the owner
+   * must register a menu in settings. No line is ever built from a bare draft id.
+   */
+  DEDICATED_MENU_CONFIG_REQUIRED: "DEDICATED_MENU_CONFIG_REQUIRED",
+  /** The same dedicated menu is selected twice: two lines with ONE identity would double-bill. */
+  DUPLICATE_CONFIGURED_ITEM: "DUPLICATE_CONFIGURED_ITEM",
 } as const;
 
 // ── The required production configuration contract ───────────────────────────────
@@ -115,6 +124,56 @@ export interface ProductionPricingConfiguration {
   readonly washMenus:          readonly ProductionLabelOption[];
   readonly roomCleaningMenus:  readonly ProductionLabelOption[];
   readonly storeGlobalOptions: readonly ProductionStoreGlobalOption[];
+  /**
+   * GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c1) — the dealer-authored DEDICATED wheel / glass menus.
+   * OPTIONAL at this type boundary ONLY so older fixtures and callers keep compiling. The
+   * authoritative resolver always supplies both as EXPLICIT (possibly empty) dealer-scoped arrays.
+   * When the matching category is selected, an absent OR empty collection BLOCKS
+   * (`DEDICATED_MENU_CONFIG_REQUIRED`); it never invents a menu, a price or a line.
+   */
+  readonly wheelMenus?:        readonly ProductionDedicatedUnitMenuOption[];
+  readonly glassMenus?:        readonly ProductionDedicatedUnitMenuOption[];
+  /**
+   * GDA-OTHER-COATINGS-R1 (C2) — the dealer-authored other-coating menu FACTS. OPTIONAL at this type
+   * boundary ONLY (older fixtures and callers keep compiling); the authoritative resolver always
+   * supplies it as an EXPLICIT (possibly empty) array. Since C4 the `other_coating` branch of
+   * `buildManualPricingLinesFromConfig` reads it: when the category is selected, an absent OR empty
+   * collection BLOCKS (`DEDICATED_MENU_CONFIG_REQUIRED`); it never invents a menu, a price or a line.
+   */
+  readonly otherCoatingMenus?: readonly ProductionOtherCoatingMenuOption[];
+}
+
+/**
+ * GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c1) — one dealer-authored DEDICATED per-unit menu (a
+ * `wheel_menu` / `glass_menu` catalogue row): stable `code`, resolved `label`, the configured
+ * quantity bounds every selected quantity must satisfy (`maxQuantity` null = unbounded above), and
+ * whether a configured tax-exclusive unit price EXISTS.
+ *
+ * Deliberately NOT the price value. Price ownership does not move: the line is priced from the
+ * operator-edited unit-price text (Step 4 prefills it from the configured price), and an EMPTY
+ * input blocks rather than silently reading the configured value back here. `unitPriceConfigured`
+ * only sharpens the operator message (settings prompt vs. missing input); both cases block.
+ */
+export interface ProductionDedicatedUnitMenuOption extends ProductionLabelOption {
+  readonly minQuantity: number;
+  readonly maxQuantity: number | null;
+  readonly unitPriceConfigured: boolean;
+}
+
+/**
+ * GDA-OTHER-COATINGS-R1 (C2) — one dealer-authored other-coating menu (an `other_coating_menu`
+ * catalogue row): stable `code`, resolved `label`, the quantity requirement READ from the row (not
+ * imposed by kind), its bounds (both null for a fixed-one item; `maxQuantity` null = unbounded
+ * above), and whether a POSITIVE configured tax-exclusive unit price EXISTS.
+ *
+ * `unitPriceConfigured` is false for a null AND for a zero configured price — neither is a price
+ * anyone decided — and, exactly like wheel / glass, this is NOT the price value.
+ */
+export interface ProductionOtherCoatingMenuOption extends ProductionLabelOption {
+  readonly quantityRequired: boolean;
+  readonly minQuantity: number | null;
+  readonly maxQuantity: number | null;
+  readonly unitPriceConfigured: boolean;
 }
 
 export interface ConfigManualPricingBundle {
@@ -134,6 +193,20 @@ function parseAmount(raw: string | undefined): { ok: boolean; empty: boolean; va
   if (t === "") return { ok: false, empty: true, value: 0 };
   const n = Number(t);
   if (!Number.isFinite(n) || n < 0) return { ok: false, empty: false, value: 0 };
+  return { ok: true, empty: false, value: n };
+}
+
+/**
+ * B5c1 — STRICT yen parser for the dedicated per-unit menus: the operator's text must be a finite,
+ * SAFE, non-negative INTEGER (yen carries no fraction). Empty and invalid stay distinct so the
+ * caller can raise MANUAL_PRICE_REQUIRED vs INVALID_MANUAL_PRICE exactly as the other categories do.
+ */
+function parseIntegerYen(raw: string | undefined): { ok: boolean; empty: boolean; value: number } {
+  const t = (raw ?? "").trim();
+  if (t === "") return { ok: false, empty: true, value: 0 };
+  if (!/^\d+$/.test(t)) return { ok: false, empty: false, value: 0 };
+  const n = Number(t);
+  if (!Number.isFinite(n) || !Number.isSafeInteger(n) || n < 0) return { ok: false, empty: false, value: 0 };
   return { ok: true, empty: false, value: n };
 }
 
@@ -308,6 +381,177 @@ export function buildManualPricingLinesFromConfig(
       }
       // The operator's own typed name — the one label no configuration may override.
       lines.push({ sourceCategory: "other", manualPricingIdentity: row.id, label: name, quantity: 1, unitPrice: amt.value, optionIdentity: null, metadata: { quantityInput: qtyNote } });
+    }
+  }
+
+  // ── Wheel / Glass — DEDICATED per-unit menus (B5c1, plan §24.1) ────────────────
+  // Two INDEPENDENT Screen-3 categories, each selecting MULTIPLE dealer-authored menu rows. One
+  // manual line per selected menu: authoritative label, operator-edited integer unit price, and a
+  // positive-integer quantity within the menu's configured bounds. The extension (unit × qty),
+  // subtotal, discount and tax stay with the production engine — nothing is totalled here.
+  //
+  // Fail closed on everything else: an absent OR empty authoritative collection, an absent draft
+  // section, an unknown (stale / disabled / foreign) id, a duplicate id, an empty or non-integer
+  // price, and a missing or out-of-bounds quantity. The nominal initial quantities (wheel 4 /
+  // glass 1) are Step-4 behaviour (B5b2): a quantity that never reached the draft is NOT defaulted
+  // here — not to the nominal, not to the minimum, and never to zero. An empty price input is NOT
+  // read back from the configured price: the operator's text is the ONLY priced amount.
+  const dedicatedMenus = (
+    category: "wheel" | "glass",
+    categoryLabel: string,
+    menus: readonly ProductionDedicatedUnitMenuOption[] | undefined,
+    section: WizardDedicatedMenuDraft | undefined,
+  ): void => {
+    if (!selected.includes(category)) return;
+    if (menus === undefined || menus.length === 0) {
+      errors.push(issue(
+        WIZARD_PRICING_CONFIG_ERRORS.DEDICATED_MENU_CONFIG_REQUIRED,
+        `${categoryLabel}のメニューが店舗の設定に登録されていません。設定画面でメニューを登録してください。`,
+        category,
+        null,
+      ));
+      return;
+    }
+    if (section === undefined || section.selectedMenuIds.length === 0) {
+      requireAmount(category, null, `${categoryLabel}のメニューを選択してください。`);
+      return;
+    }
+    const seen = new Set<string>();
+    for (const id of section.selectedMenuIds) {
+      if (seen.has(id)) {
+        errors.push(issue(
+          WIZARD_PRICING_CONFIG_ERRORS.DUPLICATE_CONFIGURED_ITEM,
+          `${categoryLabel}の同じメニューが重複して選択されています。選択し直してください。`,
+          category,
+          id,
+        ));
+        continue;
+      }
+      seen.add(id);
+      const opt = lookup(menus, id);
+      if (!opt) {
+        unknownItem(category, id); // no line — a stale/foreign menu id can never become an item name
+        continue;
+      }
+      const qty = section.quantitiesByMenu[id];
+      if (
+        qty === undefined || !Number.isSafeInteger(qty) || qty < 1 || qty < opt.minQuantity
+        || (opt.maxQuantity !== null && qty > opt.maxQuantity)
+      ) {
+        errors.push(issue(WIZARD_PRICING_ERRORS.INVALID_QUANTITY, `「${opt.label}」の数量が不正です。`, category, id));
+        continue;
+      }
+      const amt = parseIntegerYen(section.unitPricesByMenu[id]);
+      if (amt.empty) {
+        requireAmount(category, id, opt.unitPriceConfigured
+          ? `「${opt.label}」の金額が未入力です。`
+          : `「${opt.label}」の単価が店舗の設定にありません。金額を入力してください。`);
+        continue;
+      }
+      if (!amt.ok || !Number.isSafeInteger(amt.value * qty)) {
+        invalidAmount(category, id, `「${opt.label}」の金額が不正です。0以上の整数で入力してください。`);
+        continue;
+      }
+      lines.push({
+        sourceCategory: category, manualPricingIdentity: id, label: opt.label,
+        quantity: qty, unitPrice: amt.value, optionIdentity: null,
+        metadata: {
+          menuKind: `${category}_menu`, quantityRequired: true,
+          minQuantity: opt.minQuantity, maxQuantity: opt.maxQuantity, unitPriceConfigured: opt.unitPriceConfigured,
+        },
+      });
+    }
+  };
+  dedicatedMenus("wheel", "ホイール", config.wheelMenus, cfg.wheel);
+  dedicatedMenus("glass", "ガラス", config.glassMenus, cfg.glass);
+
+  // ── Other Coating — DISTINCT dealer-authored menus (GDA-OTHER-COATINGS-R1 C4) ───────────
+  // One `other_coating` manual line per selected `other_coating_menu` row, with the stable identity
+  // `other_coating:<code>` (review line id `manual:other_coating:<code>`), the authoritative dealer
+  // label and a POSITIVE tax-exclusive integer unit price. Unlike wheel / glass the quantity rule is
+  // READ FROM THE ROW: a fixed-one row (`quantityRequired: false`) prices EXACTLY quantity 1 and is
+  // never quantity-editable; a quantity-bearing row (`quantityRequired: true`) requires a positive
+  // integer within its configured bounds (absent min = 1, absent max = unbounded). Extension,
+  // subtotal, discount and tax stay with the production engine.
+  //
+  // This is NOT the body-coating catalog path (no `coating` line is touched, so nothing is counted
+  // twice) and NOT the store-global-option path (no fallback into `storeGlobalOptions`). Fail closed
+  // on everything else: absent / empty collection, absent draft section, unknown or duplicate id,
+  // malformed configured bounds, an out-of-bounds quantity, a draft quantity ≠ 1 on a fixed-one row,
+  // and a missing / zero / negative / non-integer price. A ZERO price is never a line — an
+  // unconfigured (null / 0) configured price is a settings prompt, not a ¥0 item, and the operator's
+  // text is the ONLY priced amount (never read back from the configured price).
+  if (selected.includes("other_coating")) {
+    const category = "other_coating";
+    const menus = config.otherCoatingMenus;
+    const section = cfg.otherCoating;
+    if (menus === undefined || menus.length === 0) {
+      errors.push(issue(
+        WIZARD_PRICING_CONFIG_ERRORS.DEDICATED_MENU_CONFIG_REQUIRED,
+        "その他コーティングのメニューが店舗の設定に登録されていません。設定画面でメニューを登録してください。",
+        category,
+        null,
+      ));
+    } else if (section === undefined || section.selectedMenuIds.length === 0) {
+      requireAmount(category, null, "その他コーティングのメニューを選択してください。");
+    } else {
+      const seen = new Set<string>();
+      for (const id of section.selectedMenuIds) {
+        if (seen.has(id)) {
+          errors.push(issue(
+            WIZARD_PRICING_CONFIG_ERRORS.DUPLICATE_CONFIGURED_ITEM,
+            "その他コーティングの同じメニューが重複して選択されています。選択し直してください。",
+            category,
+            id,
+          ));
+          continue;
+        }
+        seen.add(id);
+        const opt = lookup(menus, id);
+        if (!opt) {
+          unknownItem(category, id); // no line — a stale/foreign menu id can never become an item name
+          continue;
+        }
+        // Effective bounds from the ROW: fixed-one ⇒ {1, 1}; quantity-bearing ⇒ {min ?? 1, max ?? null}.
+        const minQuantity = opt.quantityRequired ? (opt.minQuantity ?? 1) : 1;
+        const maxQuantity = opt.quantityRequired ? opt.maxQuantity : 1;
+        const boundsWellFormed = Number.isSafeInteger(minQuantity) && minQuantity >= 1
+          && (maxQuantity === null || (Number.isSafeInteger(maxQuantity) && maxQuantity >= minQuantity));
+        if (!boundsWellFormed) {
+          errors.push(issue(WIZARD_PRICING_ERRORS.INVALID_QUANTITY, `「${opt.label}」の数量条件が店舗の設定で不正です。設定を確認してください。`, category, id));
+          continue;
+        }
+        const raw = section.quantitiesByMenu[id];
+        // A fixed-one row's quantity is a ROW fact (exactly 1), not operator input: an absent draft
+        // entry is 1; any other draft value is a stale / tampered contradiction and blocks.
+        const qty = !opt.quantityRequired && raw === undefined ? 1 : raw;
+        if (
+          qty === undefined || !Number.isSafeInteger(qty) || qty < 1 || qty < minQuantity
+          || (maxQuantity !== null && qty > maxQuantity)
+        ) {
+          errors.push(issue(WIZARD_PRICING_ERRORS.INVALID_QUANTITY, `「${opt.label}」の数量が不正です。`, category, id));
+          continue;
+        }
+        const amt = parseIntegerYen(section.unitPricesByMenu[id]);
+        if (amt.empty) {
+          requireAmount(category, id, opt.unitPriceConfigured
+            ? `「${opt.label}」の金額が未入力です。`
+            : `「${opt.label}」の単価が店舗の設定にありません。金額を入力してください。`);
+          continue;
+        }
+        if (!amt.ok || amt.value < 1 || !Number.isSafeInteger(amt.value * qty)) {
+          invalidAmount(category, id, `「${opt.label}」の金額が不正です。1以上の整数で入力してください。`);
+          continue;
+        }
+        lines.push({
+          sourceCategory: category, manualPricingIdentity: id, label: opt.label,
+          quantity: qty, unitPrice: amt.value, optionIdentity: null,
+          metadata: {
+            menuKind: "other_coating_menu", quantityRequired: opt.quantityRequired,
+            minQuantity, maxQuantity, unitPriceConfigured: opt.unitPriceConfigured,
+          },
+        });
+      }
     }
   }
 

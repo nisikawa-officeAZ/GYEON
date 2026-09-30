@@ -106,6 +106,11 @@ const KIND_LABEL: Record<SupportedAuthoringKind, string> = {
   maintenance_menu: "メンテナンス",
   wash_menu: "洗車",
   room_cleaning_menu: "室内清掃",
+  // B5a — dedicated per-unit menus (per wheel / per glass pane). Never a store option.
+  wheel_menu: "ホイール",
+  glass_menu: "ガラス",
+  // GDA-OTHER-COATINGS-R1 (B1) — the extensible dealer-named other-coating menu.
+  other_coating_menu: "その他コーティング",
   other_work_preset: "その他作業",
   store_global_option: "店舗オプション",
   coupon: "クーポン",
@@ -120,11 +125,19 @@ interface SectionDef {
   readonly kinds: readonly SupportedAuthoringKind[];
 }
 
-// Service groups the three menu kinds under one section with button-tabs.
+// Service groups the legacy menu kinds under one section with button-tabs (maintenance / wash /
+// room). GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5a) introduced the two dedicated per-unit menus (wheel /
+// glass); GDA-OTHER-COATINGS-R1 Stage A moves ONLY those two kinds into the dedicated
+// `other_coating` section below. That is a SETTINGS-SURFACE change: the kinds, their Screen-3
+// categories, quantity policy, pricing, save and PDF behaviour are untouched, no offering family is
+// introduced, and no rows are seeded. GDA-OTHER-COATINGS-R1 (B1) then adds the extensible
+// `other_coating_menu` kind to that same section: still no offering family, still no seeded rows,
+// still never review-gating, and still no estimate line — B1 is the settings-authoring surface only.
 const SECTION_DEFS: readonly SectionDef[] = [
   { id: "film", labelJa: "ウィンドウフィルム", descriptionJa: "施工するフィルムの種類を登録します。", anchorId: "section-film", kinds: ["film_type"] },
   { id: "ppf", labelJa: "PPF種類・施工係数", descriptionJa: "施工するPPFの種類と、種類ごとの施工係数（×倍率）を登録します。GYEON以外のPPFも登録できます。", anchorId: "section-ppf", kinds: ["ppf_type_group"] },
   { id: "service", labelJa: "サービスメニュー", descriptionJa: "メンテナンス・洗車・室内清掃のメニューを登録します。", anchorId: "section-service", kinds: ["maintenance_menu", "wash_menu", "room_cleaning_menu"] },
+  { id: "other_coating", labelJa: "その他のコーティング", descriptionJa: "ホイール・ガラスなど、ボディ以外のコーティングメニューを登録します。初期価格は税抜の参考価格です。店舗の施工内容に合わせて確認・変更してください。ホイールは1本あたり、ガラスは1枚あたりの単価と数量範囲を設定します。その他コーティングは名称・単価・数量入力の要否を設定し、必要な項目を今後も追加できます。", anchorId: "section-other-coating", kinds: ["wheel_menu", "glass_menu", "other_coating_menu"] },
   { id: "otherwork", labelJa: "その他作業プリセット", descriptionJa: "見積時に手入力する作業の名称プリセットです（金額は現場入力）。", anchorId: "section-otherwork", kinds: ["other_work_preset"] },
   { id: "store", labelJa: "店舗オプション", descriptionJa: "出張費などの店舗共通オプションを登録します。", anchorId: "section-store", kinds: ["store_global_option"] },
   { id: "coupon", labelJa: "クーポン", descriptionJa: "見積で選択できるクーポンを登録します。金額または％、併用可否、有効期間を設定できます。", anchorId: "section-coupon", kinds: ["coupon"] },
@@ -297,6 +310,10 @@ export function buildSections(
  * Only families with a DEALER-authored prerequisite appear. PPF is absent by design: all
  * of its prerequisites are global rows, which the review RPC checks structurally, so a
  * dealer can never be the reason PPF is incomplete.
+ *
+ * B5a: wheel / glass menus are ALSO absent by design, for the opposite reason — they have no
+ * offering family at all. The dealer-authored row is their availability authority, so an
+ * empty wheel/glass group is simply "not offered", never an incomplete family to warn about.
  */
 const FAMILY_PREREQUISITE: readonly {
   readonly family: ServiceFamily;

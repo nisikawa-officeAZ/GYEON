@@ -5,8 +5,19 @@
 // canonical serviceConfiguration (detached — mutating it can never mutate the draft).
 // `vehicle.suggestedSize` stays display-only (null). No pricing/OCR/save.
 
-import type { EstimateWizardDraftV22, WizardServiceConfigurationDraft } from "../draft/wizard-draft-types";
+import type {
+  EstimateWizardDraftV22, WizardDedicatedMenuDraft, WizardServiceConfigurationDraft,
+} from "../draft/wizard-draft-types";
 import type { WizardStore } from "../wizard-types";
+
+/** B5b1: detached copy of one dedicated wheel/glass menu section (array + both records copied). */
+function cloneDedicatedMenu(s: WizardDedicatedMenuDraft): WizardDedicatedMenuDraft {
+  return {
+    selectedMenuIds: [...s.selectedMenuIds],
+    unitPricesByMenu: { ...s.unitPricesByMenu },
+    quantitiesByMenu: { ...s.quantitiesByMenu },
+  };
+}
 
 /**
  * Deep-copy the canonical service configuration so the projected view is DETACHED from the draft:
@@ -44,6 +55,13 @@ function cloneServiceConfiguration(sc: WizardServiceConfigurationDraft): WizardS
       unitPricesByOption: { ...sc.storeGlobalOptions.unitPricesByOption },
       quantitiesByOption: { ...sc.storeGlobalOptions.quantitiesByOption },
     },
+    // B5b1: the OPTIONAL dedicated wheel/glass sections are deep-copied ONLY when present. An older
+    // draft without them projects without them — the projection never fabricates a section, so no
+    // wheel/glass service can be implied that the canonical draft does not hold.
+    ...(sc.wheel !== undefined ? { wheel: cloneDedicatedMenu(sc.wheel) } : {}),
+    ...(sc.glass !== undefined ? { glass: cloneDedicatedMenu(sc.glass) } : {}),
+    // GDA-OTHER-COATINGS-R1 (C1): the optional other-coating section follows the identical rule.
+    ...(sc.otherCoating !== undefined ? { otherCoating: cloneDedicatedMenu(sc.otherCoating) } : {}),
   };
 }
 

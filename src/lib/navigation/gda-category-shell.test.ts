@@ -73,7 +73,7 @@ test("settings stays direct while its existing hub adopts the TOP visual vocabul
   assert.match(settingsHub, /border-\[#31568c\]/);
 });
 
-test("estimate_pricing hub exposes exactly the four owner-approved cards in order", () => {
+test("estimate_pricing hub exposes exactly the five owner-approved cards in order", () => {
   const settingsHub = read("src/components/settings/SettingsCenterHub.tsx");
 
   const groupMatch = settingsHub.match(
@@ -84,7 +84,7 @@ test("estimate_pricing hub exposes exactly the four owner-approved cards in orde
 
   assert.deepEqual(
     [...groupBody.matchAll(/id:\s+"(\w+)"/g)].map((m) => m[1]),
-    ["estimate_wizard", "coating", "ppf", "window_film"],
+    ["estimate_wizard", "coating", "ppf", "window_film", "other_coatings"],
   );
 
   assert.match(groupBody, /label:\s+"見積ウィザード設定",\s*\n\s*labelEn:\s+"ESTIMATE WIZARD"/);
@@ -115,12 +115,15 @@ test("estimate_pricing cards render the approved solid badges and use four dedic
   assert.equal(
     (groupBody.match(/badge:\s+"solid_unset"/g) ?? []).length,
     2,
-    "ppf and window_film must use the solid unset badge",
+    "only ppf and window_film retain the static unset badge; other_coatings has no unverified status claim",
   );
   assert.match(groupBody, /id:\s+"estimate_wizard"[\s\S]*?badge:\s+"solid_active"/);
   assert.match(groupBody, /id:\s+"coating"[\s\S]*?badge:\s+"solid_active"/);
   assert.match(groupBody, /id:\s+"ppf"[\s\S]*?badge:\s+"solid_unset"/);
   assert.match(groupBody, /id:\s+"window_film"[\s\S]*?badge:\s+"solid_unset"/);
+  const otherCoatingsCard = groupBody.match(/id:\s+"other_coatings"([\s\S]*?)\n {6}\},/);
+  assert.ok(otherCoatingsCard, "other_coatings card must exist");
+  assert.doesNotMatch(otherCoatingsCard[1], /badge:\s+"solid_unset"/);
 
   assert.match(groupBody, /icon:\s+"estimate_flow"/);
   assert.match(groupBody, /icon:\s+"coating"/);

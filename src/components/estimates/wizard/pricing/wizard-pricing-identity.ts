@@ -51,6 +51,14 @@ export const WIZARD_CATEGORY_PRICING_POLICY: Record<WizardPricingCategory, Prici
   maintenance:          "manual_only",
   carwash:              "manual_only",
   roomclean:            "manual_only",
+  // GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c1, plan §24.1): the two DEDICATED per-unit menu categories.
+  // Manual: the operator-edited unit price (prefilled from the dealer's configured price) × a bounded
+  // quantity. Not a catalog family, not a store-global option, never "other".
+  wheel:                "manual_only",
+  glass:                "manual_only",
+  // GDA-OTHER-COATINGS-R1 (C1): non-body coatings are a dedicated dealer-item category, never the
+  // catalog body-coating family. Exhaustive-map parity only — no pricing path exists yet (C2+).
+  other_coating:        "manual_only",
   other:                "manual_only",
   store_global_options: "manual_only",
 };
@@ -63,6 +71,9 @@ export const WIZARD_CATEGORY_MANUAL_POLICY: Record<WizardPricingCategory, Manual
   maintenance:          "required",
   carwash:              "required",
   roomclean:            "required",
+  wheel:                "required", // B5c1: no unpriced wheel line — empty operator input blocks
+  glass:                "required", // B5c1: no unpriced glass line — empty operator input blocks
+  other_coating:        "required", // C1: parity only; no unpriced other-coating line may ever exist
   other:                "required",
   store_global_options: "required",
 };

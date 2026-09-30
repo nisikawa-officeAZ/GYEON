@@ -44,6 +44,27 @@ export type PpfR1PriceResolution =
       readonly partCode?: string;
     };
 
+/**
+ * GDA-ESTIMATE-QUANTITY-POLICY-R1 (Stage B) — the tax-exclusive UNIT price of ONE selected partial
+ * PPF part. Quantity is deliberately NOT an input: the wizard multiplies this unit price by the
+ * bounded integer quantity afterwards, so "quantity 2" is exactly two identical units at the
+ * displayed unit price and `unit_price × quantity = line_total` holds without a second rounding.
+ */
+export type PpfR1PartUnitPriceResolution =
+  | {
+      readonly ok: true;
+      readonly partCode: string;
+      readonly basePriceYen: number;
+      readonly installCoefficientBp: number;
+      readonly vehicleCoefficientBp: number;
+      readonly unitPriceYen: number;
+    }
+  | {
+      readonly ok: false;
+      readonly reason: PpfR1PriceResolutionFailure;
+      readonly partCode: string;
+    };
+
 function isBodySize(value: string): value is PpfR1BodySize {
   return PPF_R1_BODY_SIZES.some((size) => size === value);
 }
@@ -95,6 +116,25 @@ function resolveBasePrice(
 }
 
 /**
+ * `round(base × installBp × vehicleBp / 10⁸)` with the complete integer numerator guarded as a safe
+ * JS integer at every multiplication. Shared by the scope resolver and the per-part resolver so the
+ * two can never drift: one part at quantity 1 yields exactly the legacy aggregate yen.
+ */
+function applyCoefficientsOnce(
+  basePriceYen: number,
+  installCoefficientBp: number,
+  vehicleCoefficientBp: number,
+): number | null {
+  const afterInstallNumerator = basePriceYen * installCoefficientBp;
+  if (!Number.isSafeInteger(afterInstallNumerator)) return null;
+  const numerator = afterInstallNumerator * vehicleCoefficientBp;
+  if (!Number.isSafeInteger(numerator)) return null;
+  const denominator = PPF_COEFFICIENT_BP_IDENTITY * PPF_COEFFICIENT_BP_IDENTITY;
+  const resolvedPriceYen = Math.round(numerator / denominator);
+  return Number.isSafeInteger(resolvedPriceYen) ? resolvedPriceYen : null;
+}
+
+/**
  * Resolve the authoritative PPF price before any PPF+coating reduction.
  *
  * Formula: scope price x installation coefficient x vehicle coefficient.
@@ -119,15 +159,8 @@ export function resolvePpfR1Price(
   const base = resolveBasePrice(settings, scope);
   if (!base.ok) return base;
 
-  const afterInstallNumerator = base.basePriceYen * installCoefficientBp;
-  if (!Number.isSafeInteger(afterInstallNumerator)) {
-    return { ok: false, reason: "PRICE_OVERFLOW" };
-  }
-  const numerator = afterInstallNumerator * vehicleCoefficientBp;
-  if (!Number.isSafeInteger(numerator)) return { ok: false, reason: "PRICE_OVERFLOW" };
-  const denominator = PPF_COEFFICIENT_BP_IDENTITY * PPF_COEFFICIENT_BP_IDENTITY;
-  const resolvedPriceYen = Math.round(numerator / denominator);
-  if (!Number.isSafeInteger(resolvedPriceYen)) return { ok: false, reason: "PRICE_OVERFLOW" };
+  const resolvedPriceYen = applyCoefficientsOnce(base.basePriceYen, installCoefficientBp, vehicleCoefficientBp);
+  if (resolvedPriceYen === null) return { ok: false, reason: "PRICE_OVERFLOW" };
 
   return {
     ok: true,
@@ -138,4 +171,35 @@ export function resolvePpfR1Price(
     vehicleCoefficientBp,
     resolvedPriceYen,
   };
+}
+
+/**
+ * Resolve the tax-exclusive unit price of ONE configured partial PPF part:
+ * `round(partPriceYen × installBp × vehicleBp / 10⁸)`, rounded exactly once per part.
+ *
+ * Fail-closed like `resolvePpfR1Price`: an unconfigured (`null`/absent) part price, an invalid
+ * coefficient, or unsafe arithmetic is a failure carrying the part code — never a silent zero or
+ * default price. Zero is an explicit configured price and resolves to 0.
+ */
+export function resolvePpfR1PartUnitPrice(
+  settings: PpfR1PriceSettings,
+  partCode: string,
+  installCoefficientBp: number,
+  vehicleCoefficientBp: number = PPF_COEFFICIENT_BP_IDENTITY,
+): PpfR1PartUnitPriceResolution {
+  if (!isPositiveSafeInteger(installCoefficientBp)) {
+    return { ok: false, reason: "INVALID_INSTALL_COEFFICIENT", partCode };
+  }
+  if (!isPositiveSafeInteger(vehicleCoefficientBp)) {
+    return { ok: false, reason: "INVALID_VEHICLE_COEFFICIENT", partCode };
+  }
+  const price = Object.prototype.hasOwnProperty.call(settings.partialPartPrices, partCode)
+    ? settings.partialPartPrices[partCode]
+    : undefined;
+  if (price === undefined || price === null) {
+    return { ok: false, reason: "PART_PRICE_NOT_CONFIGURED", partCode };
+  }
+  const unitPriceYen = applyCoefficientsOnce(price, installCoefficientBp, vehicleCoefficientBp);
+  if (unitPriceYen === null) return { ok: false, reason: "PRICE_OVERFLOW", partCode };
+  return { ok: true, partCode, basePriceYen: price, installCoefficientBp, vehicleCoefficientBp, unitPriceYen };
 }

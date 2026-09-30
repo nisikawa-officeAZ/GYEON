@@ -11,6 +11,14 @@ export const ESTIMATE_WIZARD_PANEL_CONFIG = {
     panelId: null,
     sectionId: "service",
   },
+  // GDA-OTHER-COATINGS-R1 Stage A — reached from the settings hub (見積・価格) through the existing
+  // generic [panel] route; the section hosts the B5 wheel / glass menus (settings surface only).
+  "other-coatings": {
+    labelJa: "その他のコーティング設定",
+    labelEn: "OTHER COATINGS",
+    panelId: null,
+    sectionId: "other_coating",
+  },
   "work-presets": {
     labelJa: "その他作業プリセット",
     labelEn: "WORK PRESETS",

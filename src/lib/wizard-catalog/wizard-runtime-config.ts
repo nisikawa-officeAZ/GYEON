@@ -20,7 +20,7 @@ import type { ConfiguredPricingConfiguration } from "@/components/estimates/wiza
 import { isValidCouponCalendarDate, type ConfiguredCoupon } from "@/lib/pricing/configured-coupon-total";
 import type { PpfCoatingAdjustmentRule } from "./ppf-coating-adjustment-core";
 import type {
-  FilmTypeOption, WindowAreaOption, MaintenanceMenu, WashMenu, RoomMenu,
+  FilmTypeOption, WindowAreaOption, MaintenanceMenu, WashMenu, RoomMenu, WheelMenu, GlassMenu, OtherCoatingMenu,
   InstallationMethodOption, PpfPartOption, PpfTypeGroup, PpfTypeOption,
   OtherWorkPresetItem, StoreGlobalOption, CouponOption, PpfInstallationMethodId,
 } from "@/components/estimates/wizard/screens/step-types";
@@ -417,9 +417,19 @@ function buildConfigs(
     if (!PPF_METHOD_IDS.includes(r.code as PpfInstallationMethodId)) return { ok: false, reason: "malformed-catalog-row" };
     ppfMethods.push({ id: r.code as PpfInstallationMethodId, label: r.label_ja ?? "" });
   }
-  const ppfParts: PpfPartOption[] = of("ppf_part", "global").map((r) => ({
+  // GDA-ESTIMATE-QUANTITY-POLICY-R1 (Stage B): EVERY partial PPF part is quantity-bearing (one priced
+  // line per selected part), so every part projects its configured bounds to the Step-4 stepper and
+  // to the pricing configuration. Malformed bounds are a defect and fail closed.
+  const ppfPartRows = of("ppf_part", "global");
+  for (const r of ppfPartRows) {
+    const min = r.min_quantity;
+    const max = r.max_quantity;
+    if (!Number.isInteger(min) || min < 1) return { ok: false, reason: "malformed-catalog-row" };
+    if (max != null && (!Number.isInteger(max) || max < min)) return { ok: false, reason: "malformed-catalog-row" };
+  }
+  const ppfParts: PpfPartOption[] = ppfPartRows.map((r) => ({
     id: r.code, label: r.label_ja ?? "",
-    ...(r.quantity_required ? { quantityRequired: true, minQty: r.min_quantity, maxQty: r.max_quantity ?? undefined } : {}),
+    quantityRequired: true, minQty: r.min_quantity, maxQty: r.max_quantity ?? undefined,
   }));
 
   // PPF type groups: parents (ppf_type_group_id NULL) + their product children.
@@ -499,6 +509,79 @@ function buildConfigs(
     installCoefficientBpByCode[r.code] = bp;
   }
 
+  // ── GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5a): dedicated wheel / glass menus (dealer-owned) ────────
+  // Priced tax-exclusive PER UNIT (per wheel / per glass pane) × an operator-entered bounded
+  // quantity. The KIND is quantity-bearing — exactly as every partial PPF part is — so
+  // `quantityRequired` is projected true by kind, not read from a row flag. The configured unit
+  // price stays NULLABLE: null means "not configured" and reaches the screen as null, never as ¥0,
+  // which would price a line at nothing that nobody decided. Bounds and price are validated like
+  // ppf_part bounds and fail closed. There is no offering family and no rank gate beyond the row's
+  // own ranks: the dealer-authored row is the availability authority. Both collections are always
+  // EXPLICIT arrays here (empty ⇒ the dealer has authored none); `undefined` can only mean a caller
+  // that never ran this resolver. Initial quantities (wheel 4 / glass 1) are Step-4 behaviour (B5b),
+  // not a minimum, and are deliberately not encoded here.
+  const dedicatedUnitMenuFields = (
+    r: WizardCatalogRow,
+  ): { ok: true; defaultUnitPrice: number | null; minQty: number; maxQty: number | null } | { ok: false } => {
+    const min = r.min_quantity;
+    const max = r.max_quantity;
+    const price = r.default_unit_price;
+    if (!Number.isInteger(min) || min < 1) return { ok: false };
+    if (max != null && (!Number.isInteger(max) || max < min)) return { ok: false };
+    if (price != null && (!Number.isInteger(price) || price < 0)) return { ok: false };
+    return { ok: true, defaultUnitPrice: price ?? null, minQty: min, maxQty: max ?? null };
+  };
+  const wheelMenus: WheelMenu[] = [];
+  for (const r of of("wheel_menu", "dealer")) {
+    const f = dedicatedUnitMenuFields(r);
+    if (!f.ok) return { ok: false, reason: "malformed-catalog-row" };
+    wheelMenus.push({
+      kind: "wheel_menu", id: r.code, name: r.label_ja ?? "",
+      defaultUnitPrice: f.defaultUnitPrice, quantityRequired: true, minQty: f.minQty, maxQty: f.maxQty,
+      displayOrder: r.display_order,
+    });
+  }
+  const glassMenus: GlassMenu[] = [];
+  for (const r of of("glass_menu", "dealer")) {
+    const f = dedicatedUnitMenuFields(r);
+    if (!f.ok) return { ok: false, reason: "malformed-catalog-row" };
+    glassMenus.push({
+      kind: "glass_menu", id: r.code, name: r.label_ja ?? "",
+      defaultUnitPrice: f.defaultUnitPrice, quantityRequired: true, minQty: f.minQty, maxQty: f.maxQty,
+      displayOrder: r.display_order,
+    });
+  }
+
+  // ── GDA-OTHER-COATINGS-R1 (C2): dealer-authored other-coating menus (dealer-owned) ──────────
+  // Same projection discipline as wheel / glass with TWO deliberate differences. (1) Quantity is
+  // NOT required by kind: `quantity_required` is READ from each row — a fixed-one item projects
+  // false and no bounds, a quantity-bearing item projects true with its validated bounds. (2) Only
+  // a POSITIVE integer price counts as configured: null AND 0 both project as null with
+  // `unitPriceConfigured: false` (a settings prompt, never a ¥0 line), while a negative, fractional
+  // or non-numeric price is a defect and fails closed. Bounds are validated on every row exactly as
+  // ppf_part / wheel / glass bounds are. Nothing here creates a selectable line: no Screen-3
+  // category, draft section or manual-line builder consumes these yet. Always an EXPLICIT array
+  // from this resolver (empty ⇒ the dealer authored none); `undefined` can only mean a caller that
+  // never ran it.
+  const otherCoatingMenus: OtherCoatingMenu[] = [];
+  for (const r of of("other_coating_menu", "dealer")) {
+    const min = r.min_quantity;
+    const max = r.max_quantity;
+    const price = r.default_unit_price;
+    const quantityRequired = r.quantity_required;
+    if (typeof quantityRequired !== "boolean") return { ok: false, reason: "malformed-catalog-row" };
+    if (!Number.isInteger(min) || min < 1) return { ok: false, reason: "malformed-catalog-row" };
+    if (max != null && (!Number.isInteger(max) || max < min)) return { ok: false, reason: "malformed-catalog-row" };
+    if (price != null && (!Number.isInteger(price) || price < 0)) return { ok: false, reason: "malformed-catalog-row" };
+    otherCoatingMenus.push({
+      kind: "other_coating_menu", id: r.code, name: r.label_ja ?? "",
+      defaultUnitPrice: price != null && price > 0 ? price : null, // null / 0 ⇒ not configured, never 0
+      quantityRequired,
+      ...(quantityRequired ? { minQty: min, ...(max != null ? { maxQty: max } : {}) } : {}),
+      displayOrder: r.display_order,
+    });
+  }
+
   const ppfCoatingAdjustments: PpfCoatingAdjustmentRule[] = adjustmentRows.map((r) => ({
     ruleId: r.id,
     ppfMethodCode: r.ppf_method_code,
@@ -516,6 +599,12 @@ function buildConfigs(
     maintenanceMenus: of("maintenance_menu", "dealer").map(menu) as MaintenanceMenu[],
     washMenus: of("wash_menu", "dealer").map(menu) as WashMenu[],
     roomMenus: of("room_cleaning_menu", "dealer").map(menu) as RoomMenu[],
+    // B5a — explicit dealer-scoped collections; never undefined from this resolver. B5c1 projects
+    // the SAME rows' pricing facts into `pricingConfig.wheelMenus` / `glassMenus` below.
+    wheelMenus,
+    glassMenus,
+    // C2 — explicit dealer-scoped other-coating collection; never undefined from this resolver.
+    otherCoatingMenus,
     filmTypes,
     windowAreas,
     windowFilmPackages: (catalog.windowFilmV1?.packages ?? [])
@@ -566,6 +655,7 @@ function buildConfigs(
     coupons: configuredCoupons,
     installCoefficientBpByCode,
     ppfTypes: of("ppf_type_group", "global").map(label),
+    ppfParts: ppfPartRows.map((r) => ({ code: r.code, label: r.label_ja ?? "", minQuantity: r.min_quantity, maxQuantity: r.max_quantity ?? null })),
     ppfCoatingAdjustments,
     calculationDate,
     ppfMethods: of("ppf_method", "global").map(label),
@@ -574,6 +664,30 @@ function buildConfigs(
     washMenus: of("wash_menu", "dealer").map(label),
     roomCleaningMenus: of("room_cleaning_menu", "dealer").map(label),
     storeGlobalOptions: of("store_global_option", "dealer").map((r) => ({ code: r.code, label: r.label_ja ?? "", priceable: r.priceable, quantityRequired: r.quantity_required, minQuantity: r.min_quantity, maxQuantity: r.max_quantity })),
+    // ── GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c1): dedicated wheel / glass menu FACTS for pricing ──
+    // Projected from EXACTLY the dealer-owned, active, validated rows that built the screen
+    // collections above (same `wheelMenus` / `glassMenus`, so the two views cannot drift): stable
+    // code, authoritative label, configured quantity bounds, and whether a configured unit price
+    // EXISTS. Deliberately NOT the price itself — the line is priced from the operator's edited
+    // unit-price text, and an empty input blocks rather than falling back to the configured value.
+    // Always EXPLICIT arrays here; empty ⇒ the dealer authored none, which blocks that category when
+    // selected (never a fabricated line).
+    wheelMenus: wheelMenus.map((m) => ({
+      code: m.id, label: m.name, minQuantity: m.minQty, maxQuantity: m.maxQty, unitPriceConfigured: m.defaultUnitPrice !== null,
+    })),
+    glassMenus: glassMenus.map((m) => ({
+      code: m.id, label: m.name, minQuantity: m.minQty, maxQuantity: m.maxQty, unitPriceConfigured: m.defaultUnitPrice !== null,
+    })),
+    // ── GDA-OTHER-COATINGS-R1 (C2): other-coating menu FACTS for pricing ──
+    // Projected from EXACTLY the rows that built `screenConfig.otherCoatingMenus` above, so the two
+    // views cannot drift: stable code, authoritative label, the row-read quantity requirement with
+    // its bounds (null bounds for a fixed-one item), and whether a POSITIVE unit price EXISTS —
+    // never the price value. No manual-line builder consumes this yet (no selectable line in C2).
+    otherCoatingMenus: otherCoatingMenus.map((m) => ({
+      code: m.id, label: m.name, quantityRequired: m.quantityRequired,
+      minQuantity: m.minQty ?? null, maxQuantity: m.maxQty ?? null,
+      unitPriceConfigured: m.defaultUnitPrice !== null,
+    })),
   };
 
   return { ok: true, screenConfig, pricingConfig };

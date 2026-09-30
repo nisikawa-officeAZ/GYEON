@@ -41,6 +41,8 @@ const CATEGORY_TAG: Record<EstimateCategory, string> = {
   window: "Window",
   interior: "Interior",
   glass: "Glass",
+  wheel: "Wheel",
+  other_coating: "Other Coating",
   maintenance: "Care",
   carwash: "Wash",
   roomclean: "Interior",

@@ -60,6 +60,7 @@ import {
 } from "@/lib/pricing/coating-v34-contract";
 import {
   PPF_COEFFICIENT_BP_IDENTITY,
+  resolvePpfR1PartUnitPrice,
   resolvePpfR1Price,
   type PpfR1PricingScope,
 } from "@/lib/pricing/ppf-r1-price-resolution";
@@ -97,6 +98,19 @@ const PRODUCTION_TAX_RATE = 10; // production default (estimate-totals default);
  * still compiles and still behaves EXACTLY as before: no coupons, no coefficient, no adjustment.
  * This mirrors the additive-extension pattern already used by `pricing-contracts.ts`.
  */
+/**
+ * GDA-ESTIMATE-QUANTITY-POLICY-R1 (Stage B) — an authoritative partial PPF part: stable code, resolved
+ * label (what becomes `item_name`), and the configured quantity bounds every selected part must
+ * satisfy (`maxQuantity` null = unbounded above). Projected from the global `ppf_part` catalog rows;
+ * there is NO price here — the part price lives in the versioned R1 price settings.
+ */
+export interface ConfiguredPpfPart {
+  readonly code: string;
+  readonly label: string;
+  readonly minQuantity: number;
+  readonly maxQuantity: number | null;
+}
+
 export interface ConfiguredPricingRules {
   /** Dealer-authored coupons, projected from `wizard_catalog_items` (kind = 'coupon'). */
   readonly coupons?: readonly ConfiguredCoupon[];
@@ -104,6 +118,8 @@ export interface ConfiguredPricingRules {
   readonly installCoefficientBpByCode?: Readonly<Record<string, number>>;
   /** Authoritative PPF product code/label pairs used by the R1 calculated line. */
   readonly ppfTypes?: readonly import("./wizard-manual-pricing-config").ProductionLabelOption[];
+  /** Authoritative partial PPF part labels and quantity bounds (one priced line per selected part). */
+  readonly ppfParts?: readonly ConfiguredPpfPart[];
   /** Dealer-scoped PPF + coating reduction rules. */
   readonly ppfCoatingAdjustments?: readonly PpfCoatingAdjustmentRule[];
   /** ISO `YYYY-MM-DD` used for coupon validity. Supplied by the caller — this module reads no clock. */
@@ -318,17 +334,11 @@ export function buildWizardPricingInputFromConfig(
       : undefined;
     const vehicleCoefficientBp = parseVehicleCoefficientBp(ppf.vehicleCoefficientInput);
 
+    // Full / front-full resolve through the aggregate scope resolver exactly as before. Partial PPF
+    // (Stage B) is priced per selected part below and never builds an aggregate scope.
     let scope: PpfR1PricingScope | null = null;
     if (ppf.installationMethod === "full") {
       if (ppf.fullCoverage) scope = { kind: ppf.fullCoverage, bodySize: sizeKey };
-    } else {
-      scope = {
-        kind: "partial",
-        parts: ppf.selectedPartIds.map((partCode) => ({
-          partCode,
-          quantity: ppf.quantitiesByPart[partCode] ?? 1,
-        })),
-      };
     }
 
     if (!methodOption) {
@@ -378,15 +388,85 @@ export function buildWizardPricingInputFromConfig(
             ppfInstallCoefficientBp: resolved.installCoefficientBp,
             ppfVehicleCoefficientBp: resolved.vehicleCoefficientBp,
             ppfTypeCode: typeId,
-            ...(resolved.scope === "partial"
-              ? {
-                  ppfPartQuantities: ppf.selectedPartIds
-                    .map((partCode) => `${partCode}:${ppf.quantitiesByPart[partCode] ?? 1}`)
-                    .join(","),
-                }
-              : {}),
           },
         });
+        catalogResolved = true;
+      }
+    } else {
+      // ── GDA-ESTIMATE-QUANTITY-POLICY-R1 (Stage B): one priced line per selected partial part ──
+      // Each selected part is its own manual line with the stable identity
+      // `ppf_r1_partial_${typeId}_${partCode}`, the authoritative configured part label (no raw-code
+      // fallback), a tax-exclusive unit price = round(partPrice × installBp × vehicleBp / 10⁸) rounded
+      // ONCE per part, and an integer quantity within the part's configured bounds. One part at
+      // quantity 1 therefore prices exactly as the former aggregate line. Any unknown, unpriced,
+      // duplicate or out-of-bounds part fails the WHOLE PPF selection closed: no PPF line is emitted
+      // and no silent zero/default price exists.
+      const partLines: WizardManualPricingLineInput[] = [];
+      const partErrors: WizardPricingIssue[] = [];
+      const seenParts = new Set<string>();
+      const unavailable = (sourceId: string, message = "選択内容に対応するPPF価格が未設定です。設定画面の価格を確認してください。") =>
+        partErrors.push(issue(PPF_R1_PRICING_ERRORS.PRICE_UNAVAILABLE, message, "ppf", sourceId));
+      if (ppf.selectedPartIds.length === 0) unavailable("partial");
+      for (const partCode of ppf.selectedPartIds) {
+        if (seenParts.has(partCode)) {
+          unavailable(partCode, "同じPPF部位が重複して選択されています。選択し直してください。");
+          continue;
+        }
+        seenParts.add(partCode);
+        const part = config.ppfParts?.find((entry) => entry.code === partCode);
+        if (part === undefined) {
+          partErrors.push(issue(
+            WIZARD_PRICING_CONFIG_ERRORS.UNKNOWN_CONFIGURED_ITEM,
+            "選択したPPF部位は現在の設定に登録されていません。選択し直してください。",
+            "ppf",
+            partCode,
+          ));
+          continue;
+        }
+        const rawQuantity = ppf.quantitiesByPart[partCode];
+        const quantity = rawQuantity === undefined ? part.minQuantity : rawQuantity;
+        if (
+          !Number.isSafeInteger(quantity) || quantity < 1 || quantity < part.minQuantity
+          || (part.maxQuantity !== null && quantity > part.maxQuantity)
+        ) {
+          partErrors.push(issue(WIZARD_PRICING_ERRORS.INVALID_QUANTITY, `「${part.label}」の数量が不正です。`, "ppf", partCode));
+          continue;
+        }
+        const resolved = resolvePpfR1PartUnitPrice(settings, partCode, installCoefficientBp, vehicleCoefficientBp);
+        if (!resolved.ok) {
+          unavailable(partCode);
+          continue;
+        }
+        if (!Number.isSafeInteger(resolved.unitPriceYen * quantity)) {
+          unavailable(partCode);
+          continue;
+        }
+        partLines.push({
+          sourceCategory: "ppf",
+          manualPricingIdentity: `ppf_r1_partial_${typeId}_${partCode}`,
+          label: `PPF 部分施工 ${part.label}（${typeOption.label}）`,
+          quantity,
+          unitPrice: resolved.unitPriceYen,
+          optionIdentity: typeId,
+          metadata: {
+            ppfR1ContractVersion: settings.contractVersion,
+            ppfMethodCode: ppf.installationMethod,
+            ppfScope: "partial",
+            ppfBodySize: null,
+            ppfBasePriceYen: resolved.basePriceYen,
+            ppfInstallCoefficientBp: resolved.installCoefficientBp,
+            ppfVehicleCoefficientBp: resolved.vehicleCoefficientBp,
+            ppfTypeCode: typeId,
+            ppfPartCode: partCode,
+            ppfPartMinQuantity: part.minQuantity,
+            ppfPartMaxQuantity: part.maxQuantity,
+          },
+        });
+      }
+      if (partErrors.length > 0) {
+        errors.push(...partErrors);
+      } else {
+        resolvedPpfR1Lines.push(...partLines);
         catalogResolved = true;
       }
     }

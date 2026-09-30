@@ -10,8 +10,10 @@ import { resolveWizardRuntimeConfig, resolveWizardRuntimeConfigForDealer, type W
 import { DEFAULT_PRICING_CATALOG, makePricingCatalog } from "@/lib/pricing/canonical-pricing-engine";
 import type { PricingCatalogResolution } from "@/lib/pricing/authoritative-pricing-catalog-core";
 import { buildWizardPricingInputFromConfig } from "@/components/estimates/wizard/pricing/wizard-pricing-input-adapter-config";
-import { initialEstimateWizardDraftV22 } from "@/components/estimates/wizard/draft/wizard-draft-state";
-import type { ShopRank } from "@/components/estimates/wizard/screens/step-types";
+import { initialEstimateWizardDraftV22, resetWizardDraft } from "@/components/estimates/wizard/draft/wizard-draft-state";
+import type { ShopRank, OtherCoatingMenu } from "@/components/estimates/wizard/screens/step-types";
+import type { WizardScreenConfiguration } from "@/components/estimates/wizard/contract/wizard-runtime-inputs";
+import type { ProductionOtherCoatingMenuOption } from "@/components/estimates/wizard/pricing/wizard-manual-pricing-config";
 
 const DEALER = "d0000000-0000-0000-0000-000000000001";
 const ALL: ShopRank[] = ["shop", "detailer", "ppf_installer", "certified"];
@@ -767,4 +769,409 @@ test("B1.1-B2: the dealer-bound entry binds the adjustment reader to the SAME te
   const r = await resolveWizardRuntimeConfigForDealer(DEALER, bound);
   assert.equal(r.ok, true);
   assert.deepEqual(seen, [DEALER]);
+});
+
+// ── GDA-ESTIMATE-QUANTITY-POLICY-R1 (Stage B) — partial PPF part labels and bounds reach both configs ──
+
+test("Stage B: EVERY global ppf_part projects label + bounds into pricingConfig.ppfParts and a quantity-bearing screenConfig part", async () => {
+  const rows = [...globals(), ...menus()].map((r) => (r.kind === "ppf_part" && r.code === "part-1" ? { ...r, label_ja: "ボンネット", min_quantity: 2, max_quantity: 4 } : r));
+  const r = await resolveWith(rows, {}, PPF_RANK);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.equal(r.pricingConfig.ppfParts?.length, 16);
+  assert.deepEqual(r.pricingConfig.ppfParts?.find((p) => p.code === "part-1"), { code: "part-1", label: "ボンネット", minQuantity: 2, maxQuantity: 4 });
+  assert.deepEqual(r.pricingConfig.ppfParts?.find((p) => p.code === "part-0"), { code: "part-0", label: "part-0", minQuantity: 1, maxQuantity: null });
+  assert.deepEqual(r.screenConfig.ppfParts.find((p) => p.id === "part-1"), { id: "part-1", label: "ボンネット", quantityRequired: true, minQty: 2, maxQty: 4 });
+  assert.ok(r.screenConfig.ppfParts.every((p) => p.quantityRequired === true && p.minQty === (p.id === "part-1" ? 2 : 1)), "every part is quantity-bearing, not only quantity_required rows");
+});
+
+test("Stage B: malformed ppf_part bounds fail closed (malformed-catalog-row), never a silent default", async () => {
+  for (const bad of [{ min_quantity: 0 }, { min_quantity: 1.5 }, { min_quantity: 3, max_quantity: 2 }, { max_quantity: 2.5 }]) {
+    const rows = [...globals(), ...menus()].map((r) => (r.kind === "ppf_part" && r.code === "part-2" ? { ...r, ...bad } : r));
+    const r = await resolveWith(rows, {}, PPF_RANK);
+    assert.equal(r.ok, false, JSON.stringify(bad));
+    if (!r.ok) assert.equal(r.reason, "malformed-catalog-row");
+  }
+});
+
+// ── GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5a) — dedicated wheel / glass menu projection ─────────────
+
+function wheelRow(over: Partial<WizardCatalogRow> = {}): WizardCatalogRow {
+  return row({
+    kind: "wheel_menu", code: "wheel-coat", owner_scope: "dealer", label_ja: "ホイールコーティング",
+    default_unit_price: 8000, quantity_required: true, min_quantity: 1, max_quantity: 4, categories: ["wheel"], ...over,
+  });
+}
+function glassRow(over: Partial<WizardCatalogRow> = {}): WizardCatalogRow {
+  return row({
+    kind: "glass_menu", code: "glass-coat", owner_scope: "dealer", label_ja: "ガラスコーティング",
+    default_unit_price: null, quantity_required: true, min_quantity: 1, max_quantity: null, categories: ["glass"], ...over,
+  });
+}
+
+test("B5a: dealer wheel/glass rows project into INDEPENDENT screenConfig collections keyed by stable code, with a NULLABLE per-unit price", async () => {
+  const r = await resolveWith([...globals(), ...menus(), wheelRow(), glassRow()]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.deepEqual(r.screenConfig.wheelMenus, [{
+    kind: "wheel_menu", id: "wheel-coat", name: "ホイールコーティング",
+    defaultUnitPrice: 8000, quantityRequired: true, minQty: 1, maxQty: 4, displayOrder: 0,
+  }]);
+  assert.deepEqual(r.screenConfig.glassMenus, [{
+    kind: "glass_menu", id: "glass-coat", name: "ガラスコーティング",
+    defaultUnitPrice: null, quantityRequired: true, minQty: 1, maxQty: null, displayOrder: 0,
+  }]);
+  assert.strictEqual(r.screenConfig.glassMenus?.[0]?.defaultUnitPrice, null, "null is 'not configured' and must never become 0");
+  // Dedicated, not a widening of anything that already exists.
+  assert.deepEqual(r.screenConfig.storeGlobalOptions, [], "never projected as a store-global option");
+  assert.deepEqual(r.screenConfig.maintenanceMenus.map((m) => m.id).sort(), ["maint-a", "maint-b"], "existing menu kinds unchanged");
+  assert.deepEqual(r.screenConfig.otherWorkPresets, []);
+  // No offering family was invented for them.
+  assert.deepEqual(Object.keys(r.screenConfig.serviceOfferings).sort(), ["car_wash", "maintenance", "ppf", "room_cleaning", "window_film"]);
+});
+
+test("B5a: with no wheel/glass rows both collections are EXPLICIT empty arrays from the resolver (never undefined)", async () => {
+  const r = await resolveWith([...globals(), ...menus()]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.deepEqual(r.screenConfig.wheelMenus, [], "explicit [] ⇒ the dealer authored none (a settings prompt, not a wiring fault)");
+  assert.deepEqual(r.screenConfig.glassMenus, []);
+  assert.equal("wheelMenus" in r.screenConfig, true);
+  assert.equal("glassMenus" in r.screenConfig, true);
+});
+
+test("B5a: an EXPLICIT zero price is projected as authored; the row's quantity flag never lowers the by-kind requirement", async () => {
+  const r = await resolveWith([...globals(), ...menus(), wheelRow({ default_unit_price: 0, quantity_required: false })]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.strictEqual(r.screenConfig.wheelMenus?.[0]?.defaultUnitPrice, 0);
+  assert.equal(r.screenConfig.wheelMenus?.[0]?.quantityRequired, true, "quantity-bearing by kind, exactly like every partial PPF part");
+});
+
+test("B5a: wheel/glass sort by display_order then code, and a label change never moves identity", async () => {
+  const r = await resolveWith([
+    ...globals(), ...menus(),
+    wheelRow({ code: "wheel-z", display_order: 2, label_ja: "AAA" }),
+    wheelRow({ code: "wheel-a", display_order: 1, label_ja: "ZZZ" }),
+    wheelRow({ code: "wheel-b", display_order: 1, label_ja: "MMM" }),
+  ]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.deepEqual(r.screenConfig.wheelMenus?.map((m) => m.id), ["wheel-a", "wheel-b", "wheel-z"]);
+});
+
+test("B5a: malformed wheel/glass bounds or price fail closed (malformed-catalog-row), never a silent default", async () => {
+  for (const bad of [
+    { min_quantity: 0 }, { min_quantity: 1.5 }, { min_quantity: 3, max_quantity: 2 }, { max_quantity: 2.5 }, { max_quantity: 0 },
+    { default_unit_price: -1 }, { default_unit_price: 10.5 },
+  ]) {
+    const w = await resolveWith([...globals(), ...menus(), wheelRow(bad)]);
+    assert.equal(w.ok, false, `wheel ${JSON.stringify(bad)}`);
+    if (!w.ok) assert.equal(w.reason, "malformed-catalog-row");
+    const g = await resolveWith([...globals(), ...menus(), glassRow(bad)]);
+    assert.equal(g.ok, false, `glass ${JSON.stringify(bad)}`);
+    if (!g.ok) assert.equal(g.reason, "malformed-catalog-row");
+  }
+});
+
+test("B5a: a wheel/glass row owned by ANOTHER dealer is refused; only dealer-owned rows are admitted", async () => {
+  const foreign = await resolveWith([...globals(), ...menus(), wheelRow({ dealer_id: OTHER_DEALER })]);
+  assert.deepEqual(foreign, { ok: false, reason: "malformed-catalog-row" });
+  const foreignGlass = await resolveWith([...globals(), ...menus(), glassRow({ dealer_id: OTHER_DEALER })]);
+  assert.deepEqual(foreignGlass, { ok: false, reason: "malformed-catalog-row" });
+  const duplicate = await resolveWith([...globals(), ...menus(), wheelRow(), wheelRow()]);
+  assert.deepEqual(duplicate, { ok: false, reason: "duplicate-code" });
+});
+
+test("B5a: all-rank wheel/glass rows resolve at every rank (availability is the row, not a family or rank gate)", async () => {
+  for (const rank of ALL) {
+    const r = await resolveWith([...globals(), ...menus(), wheelRow(), glassRow()], {}, rank);
+    assert.equal(r.ok, true, rank);
+    if (!r.ok) continue;
+    assert.equal(r.screenConfig.wheelMenus?.length, 1, rank);
+    assert.equal(r.screenConfig.glassMenus?.length, 1, rank);
+  }
+});
+
+// ── GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c1) — dedicated wheel / glass menu FACTS reach pricingConfig ──
+
+test("B5c1: dealer wheel/glass rows project code, label, bounds and price PRESENCE (never the price value) into pricingConfig", async () => {
+  const r = await resolveWith([...globals(), ...menus(), wheelRow(), glassRow()]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.deepEqual(r.pricingConfig.wheelMenus, [
+    { code: "wheel-coat", label: "ホイールコーティング", minQuantity: 1, maxQuantity: 4, unitPriceConfigured: true },
+  ]);
+  assert.deepEqual(r.pricingConfig.glassMenus, [
+    { code: "glass-coat", label: "ガラスコーティング", minQuantity: 1, maxQuantity: null, unitPriceConfigured: false },
+  ]);
+  // The price VALUE is not a pricing-configuration fact: the operator's edited input is the priced amount.
+  for (const m of [...(r.pricingConfig.wheelMenus ?? []), ...(r.pricingConfig.glassMenus ?? [])]) {
+    assert.equal("defaultUnitPrice" in m, false);
+    assert.equal("unitPrice" in m, false);
+  }
+  // Dedicated: never merged into any existing manual collection.
+  assert.deepEqual(r.pricingConfig.storeGlobalOptions, []);
+  assert.deepEqual(r.pricingConfig.maintenanceMenus.map((m) => m.code).sort(), ["maint-a", "maint-b"]);
+  assert.deepEqual(r.pricingConfig.roomCleaningMenus, []);
+});
+
+test("B5c1: an EXPLICIT ¥0 configured price counts as configured; pricing and screen views come from the SAME rows", async () => {
+  const r = await resolveWith([
+    ...globals(), ...menus(),
+    wheelRow({ default_unit_price: 0 }),
+    glassRow({ code: "glass-b", label_ja: "ガラスB", min_quantity: 2, max_quantity: 6 }),
+  ]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.equal(r.pricingConfig.wheelMenus?.[0]?.unitPriceConfigured, true, "¥0 is an authored price, not 'unconfigured'");
+  assert.deepEqual(r.pricingConfig.glassMenus?.[0], { code: "glass-b", label: "ガラスB", minQuantity: 2, maxQuantity: 6, unitPriceConfigured: false });
+  assert.deepEqual(r.pricingConfig.wheelMenus?.map((m) => m.code), r.screenConfig.wheelMenus?.map((m) => m.id));
+  assert.deepEqual(r.pricingConfig.glassMenus?.map((m) => m.code), r.screenConfig.glassMenus?.map((m) => m.id));
+  assert.deepEqual(
+    r.pricingConfig.glassMenus?.map((m) => [m.minQuantity, m.maxQuantity]),
+    r.screenConfig.glassMenus?.map((m) => [m.minQty, m.maxQty]),
+    "bounds identical in both views",
+  );
+});
+
+test("B5c1: with no wheel/glass rows both pricingConfig collections are EXPLICIT empty arrays (never undefined)", async () => {
+  const r = await resolveWith([...globals(), ...menus()]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.deepEqual(r.pricingConfig.wheelMenus, []);
+  assert.deepEqual(r.pricingConfig.glassMenus, []);
+  assert.equal("wheelMenus" in r.pricingConfig, true);
+  assert.equal("glassMenus" in r.pricingConfig, true);
+});
+
+test("B5c1: a label change never moves pricing identity; order follows display_order then code", async () => {
+  const r = await resolveWith([
+    ...globals(), ...menus(),
+    wheelRow({ code: "wheel-z", display_order: 2, label_ja: "AAA" }),
+    wheelRow({ code: "wheel-a", display_order: 1, label_ja: "ZZZ" }),
+  ]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.deepEqual(r.pricingConfig.wheelMenus?.map((m) => [m.code, m.label]), [["wheel-a", "ZZZ"], ["wheel-z", "AAA"]]);
+});
+
+test("B5c1: the resolved pricingConfig prices a selected wheel/glass draft through the EXISTING adapter (4 wheels × ¥8000; 1 pane × operator ¥12000)", async () => {
+  const r = await resolveWith([...globals(), ...menus(), wheelRow(), glassRow()]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  const base = resetWizardDraft();
+  const draft = {
+    ...base,
+    serviceSelection: { selectedCategories: ["wheel" as const, "glass" as const] },
+    serviceConfiguration: {
+      ...base.serviceConfiguration,
+      wheel: { selectedMenuIds: ["wheel-coat"], unitPricesByMenu: { "wheel-coat": "8000" }, quantitiesByMenu: { "wheel-coat": 4 } },
+      glass: { selectedMenuIds: ["glass-coat"], unitPricesByMenu: { "glass-coat": "12000" }, quantitiesByMenu: { "glass-coat": 1 } },
+    },
+  };
+  const bundle = buildWizardPricingInputFromConfig(draft, r.pricingConfig, r.catalog, r.shopRank);
+  assert.deepEqual(bundle.errors, []);
+  assert.deepEqual(
+    bundle.manualLines.map((l) => [l.sourceCategory, l.manualPricingIdentity, l.label, l.quantity, l.unitPrice]),
+    [["wheel", "wheel-coat", "ホイールコーティング", 4, 8000], ["glass", "glass-coat", "ガラスコーティング", 1, 12000]],
+  );
+  // The engine receives unit × quantity per line; it owns subtotal/discount/tax from here.
+  assert.deepEqual(bundle.services, [{ type: "other", items: [{ name: "ホイールコーティング", price: 32000 }, { name: "ガラスコーティング", price: 12000 }] }]);
+});
+
+// ── GDA-OTHER-COATINGS-R1 (C2) — dealer-authored other-coating menu projection (no selectable line yet) ──
+
+function otherCoatingRow(over: Partial<WizardCatalogRow> = {}): WizardCatalogRow {
+  return row({
+    kind: "other_coating_menu", code: "oc-fixed", owner_scope: "dealer", label_ja: "ヘッドライトコーティング",
+    default_unit_price: 6000, quantity_required: false, min_quantity: 1, max_quantity: null, categories: [], ...over,
+  });
+}
+
+test("C2: a positive-price FIXED-ONE other-coating row projects quantityRequired:false with no bounds into screenConfig and pricingConfig", async () => {
+  const r = await resolveWith([...globals(), ...menus(), otherCoatingRow()]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.deepEqual(r.screenConfig.otherCoatingMenus, [{
+    kind: "other_coating_menu", id: "oc-fixed", name: "ヘッドライトコーティング",
+    defaultUnitPrice: 6000, quantityRequired: false, displayOrder: 0,
+  }]);
+  assert.equal("minQty" in (r.screenConfig.otherCoatingMenus?.[0] ?? {}), false, "a fixed-one item carries no bounds");
+  assert.equal("maxQty" in (r.screenConfig.otherCoatingMenus?.[0] ?? {}), false);
+  assert.deepEqual(r.pricingConfig.otherCoatingMenus, [{
+    code: "oc-fixed", label: "ヘッドライトコーティング", quantityRequired: false,
+    minQuantity: null, maxQuantity: null, unitPriceConfigured: true,
+  }]);
+  // The price VALUE is not a pricing-configuration fact (same discipline as wheel / glass).
+  assert.equal("defaultUnitPrice" in (r.pricingConfig.otherCoatingMenus?.[0] ?? {}), false);
+});
+
+test("C2: a positive-price QUANTITY-BEARING other-coating row projects quantityRequired:true WITH its bounds, read from the row (not by kind)", async () => {
+  const r = await resolveWith([
+    ...globals(), ...menus(),
+    otherCoatingRow({ code: "oc-qty", label_ja: "ホイールハウスコーティング", default_unit_price: 3500, quantity_required: true, min_quantity: 2, max_quantity: 6 }),
+    otherCoatingRow({ code: "oc-qty-open", label_ja: "無上限", default_unit_price: 100, quantity_required: true, min_quantity: 1, max_quantity: null }),
+  ]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.deepEqual(r.screenConfig.otherCoatingMenus?.find((m) => m.id === "oc-qty"), {
+    kind: "other_coating_menu", id: "oc-qty", name: "ホイールハウスコーティング",
+    defaultUnitPrice: 3500, quantityRequired: true, minQty: 2, maxQty: 6, displayOrder: 0,
+  });
+  assert.deepEqual(r.screenConfig.otherCoatingMenus?.find((m) => m.id === "oc-qty-open"), {
+    kind: "other_coating_menu", id: "oc-qty-open", name: "無上限",
+    defaultUnitPrice: 100, quantityRequired: true, minQty: 1, displayOrder: 0,
+  });
+  assert.deepEqual(r.pricingConfig.otherCoatingMenus?.find((m) => m.code === "oc-qty"), {
+    code: "oc-qty", label: "ホイールハウスコーティング", quantityRequired: true, minQuantity: 2, maxQuantity: 6, unitPriceConfigured: true,
+  });
+  assert.deepEqual(r.pricingConfig.otherCoatingMenus?.find((m) => m.code === "oc-qty-open"), {
+    code: "oc-qty-open", label: "無上限", quantityRequired: true, minQuantity: 1, maxQuantity: null, unitPriceConfigured: true,
+  });
+  // Both views come from the SAME rows.
+  assert.deepEqual(r.pricingConfig.otherCoatingMenus?.map((m) => m.code), r.screenConfig.otherCoatingMenus?.map((m) => m.id));
+});
+
+test("C2: an ABSENT, NULL or ZERO price is 'not configured' — projected as null / unitPriceConfigured:false, never converted to 0", async () => {
+  const absent = { ...otherCoatingRow({ code: "oc-absent" }) } as Partial<WizardCatalogRow> as WizardCatalogRow;
+  delete (absent as Partial<WizardCatalogRow>).default_unit_price;
+  const r = await resolveWith([
+    ...globals(), ...menus(),
+    absent,
+    otherCoatingRow({ code: "oc-null", default_unit_price: null }),
+    otherCoatingRow({ code: "oc-zero", default_unit_price: 0 }),
+    otherCoatingRow({ code: "oc-zero-qty", default_unit_price: 0, quantity_required: true, min_quantity: 1, max_quantity: 4 }),
+  ]);
+  assert.equal(r.ok, true, "an unconfigured price is a configuration state, not a defect");
+  if (!r.ok) return;
+  for (const code of ["oc-absent", "oc-null", "oc-zero", "oc-zero-qty"]) {
+    // Explicit annotations: the assertion-signature calls below sit inside a loop back-edge, and
+    // TypeScript (TS7022) refuses to infer these locals through that circular flow.
+    const screen: OtherCoatingMenu | undefined = r.screenConfig.otherCoatingMenus?.find((m) => m.id === code);
+    const pricing: ProductionOtherCoatingMenuOption | undefined = r.pricingConfig.otherCoatingMenus?.find((m) => m.code === code);
+    if (!screen || !pricing) assert.fail(`${code} is still projected (settings prompt, not dropped)`);
+    assert.strictEqual(screen.defaultUnitPrice, null, `${code}: null, never 0`);
+    assert.notStrictEqual(screen.defaultUnitPrice, 0, `${code}: never coerced to ¥0`);
+    assert.equal(pricing.unitPriceConfigured, false, `${code}: never 'configured'`);
+  }
+  // The quantity requirement is still read from the row even when the price is unconfigured.
+  assert.equal(r.screenConfig.otherCoatingMenus?.find((m) => m.id === "oc-zero-qty")?.quantityRequired, true);
+  assert.equal(r.screenConfig.otherCoatingMenus?.find((m) => m.id === "oc-zero")?.quantityRequired, false);
+});
+
+test("C2: a MALFORMED price or bounds fails closed (malformed-catalog-row) — never a silent default, never 0", async () => {
+  for (const bad of [
+    { default_unit_price: -1 }, { default_unit_price: 10.5 }, { default_unit_price: Number.NaN },
+    { default_unit_price: "6000" as unknown as number },
+    { quantity_required: true, min_quantity: 0 }, { quantity_required: true, min_quantity: 1.5 },
+    { quantity_required: true, min_quantity: 3, max_quantity: 2 }, { quantity_required: true, max_quantity: 2.5 },
+    { quantity_required: false, min_quantity: 0 }, // bounds are validated on every row, fixed-one included
+    { quantity_required: "yes" as unknown as boolean },
+  ] as Partial<WizardCatalogRow>[]) {
+    const r = await resolveWith([...globals(), ...menus(), otherCoatingRow(bad)]);
+    assert.equal(r.ok, false, JSON.stringify(bad));
+    if (!r.ok) assert.equal(r.reason, "malformed-catalog-row");
+  }
+});
+
+test("C2: an INACTIVE, deleted, foreign-owned or duplicate other-coating row is refused exactly like every other row", async () => {
+  const inactive = await resolveWith([...globals(), ...menus(), otherCoatingRow({ is_active: false })]);
+  assert.deepEqual(inactive, { ok: false, reason: "malformed-catalog-row" }, "the reader contract admits active rows only");
+  const deleted = await resolveWith([...globals(), ...menus(), otherCoatingRow({ deleted_at: "2026-09-30T00:00:00Z" })]);
+  assert.deepEqual(deleted, { ok: false, reason: "malformed-catalog-row" });
+  const foreign = await resolveWith([...globals(), ...menus(), otherCoatingRow({ dealer_id: OTHER_DEALER })]);
+  assert.deepEqual(foreign, { ok: false, reason: "malformed-catalog-row" });
+  const duplicate = await resolveWith([...globals(), ...menus(), otherCoatingRow(), otherCoatingRow()]);
+  assert.deepEqual(duplicate, { ok: false, reason: "duplicate-code" });
+});
+
+test("C2: a rank-ineligible other-coating row is filtered out (never fails), and rows sort by display_order then code", async () => {
+  const r = await resolveWith([
+    ...globals(), ...menus(),
+    otherCoatingRow({ code: "oc-z", display_order: 2, label_ja: "AAA" }),
+    otherCoatingRow({ code: "oc-a", display_order: 1, label_ja: "ZZZ" }),
+    otherCoatingRow({ code: "oc-b", display_order: 1, label_ja: "MMM" }),
+    otherCoatingRow({ code: "oc-cert-only", ranks: ["certified"] }),
+  ], {}, "shop");
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.deepEqual(r.screenConfig.otherCoatingMenus?.map((m) => m.id), ["oc-a", "oc-b", "oc-z"]);
+  assert.deepEqual(r.pricingConfig.otherCoatingMenus?.map((m) => m.code), ["oc-a", "oc-b", "oc-z"]);
+});
+
+test("C2: NON-OTHER kinds are isolated — wheel / glass / maintenance / store rows never enter the other-coating collections and vice versa", async () => {
+  const r = await resolveWith([
+    ...globals(), ...menus(),
+    wheelRow(), glassRow(),
+    row({ kind: "store_global_option", code: "store-trip", owner_scope: "dealer", label_ja: "出張費", default_unit_price: 15000, categories: [] }),
+    row({ kind: "other_work_preset", code: "other-polish", owner_scope: "dealer", label_ja: "ハードポリッシュ", categories: ["other"] }),
+    otherCoatingRow({ code: "oc-x", quantity_required: true, min_quantity: 1, max_quantity: 2 }),
+  ]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.deepEqual(r.screenConfig.otherCoatingMenus?.map((m) => m.id), ["oc-x"]);
+  assert.deepEqual(r.pricingConfig.otherCoatingMenus?.map((m) => m.code), ["oc-x"]);
+  // B5 wheel / glass behaviour is byte-for-byte what it was: by-kind quantity, nullable price, ¥0 = configured.
+  assert.deepEqual(r.screenConfig.wheelMenus, [{ kind: "wheel_menu", id: "wheel-coat", name: "ホイールコーティング", defaultUnitPrice: 8000, quantityRequired: true, minQty: 1, maxQty: 4, displayOrder: 0 }]);
+  assert.deepEqual(r.screenConfig.glassMenus, [{ kind: "glass_menu", id: "glass-coat", name: "ガラスコーティング", defaultUnitPrice: null, quantityRequired: true, minQty: 1, maxQty: null, displayOrder: 0 }]);
+  assert.deepEqual(r.pricingConfig.wheelMenus, [{ code: "wheel-coat", label: "ホイールコーティング", minQuantity: 1, maxQuantity: 4, unitPriceConfigured: true }]);
+  assert.deepEqual(r.pricingConfig.glassMenus, [{ code: "glass-coat", label: "ガラスコーティング", minQuantity: 1, maxQuantity: null, unitPriceConfigured: false }]);
+  assert.deepEqual(r.screenConfig.storeGlobalOptions.map((o) => o.id), ["store-trip"]);
+  assert.deepEqual(r.screenConfig.otherWorkPresets.map((o) => o.id), ["other-polish"]);
+  assert.deepEqual(r.pricingConfig.storeGlobalOptions.map((o) => o.code), ["store-trip"]);
+  assert.deepEqual(r.screenConfig.maintenanceMenus.map((m) => m.id).sort(), ["maint-a", "maint-b"]);
+  // No offering family was invented for other coatings.
+  assert.deepEqual(Object.keys(r.screenConfig.serviceOfferings).sort(), ["car_wash", "maintenance", "ppf", "room_cleaning", "window_film"]);
+});
+
+test("C2: with no other-coating rows both collections are EXPLICIT empty arrays from the resolver (never undefined)", async () => {
+  const r = await resolveWith([...globals(), ...menus()]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.deepEqual(r.screenConfig.otherCoatingMenus, []);
+  assert.deepEqual(r.pricingConfig.otherCoatingMenus, []);
+  assert.equal("otherCoatingMenus" in r.screenConfig, true);
+  assert.equal("otherCoatingMenus" in r.pricingConfig, true);
+});
+
+test("C2/C4: old-runtime config compatibility — unselected other-coating rows do not change wheel/glass pricing", async () => {
+  const r = await resolveWith([...globals(), ...menus(), wheelRow(), glassRow(), otherCoatingRow(), otherCoatingRow({ code: "oc-qty", quantity_required: true, max_quantity: 3 })]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  const base = resetWizardDraft();
+  const draft = {
+    ...base,
+    serviceSelection: { selectedCategories: ["wheel" as const, "glass" as const] },
+    serviceConfiguration: {
+      ...base.serviceConfiguration,
+      wheel: { selectedMenuIds: ["wheel-coat"], unitPricesByMenu: { "wheel-coat": "8000" }, quantitiesByMenu: { "wheel-coat": 4 } },
+      glass: { selectedMenuIds: ["glass-coat"], unitPricesByMenu: { "glass-coat": "12000" }, quantitiesByMenu: { "glass-coat": 1 } },
+    },
+  };
+  // (1) The optional type boundary: a pre-C2 shaped configuration is still a valid input.
+  const { otherCoatingMenus: _omitted, ...legacyPricingConfig } = r.pricingConfig;
+  void _omitted;
+  const legacyScreenConfig: WizardScreenConfiguration = (({ otherCoatingMenus: _o, ...rest }) => { void _o; return rest; })(r.screenConfig);
+  assert.equal("otherCoatingMenus" in legacyPricingConfig, false);
+  assert.equal("otherCoatingMenus" in legacyScreenConfig, false);
+  // (2) Pricing output is identical while other_coating is unselected, even
+  // though C4 consumes those facts when the category is selected.
+  const withC2 = buildWizardPricingInputFromConfig(draft, r.pricingConfig, r.catalog, r.shopRank);
+  const withoutC2 = buildWizardPricingInputFromConfig(draft, legacyPricingConfig, r.catalog, r.shopRank);
+  assert.deepEqual(withC2.errors, []);
+  assert.deepEqual(withC2.errors, withoutC2.errors);
+  assert.deepEqual(withC2.manualLines, withoutC2.manualLines);
+  assert.deepEqual(withC2.services, withoutC2.services);
+  assert.deepEqual(
+    withC2.manualLines.map((l) => [l.sourceCategory, l.manualPricingIdentity, l.label, l.quantity, l.unitPrice]),
+    [["wheel", "wheel-coat", "ホイールコーティング", 4, 8000], ["glass", "glass-coat", "ガラスコーティング", 1, 12000]],
+    "B5 wheel / glass lines unchanged",
+  );
+  assert.ok(withC2.manualLines.every((l) => l.sourceCategory !== "other_coating"), "unselected other-coating rows are not priced");
+  // (3) C4 now consumes the projected facts only for an explicit selection.
+  const builder = codeOf("src/components/estimates/wizard/pricing/wizard-manual-pricing-config.ts");
+  const bodyStart = builder.indexOf("export function buildManualPricingLinesFromConfig");
+  assert.ok(bodyStart > 0);
+  assert.equal(/otherCoatingMenus|other_coating/.test(builder.slice(bodyStart)), true, "C4 prices explicitly selected other-coating rows");
 });

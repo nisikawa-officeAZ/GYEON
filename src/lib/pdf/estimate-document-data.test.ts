@@ -145,3 +145,31 @@ test("estimate PDF preserves the operator-selected sort_order across categories"
   }));
   assert.deepEqual(d.items.map((row) => row.name), ["Other", "Window", "Coating"]);
 });
+
+test("wheel and glass PDF lines preserve persisted quantity, unit price, and line amount", () => {
+  const d = toEstimateDocumentData(estimate({
+    estimate_items: [
+      item({ id: "wheel", item_name: "Wheel Coating", category: "wheel", quantity: 4, unit_price: 8000, line_total: 30000, sort_order: 0 }),
+      item({ id: "glass", item_name: "Glass Coating", category: "glass", quantity: 2, unit_price: 12000, line_total: 24000, sort_order: 1 }),
+    ],
+  }));
+
+  assert.deepEqual(d.items.map(({ category, name, quantity, unitPrice, amount, discount }) =>
+    ({ category, name, quantity, unitPrice, amount, discount })), [
+    { category: "Wheel", name: "Wheel Coating", quantity: 4, unitPrice: 8000, amount: 30000, discount: 2000 },
+    { category: "Glass", name: "Glass Coating", quantity: 2, unitPrice: 12000, amount: 24000, discount: null },
+  ]);
+});
+
+test("other-coating PDF line preserves its distinct category and persisted monetary snapshot", () => {
+  const d = toEstimateDocumentData(estimate({
+    estimate_items: [
+      item({ id: "trim", item_name: "樹脂TRIMコーティング", category: "other_coating", quantity: 1, unit_price: 15000, line_total: 15000, sort_order: 0 }),
+      item({ id: "seat", item_name: "シートコーティング", category: "other_coating", quantity: 2, unit_price: 11000, line_total: 22000, sort_order: 1 }),
+    ],
+  }));
+  assert.deepEqual(d.items.map(({ category, quantity, unitPrice, amount }) => ({ category, quantity, unitPrice, amount })), [
+    { category: "Other Coating", quantity: 1, unitPrice: 15000, amount: 15000 },
+    { category: "Other Coating", quantity: 2, unitPrice: 11000, amount: 22000 },
+  ]);
+});

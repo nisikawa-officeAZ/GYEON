@@ -25,12 +25,14 @@ const MSG = {
   labelJa: "表示名を入力してください",
   labelTooLong: "表示名が長すぎます（200文字以内）",
   priceYen: "価格は0以上の整数（税抜・円）で入力してください",
+  priceYenPositive: "単価は1以上の整数（税抜・円）で入力してください",
   durationMinutes: "所要時間は正の整数（分）で入力してください",
   displayOrder: "表示順は0以上の整数で入力してください",
   priceable: "価格対象の指定が正しくありません",
   quantityRequired: "数量指定の指定が正しくありません",
   minQuantity: "最小数量は1以上の整数で入力してください",
   maxQuantity: "最大数量は最小数量以上の整数で入力してください",
+  fixedOneBounds: "数量入力が必須でない項目には最小数量・最大数量を設定できません",
   presentation: "フィルム情報の値が正しくありません",
   itemId: "対象項目の指定が正しくありません",
   isActive: "表示状態の指定が正しくありません",
@@ -55,6 +57,19 @@ function allowedFields(kind: SupportedAuthoringKind): readonly string[] {
     case "wash_menu":
     case "room_cleaning_menu":
       return [...COMMON_FIELDS, "priceYen", "durationMinutes"];
+    case "wheel_menu":
+    case "glass_menu":
+      // GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5a) — dedicated per-unit menus. Quantity is required BY
+      // KIND and is never client-toggled, so `quantityRequired` / `priceable` are NOT writable; only
+      // the tax-exclusive unit price and the quantity bounds are. No `durationMinutes`: nothing in
+      // the B5 contract authorises one, and allowlisting a field this pass does not parse would
+      // drop it silently.
+      return [...COMMON_FIELDS, "priceYen", "minQuantity", "maxQuantity"];
+    case "other_coating_menu":
+      // GDA-OTHER-COATINGS-R1 (B1) — the extensible other-coating kind. Unlike wheel/glass, the
+      // dealer STATES whether a quantity is required, so `quantityRequired` is writable (and, below,
+      // mandatory). No `priceable` toggle and no `durationMinutes`: neither is part of the B1 contract.
+      return [...COMMON_FIELDS, "priceYen", "quantityRequired", "minQuantity", "maxQuantity"];
     case "film_type":
       return [...COMMON_FIELDS, "priceYen", "presentation", "installCoefficientBp"];
     case "ppf_type_group":
@@ -160,11 +175,25 @@ export function validateWizardItemForm(raw: Record<string, unknown>): WizardItem
 
   // 7. price (kinds that support it: menus/film/ppf/store — NOT other_work, NOT coupon).
   const supportsPrice = kind !== "other_work_preset" && kind !== "coupon";
+  //    GDA-OTHER-COATINGS-R1 (B1) — `other_coating_menu` is stricter than every other priced kind:
+  //    its unit price must be POSITIVE (0 is refused, not preserved), and a blank price is sent as
+  //    an EXPLICIT null ("not configured") so an edit can clear a price and the server never sees a
+  //    0 stand in for "unset". Wheel/glass keep their B5a behaviour untouched (0 preserved, blank
+  //    omitted).
+  const isOtherCoatingMenu = kind === "other_coating_menu";
   let defaultUnitPrice: number | null | undefined;
   if (supportsPrice && !isBlankOptional(raw.priceYen)) {
     const p = parseIntStrict(raw.priceYen);
-    if (!p.ok || p.value < 0) errors.priceYen = MSG.priceYen; // rejects negative/fractional/NaN/Infinity
-    else defaultUnitPrice = p.value; // 0 preserved
+    if (isOtherCoatingMenu) {
+      if (!p.ok || p.value < 1) errors.priceYen = MSG.priceYenPositive; // rejects 0/negative/fractional/NaN/Infinity
+      else defaultUnitPrice = p.value;
+    } else if (!p.ok || p.value < 0) {
+      errors.priceYen = MSG.priceYen; // rejects negative/fractional/NaN/Infinity
+    } else {
+      defaultUnitPrice = p.value; // 0 preserved
+    }
+  } else if (isOtherCoatingMenu) {
+    defaultUnitPrice = null; // blank ⇒ explicitly unconfigured, never 0
   }
 
   // 8. duration (menus only, optional positive int).
@@ -176,7 +205,12 @@ export function validateWizardItemForm(raw: Record<string, unknown>): WizardItem
     else durationMinutes = p.value;
   }
 
-  // 9. store-option fields.
+  // 9. quantity fields. A store option authors `priceable` / `quantityRequired` explicitly. A
+  //    wheel/glass menu (B5a) is quantity-bearing BY KIND: `quantityRequired` is fixed to true here
+  //    and never read from the client (the key is not even allowlisted above); only the bounds are
+  //    authored. The unit price stays optional — an unauthored price is OMITTED from the payload so
+  //    the server stores null ("not configured"); it is never turned into 0.
+  const isDedicatedUnitMenu = kind === "wheel_menu" || kind === "glass_menu";
   let priceable: boolean | undefined;
   let quantityRequired: boolean | undefined;
   let minQuantity: number | undefined;
@@ -192,6 +226,19 @@ export function validateWizardItemForm(raw: Record<string, unknown>): WizardItem
       if (b === null) errors.quantityRequired = MSG.quantityRequired;
       else quantityRequired = b;
     }
+  }
+  if (isDedicatedUnitMenu) {
+    quantityRequired = true;
+  }
+  //    GDA-OTHER-COATINGS-R1 (B1) — `other_coating_menu` REQUIRES an explicit boolean. Absence is
+  //    not "false": a dealer who does not want a quantity prompt states false, and that false is
+  //    carried into the payload rather than dropped, so the server records a decision either way.
+  if (isOtherCoatingMenu) {
+    const b = parseBool(raw.quantityRequired);
+    if (b === null) errors.quantityRequired = MSG.quantityRequired;
+    else quantityRequired = b;
+  }
+  if (kind === "store_global_option" || isDedicatedUnitMenu || isOtherCoatingMenu) {
     if (!isBlankOptional(raw.minQuantity)) {
       const p = parseIntStrict(raw.minQuantity);
       if (!p.ok || p.value < 1) errors.minQuantity = MSG.minQuantity;
@@ -206,6 +253,16 @@ export function validateWizardItemForm(raw: Record<string, unknown>): WizardItem
     if (maxQuantity !== undefined && maxQuantity !== null && maxQuantity < effMin) {
       errors.maxQuantity = MSG.maxQuantity;
     }
+  }
+  //    GDA-OTHER-COATINGS-R1 (C5 F3) — a FIXED-ONE other-coating row (`quantityRequired: false`) has
+  //    no quantity to bound and the SQL policy refuses bounds on it. An authored bound here is a
+  //    contradiction: it is REJECTED (never silently dropped, never sent). Quantity-bearing rows keep
+  //    their explicit, validated bounds above; wheel / glass / store option are untouched.
+  if (isOtherCoatingMenu && quantityRequired === false) {
+    if (!isBlankOptional(raw.minQuantity)) errors.minQuantity = MSG.fixedOneBounds;
+    if (!isBlankOptional(raw.maxQuantity)) errors.maxQuantity = MSG.fixedOneBounds;
+    minQuantity = undefined;
+    maxQuantity = undefined;
   }
 
   // 10. film presentation allowlist (strings only).

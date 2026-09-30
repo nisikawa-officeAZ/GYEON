@@ -25,12 +25,22 @@ import {
 } from "./estimate-wizard-settings-core";
 import type { EstimateWizardSettingsViewResult } from "./estimate-wizard-settings-types";
 
+// GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5a2) — `wheel_menu` / `glass_menu` are loaded through the SAME
+// dealer-owned, dealer-id, active, non-deleted filter as every other kind below. They are not a
+// new offering family and get no separate query: the dealer-authored row is their only source, so
+// leaving them out of this list is exactly what made a newly authored menu invisible on the page.
+// GDA-OTHER-COATINGS-R1 (B1) — `other_coating_menu` joins the same filter for the same reason. Until
+// the Book-local SQL contract admits the kind no row can exist, so the extra value simply matches
+// nothing; once it can, an authored menu is visible without a second loader change.
 const EDITABLE_KINDS = [
   "film_type",
   "ppf_type_group",
   "maintenance_menu",
   "wash_menu",
   "room_cleaning_menu",
+  "wheel_menu",
+  "glass_menu",
+  "other_coating_menu",
   "other_work_preset",
   "store_global_option",
   "coupon",

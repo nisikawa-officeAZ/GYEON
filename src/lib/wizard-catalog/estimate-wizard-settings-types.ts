@@ -18,9 +18,11 @@ export type EstimateWizardPermission = "editable" | "readonly";
 /**
  * The editable top-level sections. Coating remains summary-only (it is authored elsewhere and must
  * never gain a duplicate editor here). B1.1 promotes coupons from a planned card to a real editable
- * section and adds PPF types.
+ * section and adds PPF types. GDA-OTHER-COATINGS-R1 Stage A adds `other_coating`, which hosts the
+ * dealer-authored non-body coating menus (today: the B5 wheel / glass kinds) — a settings surface
+ * only; the Screen-3 categories, quantities and pricing of those kinds are untouched by it.
  */
-export type WizardSettingsSectionId = "film" | "ppf" | "service" | "otherwork" | "store" | "coupon";
+export type WizardSettingsSectionId = "film" | "ppf" | "service" | "other_coating" | "otherwork" | "store" | "coupon";
 
 /** Film presentation, presentation-safe (already string-normalised). */
 export interface FilmPresentationView {

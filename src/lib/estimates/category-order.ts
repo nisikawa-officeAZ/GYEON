@@ -9,7 +9,10 @@
 // without a schema change, which is out of scope). Coating add-on options carry
 // their own category — interior / glass rank at the options slot (7); process
 // options categorised as "coating" stay grouped with coating; "other"-category
-// options fall into the final slot (8). Within a category, the original
+// options fall into the final slot (8). GDA-OTHER-COATINGS-R1 (C1): "other_coating"
+// (non-body coatings — resin trim / seat / engine room) ranks at the options
+// slot (7) too: after every body-work category, before "other". Existing ranks
+// are unchanged. Within a category, the original
 // sort_order is preserved. Reordering never changes amounts (sums are
 // order-independent; totals are read from stored values).
 
@@ -22,6 +25,7 @@ export const CATEGORY_ORDER: Record<string, number> = {
   roomclean:   6,
   interior:    7, // options (room/leather add-ons, and legacy roomclean pre-093)
   glass:       7, // options (glass coat add-on)
+  other_coating: 7, // non-body coatings (GDA-OTHER-COATINGS-R1 C1)
   other:       8,
 };
 

@@ -9,8 +9,11 @@ export type InvoiceStatus =
   | 'overdue'
   | 'cancelled';
 
-export type InvoiceCategory =
-  | 'coating' | 'ppf' | 'window' | 'interior' | 'glass' | 'other';
+import type { EstimateCategory } from '@/lib/estimates/estimate-types';
+
+// estimate_items and invoice_items share the same category CHECK. Keep the
+// application vocabulary aligned when an accepted estimate becomes an invoice.
+export type InvoiceCategory = EstimateCategory;
 
 export interface InvoiceItemDB {
   id:            string;
@@ -196,6 +199,11 @@ const CATEGORY_LABELS: Record<InvoiceCategory, string> = {
   window:   'ウィンドウ',
   interior: 'インテリア',
   glass:    'ガラス',
+  wheel:    'ホイール',
+  other_coating: 'その他コーティング',
+  maintenance: 'メンテナンス',
+  carwash:  '洗車',
+  roomclean: 'ルームクリーニング',
   other:    'その他',
 };
 
@@ -205,6 +213,11 @@ export const INVOICE_CATEGORIES: { value: InvoiceCategory; label: string }[] = [
   { value: 'window',   label: 'ウィンドウ' },
   { value: 'interior', label: 'インテリア' },
   { value: 'glass',    label: 'ガラス' },
+  { value: 'wheel',    label: 'ホイール' },
+  { value: 'other_coating', label: 'その他コーティング' },
+  { value: 'maintenance', label: 'メンテナンス' },
+  { value: 'carwash',  label: '洗車' },
+  { value: 'roomclean', label: 'ルームクリーニング' },
   { value: 'other',    label: 'その他' },
 ];
 

@@ -22,6 +22,14 @@ const CATEGORY_LABELS: Record<WizardCatalogCategoryId, string> = {
   maintenance: "ボディ定期メンテナンス",
   carwash: "メンテナンス洗車",
   roomclean: "ルームクリーニング",
+  // GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c1): exhaustive-map parity ONLY. Wheel / glass are dealer-
+  // authored dedicated menus (manual_only); the production PricingCatalog has NO wheel/glass source,
+  // so no projected category/item is synthesized for them here.
+  wheel: "ホイール",
+  glass: "ガラス",
+  // GDA-OTHER-COATINGS-R1 (C1): parity only. Non-body coatings are dealer-authored items (manual_only);
+  // the production PricingCatalog has NO other-coating source, so nothing is synthesized for them.
+  other_coating: "その他コーティング",
   other: "その他作業",
   store_global_options: "追加サービスオプション",
 };
@@ -36,6 +44,9 @@ const CATEGORY_PRICING_POLICY: Record<WizardCatalogCategoryId, PricingPolicy> = 
   maintenance: "catalog_only",
   carwash: "catalog_only",
   roomclean: "catalog_only",
+  wheel: "manual_only", // B5c1: dedicated dealer menu × bounded quantity; no catalog item
+  glass: "manual_only", // B5c1: dedicated dealer menu × bounded quantity; no catalog item
+  other_coating: "manual_only", // C1: dedicated non-body coating items; no catalog item
   other: "manual_only",
   store_global_options: "catalog_only",
 };

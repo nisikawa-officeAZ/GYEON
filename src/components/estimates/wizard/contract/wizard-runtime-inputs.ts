@@ -19,6 +19,9 @@ import type {
   MaintenanceMenu,
   WashMenu,
   RoomMenu,
+  WheelMenu,
+  GlassMenu,
+  OtherCoatingMenu,
   OtherWorkPresetItem,
   StoreGlobalOption,
   CouponOption,
@@ -60,6 +63,35 @@ export interface WizardScreenConfiguration {
   maintenanceMenus:   MaintenanceMenu[];
   washMenus:          WashMenu[];
   roomMenus:          RoomMenu[];
+  /**
+   * GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5a) — the dedicated wheel / glass service menus, dealer-authored
+   * (`wheel_menu` / `glass_menu` catalogue rows). Each is priced tax-exclusive PER UNIT and multiplied
+   * by an operator-entered bounded quantity; `defaultUnitPrice` is nullable, and null means "not
+   * configured" — never ¥0.
+   *
+   * OPTIONAL AT THIS TYPE BOUNDARY ONLY, so that pre-B5 fixtures and the protected preview keep
+   * compiling. The authoritative runtime resolver ALWAYS supplies both, as EXPLICIT (possibly
+   * empty) dealer-scoped arrays. `undefined` is a wiring/legacy state and must never be read as
+   * "this dealer has zero menus": the Step-4 host (B5b) must fail closed on `undefined` and show
+   * the settings-required prompt on `[]`. Neither state may invent a menu, a price, or an opt-in.
+   * There is deliberately NO offering-family key for these two — the dealer-authored row is the
+   * sole availability authority — so `serviceOfferings` stays exactly five families.
+   */
+  wheelMenus?:        WheelMenu[];
+  glassMenus?:        GlassMenu[];
+  /**
+   * GDA-OTHER-COATINGS-R1 (C2) — the dealer-authored other-coating menus (`other_coating_menu`
+   * catalogue rows). PROJECTION ONLY: no Screen-3 category, draft section or priced line consumes
+   * them yet. `defaultUnitPrice` is the POSITIVE tax-exclusive price or null ("not configured" —
+   * null and 0 both land here, never a fabricated ¥0); `quantityRequired` is read from each row
+   * (false = fixed one, true = quantity-bearing with optional bounds).
+   *
+   * OPTIONAL AT THIS TYPE BOUNDARY ONLY, exactly like wheel / glass, so pre-C2 fixtures and the
+   * protected preview keep compiling. The authoritative resolver ALWAYS supplies it as an EXPLICIT
+   * (possibly empty) dealer-scoped array; `undefined` is a wiring/legacy state, never "zero menus".
+   * No offering-family key is added — `serviceOfferings` stays exactly five families.
+   */
+  otherCoatingMenus?: OtherCoatingMenu[];
   otherWorkPresets:   OtherWorkPresetItem[];
   storeGlobalOptions: StoreGlobalOption[];
   coupons:            CouponOption[];

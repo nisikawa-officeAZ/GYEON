@@ -37,7 +37,9 @@
 
 import type { EstimateCategory } from "@/lib/estimates/estimate-types";
 import type { ServiceCategoryId } from "@/lib/estimates/service-categories";
-import type { EstimateWizardDraftV22, WizardServiceCategory } from "../draft/wizard-draft-types";
+import type {
+  EstimateWizardDraftV22, WizardServiceCategory, WizardDedicatedMenuDraft,
+} from "../draft/wizard-draft-types";
 import { initialEstimateWizardDraftV22 } from "../draft/wizard-draft-state";
 import {
   INTEGRATION_ISSUE_CODES,
@@ -113,9 +115,18 @@ export type HydratedWizardDraft = HydratedWizardDraftImplementation;
 
 // ── Category mapping ─────────────────────────────────────────────────────────────
 /**
- * `EstimateCategory` (persisted, 9 values) → `ServiceCategoryId` (Screen 3, 7 values).
- * 'interior' and 'glass' exist ONLY in the persisted taxonomy and have no Screen-3 counterpart.
- * They map to `null` and are reported — never coerced into 'other'.
+ * `EstimateCategory` (persisted, 11 values) → `ServiceCategoryId` (Screen 3, 10 values).
+ * 'interior' exists ONLY in the persisted taxonomy and has no Screen-3 counterpart. It maps to
+ * `null` and is reported — never coerced into 'other'.
+ *
+ * GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c3, plan §24.1): 'wheel' and 'glass' are dedicated Screen-3
+ * categories, so a saved wheel / glass row hydrates back to its OWN Screen-3 identity. ONLY the
+ * category identity round-trips: the flat row still cannot say WHICH dealer menu, quantity bounds or
+ * configured price produced it, so its Screen-4 provenance stays unresolved and blocks (below).
+ *
+ * GDA-OTHER-COATINGS-R1 (C1b): persisted 'other_coating' maps only to its own Screen-3 category.
+ * Flat persisted rows still lack menu provenance and remain unresolved until a versioned snapshot
+ * supplies it; they are never coerced into body 'coating' or 'other'.
  */
 const CATEGORY_TO_SCREEN3: Record<EstimateCategory, ServiceCategoryId | null> = {
   coating:     "coating",
@@ -124,9 +135,11 @@ const CATEGORY_TO_SCREEN3: Record<EstimateCategory, ServiceCategoryId | null> = 
   maintenance: "maintenance",
   carwash:     "carwash",
   roomclean:   "roomclean",
+  wheel:       "wheel",
+  glass:       "glass",
+  other_coating: "other_coating",
   other:       "other",
   interior:    null, // persisted-only taxonomy — no Screen-3 category
-  glass:       null, // persisted-only taxonomy — no Screen-3 category
 };
 
 // ── New estimate ─────────────────────────────────────────────────────────────────
@@ -223,6 +236,14 @@ function cloneWizardDraft(source: EstimateWizardDraftV22): EstimateWizardDraftV2
         unitPricesByOption: { ...cfg.storeGlobalOptions.unitPricesByOption },
         quantitiesByOption: { ...cfg.storeGlobalOptions.quantitiesByOption },
       },
+      // B5c3 — the OPTIONAL dedicated wheel / glass sections (B5b1) are cloned with fresh arrays /
+      // records exactly like the eight required ones. Present ⇒ deep-copied, never aliased; absent
+      // (an older 2.2 shape) ⇒ left absent, never fabricated. `wheel: undefined` is deliberately NOT
+      // emitted: a blank draft must stay value-identical to the canonical initial draft.
+      ...(cfg.wheel === undefined ? {} : { wheel: cloneDedicatedMenuDraft(cfg.wheel) }),
+      ...(cfg.glass === undefined ? {} : { glass: cloneDedicatedMenuDraft(cfg.glass) }),
+      // GDA-OTHER-COATINGS-R1 (C1): the OPTIONAL other-coating section follows the identical rule.
+      ...(cfg.otherCoating === undefined ? {} : { otherCoating: cloneDedicatedMenuDraft(cfg.otherCoating) }),
     },
     discountAndCoupon: {
       mode: source.discountAndCoupon.mode,
@@ -239,6 +260,15 @@ function cloneWizardDraft(source: EstimateWizardDraftV22): EstimateWizardDraftV2
       unitPriceInputsByLine: { ...source.review.unitPriceInputsByLine },
     },
     metadata: { ...source.metadata },
+  };
+}
+
+/** B5c3 — one dedicated wheel / glass section, deep-copied (new array + new records; no alias). */
+function cloneDedicatedMenuDraft(section: WizardDedicatedMenuDraft): WizardDedicatedMenuDraft {
+  return {
+    selectedMenuIds: [...section.selectedMenuIds],
+    unitPricesByMenu: { ...section.unitPricesByMenu },
+    quantitiesByMenu: { ...section.quantitiesByMenu },
   };
 }
 

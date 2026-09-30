@@ -1,8 +1,20 @@
 "use client";
 
-// Step 3 — 作業内容選択. Exactly 7 categories, multi-select push-buttons (no pulldown).
+// Step 3 — 作業内容選択. Ten categories, multi-select push-buttons (no pulldown).
 // Only selected categories flow to Step 4. PPF部分施工 is NOT a category here — it
 // branches inside Step 4. Breakpoint-agnostic (identical across PC/Tablet/Mobile).
+//
+// B5b1: ホイール / ガラス are independent categories (plan §24.1). They are NOT in the five-family
+// opt-in map — a dealer-authored wheel/glass menu is their availability authority, which Step 4
+// enforces (B5b2: settings-required prompt, never an unpriced line). Here they behave exactly like
+// the unmanaged categories: never disabled by a store offering switch, and they emit the same single
+// category patch as every other button. Rank/offering semantics of the seven old categories are
+// unchanged.
+//
+// GDA-OTHER-COATINGS-R1 (C1): その他コーティング (non-body coatings — resin trim / seat / engine room /
+// future dealer-added items) is a further independent category with the same unmanaged behaviour:
+// never a family switch, never merged into ボディコーティング or その他の作業. Its Step-4 section,
+// pricing and row selection are C2+; C1 only establishes the category/draft contract.
 
 import type { EstimateWizardApi } from "../useEstimateWizard";
 import { Card, SectionTitle, SelectButton } from "../ui";
@@ -19,6 +31,9 @@ const CATEGORIES: Array<{ id: ServiceCategoryId; label: string; icon: string }> 
   { id: "maintenance", label: "ボディ定期メンテナンス", icon: "🔧" },
   { id: "carwash",     label: "洗車",                 icon: "🚿" },
   { id: "roomclean",   label: "ルームクリーニング",   icon: "🧹" },
+  { id: "wheel",       label: "ホイール",             icon: "🛞" },
+  { id: "glass",       label: "ガラス",               icon: "🪞" },
+  { id: "other_coating", label: "その他コーティング",   icon: "🧴" },
   { id: "other",       label: "その他の作業",         icon: "📋" },
 ];
 
