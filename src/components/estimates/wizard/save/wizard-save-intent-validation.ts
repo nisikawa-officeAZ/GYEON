@@ -29,7 +29,7 @@
 // ACCESS is reported — never whether a malformed value is caught.
 
 import { isServiceCategoryId, type ServiceCategoryId } from "@/lib/estimates/service-categories";
-import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
+import type { EstimateWizardDraftV22, WizardDedicatedMenuDraft } from "../draft/wizard-draft-types";
 import type {
   DiscountMode, InteriorPpfRow, LayerCount, NewCustomerDraft, NewVehicleDraft,
   OtherWorkCustomRow, PpfInstallationMethodId,
@@ -412,10 +412,13 @@ function readServiceConfiguration(
 ): DraftSections["serviceConfiguration"] | undefined {
   const o = readObject(v, path, issues);
   if (o === undefined) return undefined;
+  // The eight original sections stay STRICTLY required. B5b1: `wheel` / `glass` are OPTIONAL only so
+  // older 2.2 snapshots that predate them remain readable; when present they are validated exactly.
+  // GDA-OTHER-COATINGS-R1 (C1): `otherCoating` is OPTIONAL under the identical rule.
   requireExactKeys(o, path, [
     "coating", "ppf", "windowFilm", "bodyMaintenance",
     "carWash", "roomCleaning", "otherWork", "storeGlobalOptions",
-  ], issues);
+  ], issues, ["wheel", "glass", "otherCoating"]);
 
   // ── coating ──
   const cRaw = readObject(o.coating, `${path}.coating`, issues);
@@ -543,13 +546,47 @@ function readServiceConfiguration(
     }
   }
 
+  // ── wheel / glass (B5b1; OPTIONAL; identical shape) / otherCoating (C1; same rule) ──
+  // Absent ⇒ an older 2.2 draft: valid, and the section stays ABSENT in the reconstruction (no
+  // fabricated empty section, no implied selection). Present ⇒ exactly the three canonical keys;
+  // present-but-null fails as invalid-type. Quantities are counts: finite non-negative safe integers,
+  // never coerced (initial 4/1 values and configured bounds are enforced by later stages, not here).
+  const readDedicatedMenu = (raw: unknown, p: string): WizardDedicatedMenuDraft | undefined => {
+    const mo = readObject(raw, p, issues);
+    if (mo === undefined) return undefined;
+    requireExactKeys(mo, p, ["selectedMenuIds", "unitPricesByMenu", "quantitiesByMenu"], issues);
+    const selectedMenuIds = readStringArray(mo.selectedMenuIds, `${p}.selectedMenuIds`, issues);
+    const unitPricesByMenu = readStringRecord(mo.unitPricesByMenu, `${p}.unitPricesByMenu`, issues);
+    const quantitiesByMenu = readNumberRecord(mo.quantitiesByMenu, `${p}.quantitiesByMenu`, issues);
+    if (selectedMenuIds === undefined || unitPricesByMenu === undefined || quantitiesByMenu === undefined) return undefined;
+    return { selectedMenuIds, unitPricesByMenu, quantitiesByMenu };
+  };
+  // Each optional property is read EXACTLY ONCE into a local (a getter cannot split the read).
+  const wheelRaw: unknown = o.wheel;
+  const glassRaw: unknown = o.glass;
+  const otherCoatingRaw: unknown = o.otherCoating;
+  const wheel = wheelRaw === undefined ? undefined : readDedicatedMenu(wheelRaw, `${path}.wheel`);
+  const glass = glassRaw === undefined ? undefined : readDedicatedMenu(glassRaw, `${path}.glass`);
+  const otherCoating = otherCoatingRaw === undefined ? undefined : readDedicatedMenu(otherCoatingRaw, `${path}.otherCoating`);
+  const wheelOk = wheelRaw === undefined || wheel !== undefined;
+  const glassOk = glassRaw === undefined || glass !== undefined;
+  const otherCoatingOk = otherCoatingRaw === undefined || otherCoating !== undefined;
+
   if (
     coating === undefined || ppf === undefined || windowFilm === undefined ||
     bodyMaintenance === undefined || carWash === undefined || roomCleaning === undefined ||
-    otherWork === undefined || storeGlobalOptions === undefined
+    otherWork === undefined || storeGlobalOptions === undefined || !wheelOk || !glassOk || !otherCoatingOk
   ) return undefined;
 
-  return { coating, ppf, windowFilm, bodyMaintenance, carWash, roomCleaning, otherWork, storeGlobalOptions };
+  const eight = { coating, ppf, windowFilm, bodyMaintenance, carWash, roomCleaning, otherWork, storeGlobalOptions };
+  // Optional sections are re-added ONLY when the input actually carried them, so an absent section
+  // stays absent rather than becoming an explicit `undefined` property (an empty spread adds no key).
+  return {
+    ...eight,
+    ...(wheel !== undefined ? { wheel } : {}),
+    ...(glass !== undefined ? { glass } : {}),
+    ...(otherCoating !== undefined ? { otherCoating } : {}),
+  };
 }
 
 const DRAFT_ROOT_KEYS = [

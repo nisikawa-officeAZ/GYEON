@@ -21,6 +21,7 @@ import {
   type ConfiguredPricingConfiguration,
 } from "./wizard-pricing-input-adapter-config";
 import {
+  annotateWizardReviewQuantityPolicies,
   applyWizardReviewLineAdjustments,
   resolvedCouponApplicationsForSubtotal,
   resolvedPpfCoatingReductionForLines,
@@ -334,4 +335,548 @@ test("P2-1: no adjustment ⇒ the authoritative result is returned as-is (same r
   assert.equal(same, canonical, "no adjustment returns the input object itself");
   const recomputed = computeWizardPricingFromConfig({ ...d, review: { ...d.review, quantityInputsByLine: {}, unitPriceInputsByLine: {} } }, PC, CATALOG, "detailer");
   assert.deepEqual(recomputed, canonical);
+});
+
+// ── GDA-ESTIMATE-QUANTITY-POLICY-R1 (Stage A) — the presentation policy IS the adjustment policy ──
+
+function deepFreeze<T>(value: T): T {
+  if (value !== null && typeof value === "object") {
+    for (const v of Object.values(value as object)) deepFreeze(v);
+    Object.freeze(value);
+  }
+  return value;
+}
+
+test("annotateWizardReviewQuantityPolicies is pure: fresh result/lines, input untouched, policy = reviewQuantityPolicyForLine, nothing else changes", () => {
+  const d = draft((sd) => { selectOption(sd, "go-q", "3000", 2); selectOption(sd, "go-min", "1000", 3); selectOption(sd, "go-1", "2500"); });
+  const bundle = buildWizardPricingInputFromConfig(d, PC, CATALOG, "detailer");
+  const computed = computeWizardPricingFromConfig(d, PC, CATALOG, "detailer");
+  assert.equal(computed.completeness, "complete", "PRECONDITION");
+  // Start from an UN-annotated copy so the test proves the annotation itself.
+  const unannotated: WizardPricingResult = deepFreeze({
+    ...computed,
+    lines: computed.lines.map((line) => { const { quantityPolicy: _p, ...rest } = line; void _p; return rest as WizardPricingResult["lines"][number]; }),
+  });
+  const before = JSON.stringify(unannotated);
+
+  const annotated = annotateWizardReviewQuantityPolicies(unannotated, bundle, PC);
+  assert.notEqual(annotated, unannotated, "fresh result object");
+  assert.equal(JSON.stringify(unannotated), before, "input never mutated (and frozen input did not throw)");
+  assert.equal(annotated.lines.length, unannotated.lines.length);
+  for (const [i, line] of annotated.lines.entries()) {
+    const source = unannotated.lines[i]!;
+    assert.notEqual(line, source, `${line.sourceId}: fresh line object`);
+    assert.deepEqual(line.quantityPolicy, reviewQuantityPolicyForLine(source, bundle, PC), `${line.sourceId}: same policy as the adjustment rule`);
+    const { quantityPolicy: _p, ...rest } = line; void _p;
+    assert.deepEqual(rest, source, `${line.sourceId}: no other field touched`);
+  }
+  assert.deepEqual(totalsOf(annotated), totalsOf(unannotated), "totals untouched");
+  assert.deepEqual(annotated.lines, computed.lines, "identical to what the compute route hands the UI");
+
+  const matrix = Object.fromEntries(annotated.lines.map((l) => [l.sourceId, l.quantityPolicy]));
+  assert.equal(matrix["store_global_options:go-1"], null, "non-quantity option fixed");
+  assert.equal(matrix["maintenance:mm1"], null, "maintenance fixed");
+  assert.deepEqual(matrix["store_global_options:go-q"], { minQuantity: 1, maxQuantity: 5 });
+  assert.deepEqual(matrix["store_global_options:go-min"], { minQuantity: 2, maxQuantity: 4 });
+  assert.equal(annotated.lines.find((l) => l.kind === "catalog")?.quantityPolicy, null, "catalog coating fixed");
+
+  // Empty / error results pass through with no lines invented.
+  const none = annotateWizardReviewQuantityPolicies({ ...computed, lines: [] }, bundle, PC);
+  assert.deepEqual(none.lines, []);
+});
+
+test("the annotation never widens or narrows what applyWizardReviewLineAdjustments accepts (authority stays in the rule, fail closed)", () => {
+  const d = draft((sd) => { selectOption(sd, "go-q", "3000", 2); });
+  const bundle = buildWizardPricingInputFromConfig(d, PC, CATALOG, "detailer");
+  const canonical = computeWizardPricingFromConfig(d, PC, CATALOG, "detailer");
+  assert.equal(canonical.completeness, "complete", "PRECONDITION");
+
+  // A FIXED catalog line tampered to claim editable bounds is STILL rejected on a quantity change.
+  const widened: WizardPricingResult = {
+    ...canonical,
+    lines: canonical.lines.map((l) => (l.kind === "catalog" ? { ...l, quantityPolicy: { minQuantity: 1, maxQuantity: 99 } } : l)),
+  };
+  expectRejected(applyWizardReviewLineAdjustments(widened, bundle, {
+    quantityInputsByLine: { "catalog:coating:base:pure-evo": "2" }, unitPriceInputsByLine: {},
+  }, CATALOG, PC), "tampered catalog annotation");
+
+  // An EDITABLE option line tampered to claim it is fixed STILL accepts an in-bounds change.
+  const narrowed: WizardPricingResult = {
+    ...canonical,
+    lines: canonical.lines.map((l) => (l.sourceId === "store_global_options:go-q" ? { ...l, quantityPolicy: null } : l)),
+  };
+  const accepted = applyWizardReviewLineAdjustments(narrowed, bundle, {
+    quantityInputsByLine: { "manual:store_global_options:go-q": "4" }, unitPriceInputsByLine: {},
+  }, CATALOG, PC);
+  assert.equal(accepted.status, canonical.status);
+  assert.equal(accepted.completeness, "complete");
+  assert.equal(accepted.lines.find((l) => l.sourceId === "store_global_options:go-q")?.quantity, 4);
+  assert.equal(accepted.lines.find((l) => l.sourceId === "store_global_options:go-q")?.lineTotal, 12_000);
+
+  // And through the compute route, the annotation is always re-derived from bundle + config.
+  const viaCompute = computeWizardPricingFromConfig(draft((sd) => {
+    selectOption(sd, "go-q", "3000", 2);
+    sd.review.quantityInputsByLine["manual:store_global_options:go-q"] = "4";
+  }), PC, CATALOG, "detailer");
+  assert.deepEqual(viaCompute.lines.find((l) => l.sourceId === "store_global_options:go-q")?.quantityPolicy, { minQuantity: 1, maxQuantity: 5 });
+  assert.equal(viaCompute.lines.find((l) => l.sourceId === "store_global_options:go-q")?.quantity, 4);
+});
+
+// ── GDA-ESTIMATE-QUANTITY-POLICY-R1 (Stage B) — partial PPF PART lines at final review ──────────────
+
+const PPF_PC: ConfiguredPricingConfiguration = {
+  ...PC,
+  ppfMethods: [{ code: "full", label: "外装フル施工" }, { code: "partial", label: "部分施工" }],
+  ppfTypes: [{ code: "t1", label: "T1" }],
+  ppfParts: [{ code: "bonnet", label: "ボンネット", minQuantity: 1, maxQuantity: 4 }, { code: "fender", label: "フェンダー", minQuantity: 1, maxQuantity: null }],
+  installCoefficientBpByCode: { t1: 12_500 },
+  ppfCoatingAdjustments: [{ ruleId: "r", ppfMethodCode: MC, coatingCode: CC, adjustmentType: "amount", adjustmentValue: 5_000, isActive: true }],
+};
+const PPF_CATALOG = makePricingCatalog({ ppfR1: {
+  contractVersion: "1.0",
+  frontFullPricesBySize: { SS: 1, S: 1, M: 100_000, ML: 1, L: 1, LL: 1, XL: 1 },
+  fullBodyPricesBySize: { SS: 1, S: 1, M: 300_000, ML: 1, L: 1, LL: 1, XL: 1 },
+  partialPartPrices: { bonnet: 40_000, fender: 20_000 },
+} });
+const BONNET = "manual:ppf:ppf_r1_partial_t1_bonnet";
+const ppfDraft = (over?: (d: EstimateWizardDraftV22) => void) => draft((d) => {
+  d.serviceSelection.selectedCategories = ["coating", "ppf"];
+  d.discountAndCoupon = { mode: "none", percentInput: "", amountInput: "", selectedCouponIds: [], adjustmentReason: "" };
+  d.serviceConfiguration.ppf = { ...d.serviceConfiguration.ppf, installationMethod: "partial", fullCoverage: null, ppfTypeId: "t1", selectedPartIds: ["bonnet", "fender"], quantitiesByPart: { bonnet: 2 }, vehicleCoefficientInput: "1.0" };
+  over?.(d);
+});
+
+test("Stage B: a valid in-bounds review quantity on a partial part line is accepted (unit × quantity), reduction stays once; the persisted request matches", () => {
+  const canonical = computeWizardPricingFromConfig(ppfDraft(), PPF_PC, PPF_CATALOG, "detailer");
+  assert.equal(canonical.completeness, "complete", "PRECONDITION");
+  assert.equal(canonical.lines.find((l) => wizardPricingLineId(l) === BONNET)?.lineTotal, 100_000, "2 × 50,000");
+  assert.equal(canonical.discountTotal, 5_000, "ONE reduction across two part lines");
+  const editedDraft = ppfDraft((d) => { d.review.quantityInputsByLine[BONNET] = "3"; });
+  const edited = computeWizardPricingFromConfig(editedDraft, PPF_PC, PPF_CATALOG, "detailer");
+  assert.equal(edited.completeness, "complete");
+  const bonnet = edited.lines.find((l) => wizardPricingLineId(l) === BONNET)!;
+  assert.deepEqual([bonnet.quantity, bonnet.unitPrice, bonnet.lineTotal], [3, 50_000, 150_000]);
+  assert.equal(edited.subtotal, 60_000 + 150_000 + 25_000);
+  assert.equal(edited.discountTotal, 5_000, "still exactly one reduction");
+  assert.equal(edited.taxableSubtotal, edited.subtotal, "post-tax discount rule preserved");
+  const mapped = mapWizardDraftToSaveRequestFromConfig({ draft: editedDraft, pricingResult: edited, pricingConfig: PPF_PC, catalog: PPF_CATALOG, shopRank: "detailer" });
+  assert.equal(mapped.ok, true);
+  if (!mapped.ok) return;
+  const saved = mapped.request.services.find((s) => s.lineId === BONNET)!;
+  assert.deepEqual([saved.quantity, saved.unitPrice, saved.subtotal], [3, 50_000, 150_000]);
+  assert.equal(saved.metadata.ppfCoatingAdjustmentReductionYen, 5_000, "reduction metadata on the first part line");
+  assert.equal(mapped.request.services.find((s) => s.lineId === "manual:ppf:ppf_r1_partial_t1_fender")?.metadata.ppfCoatingAdjustmentReductionYen, undefined);
+});
+
+test("Stage B: out-of-bounds / malformed review text on a partial part line fails closed; the stale aggregate id is ignored; full PPF stays fixed", () => {
+  for (const q of ["5", "0", "abc", "", "03", "1.5"]) {
+    expectRejected(computeWizardPricingFromConfig(ppfDraft((d) => { d.review.quantityInputsByLine[BONNET] = q; }), PPF_PC, PPF_CATALOG, "detailer"), `bonnet=${q}`);
+  }
+  const canonical = computeWizardPricingFromConfig(ppfDraft(), PPF_PC, PPF_CATALOG, "detailer");
+  const stale = computeWizardPricingFromConfig(ppfDraft((d) => {
+    d.review.quantityInputsByLine["manual:ppf:ppf_r1_partial_t1"] = "9"; // pre-Stage-B aggregate id
+    d.review.serviceLineOrder = ["manual:ppf:ppf_r1_partial_t1", BONNET];
+  }), PPF_PC, PPF_CATALOG, "detailer");
+  assert.deepEqual(totalsOf(stale), totalsOf(canonical), "old aggregate ids are ignored, never applied to a part line");
+  const full = ppfDraft((d) => { d.serviceConfiguration.ppf = { ...d.serviceConfiguration.ppf, installationMethod: "full", fullCoverage: "full_body" }; });
+  const fullResult = computeWizardPricingFromConfig(full, PPF_PC, PPF_CATALOG, "detailer");
+  assert.equal(fullResult.completeness, "complete");
+  const bundle = buildWizardPricingInputFromConfig(full, PPF_PC, PPF_CATALOG, "detailer");
+  assert.equal(reviewQuantityPolicyForLine(fullResult.lines.find((l) => l.category === "ppf")!, bundle, PPF_PC), null);
+  expectRejected(computeWizardPricingFromConfig({ ...full, review: { ...full.review, quantityInputsByLine: { "manual:ppf:ppf_r1_full_body_t1": "2" } } }, PPF_PC, PPF_CATALOG, "detailer"), "full-body fixed");
+  // Malformed bounds in a (hypothetically tampered) source line ⇒ fixed, fail closed.
+  const partBundle = buildWizardPricingInputFromConfig(ppfDraft(), PPF_PC, PPF_CATALOG, "detailer");
+  const line = canonical.lines.find((l) => wizardPricingLineId(l) === BONNET)!;
+  const broken = { manualLines: partBundle.manualLines.map((m) => (m.manualPricingIdentity.endsWith("bonnet") ? { ...m, metadata: { ...m.metadata, ppfPartMinQuantity: 0 } } : m)) };
+  assert.equal(reviewQuantityPolicyForLine(line, broken, PPF_PC), null);
+});
+
+// ── GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c2, plan §24.1) — DEDICATED wheel / glass menu lines at final review ──
+
+const DEDICATED_PC: ConfiguredPricingConfiguration = {
+  ...PC,
+  wheelMenus: [
+    { code: "wm1", label: "ホイールコート", minQuantity: 1, maxQuantity: null, unitPriceConfigured: true },
+    { code: "wm2", label: "ホイール撥水", minQuantity: 2, maxQuantity: 8, unitPriceConfigured: true },
+  ],
+  glassMenus: [
+    { code: "gm1", label: "ガラス撥水", minQuantity: 1, maxQuantity: 6, unitPriceConfigured: false },
+  ],
+};
+const WM1 = "manual:wheel:wm1";
+const WM2 = "manual:wheel:wm2";
+const GM1 = "manual:glass:gm1";
+/** Step-4 canonical state after B5b2 selection: wheel initial 4 / glass initial 1, operator prices. */
+const dedicatedDraft = (over?: (d: EstimateWizardDraftV22) => void) => draft((d) => {
+  d.serviceSelection.selectedCategories = ["coating", "maintenance", "wheel", "glass"];
+  d.serviceConfiguration.wheel = { selectedMenuIds: ["wm1", "wm2"], unitPricesByMenu: { wm1: "8000", wm2: "3000" }, quantitiesByMenu: { wm1: 4, wm2: 4 } };
+  d.serviceConfiguration.glass = { selectedMenuIds: ["gm1"], unitPricesByMenu: { gm1: "12000" }, quantitiesByMenu: { gm1: 1 } };
+  over?.(d);
+});
+
+test("B5c2: multiple wheel / glass menu identities price at 4 / 1 and are annotated editable with the configured bounds + dedicatedMenu; every other line stays fixed", () => {
+  const d = dedicatedDraft();
+  const canonical = computeWizardPricingFromConfig(d, DEDICATED_PC, CATALOG, "detailer");
+  assert.equal(canonical.completeness, "complete", "PRECONDITION: the dedicated draft prices cleanly");
+  const byId = (id: string) => canonical.lines.find((l) => wizardPricingLineId(l) === id)!;
+  assert.deepEqual([byId(WM1).quantity, byId(WM1).unitPrice, byId(WM1).lineTotal], [4, 8_000, 32_000], "wheel: unit × 4");
+  assert.deepEqual([byId(WM2).quantity, byId(WM2).unitPrice, byId(WM2).lineTotal], [4, 3_000, 12_000]);
+  assert.deepEqual([byId(GM1).quantity, byId(GM1).unitPrice, byId(GM1).lineTotal], [1, 12_000, 12_000], "glass: unit × 1");
+  assert.equal(byId(WM1).category, "wheel");
+  assert.equal(byId(GM1).category, "glass");
+  assert.deepEqual(byId(WM1).quantityPolicy, { minQuantity: 1, maxQuantity: null, dedicatedMenu: { kind: "wheel", menuCode: "wm1" } });
+  assert.deepEqual(byId(WM2).quantityPolicy, { minQuantity: 2, maxQuantity: 8, dedicatedMenu: { kind: "wheel", menuCode: "wm2" } });
+  assert.deepEqual(byId(GM1).quantityPolicy, { minQuantity: 1, maxQuantity: 6, dedicatedMenu: { kind: "glass", menuCode: "gm1" } });
+  assert.equal(byId(WM1).quantityPolicy?.ppfPartCode, undefined, "never both sync hints");
+  assert.equal(byId("catalog:coating:base:pure-evo").quantityPolicy, null, "body coating fixed");
+  assert.equal(byId("manual:maintenance:mm1").quantityPolicy, null, "maintenance fixed");
+  // The annotation IS the rule.
+  const bundle = buildWizardPricingInputFromConfig(d, DEDICATED_PC, CATALOG, "detailer");
+  for (const line of canonical.lines) assert.deepEqual(line.quantityPolicy, reviewQuantityPolicyForLine(line, bundle, DEDICATED_PC), line.sourceId);
+});
+
+test("B5c2: a valid in-bounds review quantity on a wheel / glass line recomputes unit × quantity, subtotal, coupon, discount and tax through the canonical engine", () => {
+  const canonical = computeWizardPricingFromConfig(dedicatedDraft(), DEDICATED_PC, CATALOG, "detailer");
+  const coatingTotal = canonical.lines.find((l) => l.kind === "catalog")!.lineTotal as number;
+  const editedDraft = dedicatedDraft((d) => {
+    d.review.quantityInputsByLine[WM1] = "5";   // unbounded above
+    d.review.quantityInputsByLine[WM2] = "2";   // min bound, inclusive
+    d.review.quantityInputsByLine[GM1] = "6";   // max bound, inclusive
+  });
+  const edited = computeWizardPricingFromConfig(editedDraft, DEDICATED_PC, CATALOG, "detailer");
+  assert.equal(edited.completeness, "complete");
+  const byId = (id: string) => edited.lines.find((l) => wizardPricingLineId(l) === id)!;
+  assert.deepEqual([byId(WM1).quantity, byId(WM1).unitPrice, byId(WM1).lineTotal], [5, 8_000, 40_000]);
+  assert.deepEqual([byId(WM2).quantity, byId(WM2).unitPrice, byId(WM2).lineTotal], [2, 3_000, 6_000]);
+  assert.deepEqual([byId(GM1).quantity, byId(GM1).unitPrice, byId(GM1).lineTotal], [6, 12_000, 72_000]);
+  const subtotal = coatingTotal + 5_000 + 40_000 + 6_000 + 72_000;
+  assert.equal(edited.subtotal, subtotal);
+  assert.notEqual(edited.subtotal, canonical.subtotal, "the edit really changed the subtotal");
+  assertCouponCountedOnce(edited, 1_000, percentOfYen(subtotal, 1_000));
+  // Every other line is untouched by the dedicated edits (same quantity / unit price / total).
+  assert.deepEqual(byId("catalog:coating:base:pure-evo"), canonical.lines.find((l) => l.kind === "catalog"));
+  assert.deepEqual(byId("manual:maintenance:mm1"), canonical.lines.find((l) => wizardPricingLineId(l) === "manual:maintenance:mm1"));
+  // NOTE (B5c3 scope): persisting the wheel / glass lines through the production save mapper
+  // (`estimate-save-mapper-from-config`) is the SEPARATE B5c3 save/revision packet — not pinned here.
+});
+
+test("B5c2: blank / malformed / out-of-bounds review text on a wheel / glass line fails the WHOLE result closed with the bounds message; identity text is accepted", () => {
+  const cases: ReadonlyArray<readonly [string, string, string]> = [
+    [WM1, "0", "数量は1以上の整数"], [WM1, "", "数量は1以上の整数"], [WM1, "abc", "数量は1以上の整数"], [WM1, "04", "数量は1以上の整数"], [WM1, "1.5", "数量は1以上の整数"],
+    [WM2, "1", "2〜8の範囲"], [WM2, "9", "2〜8の範囲"],
+    [GM1, "7", "1〜6の範囲"], [GM1, "0", "数量は1以上の整数"],
+  ];
+  for (const [id, q, message] of cases) {
+    const r = computeWizardPricingFromConfig(dedicatedDraft((d) => { d.review.quantityInputsByLine[id] = q; }), DEDICATED_PC, CATALOG, "detailer");
+    expectRejected(r, `${id}=${JSON.stringify(q)}`);
+    assert.ok(r.errors.some((e) => e.message.includes(message)), `${id}=${JSON.stringify(q)}: ${message}`);
+  }
+  const canonical = computeWizardPricingFromConfig(dedicatedDraft(), DEDICATED_PC, CATALOG, "detailer");
+  const identity = computeWizardPricingFromConfig(dedicatedDraft((d) => {
+    d.review.quantityInputsByLine[WM1] = "4"; d.review.quantityInputsByLine[WM2] = "4"; d.review.quantityInputsByLine[GM1] = "1";
+  }), DEDICATED_PC, CATALOG, "detailer");
+  assert.deepEqual(totalsOf(identity), totalsOf(canonical));
+  assert.deepEqual(identity.lines, canonical.lines);
+});
+
+test("B5c2: a later Step-4 quantity change is the canonical value the review reconciles to — the same text is an identity, a different text is an edit from the NEW base", () => {
+  // Step 4 later moves wm1 from 4 to 6 (the hook clears the stale buffer; here the buffer is gone).
+  const after = computeWizardPricingFromConfig(dedicatedDraft((d) => { d.serviceConfiguration.wheel!.quantitiesByMenu.wm1 = 6; }), DEDICATED_PC, CATALOG, "detailer");
+  assert.equal(after.completeness, "complete");
+  assert.equal(after.lines.find((l) => wizardPricingLineId(l) === WM1)?.quantity, 6);
+  assert.equal(after.lines.find((l) => wizardPricingLineId(l) === WM1)?.lineTotal, 48_000);
+  // A review edit that equals the new canonical value is an identity; a different one is a real edit.
+  const same = computeWizardPricingFromConfig(dedicatedDraft((d) => { d.serviceConfiguration.wheel!.quantitiesByMenu.wm1 = 6; d.review.quantityInputsByLine[WM1] = "6"; }), DEDICATED_PC, CATALOG, "detailer");
+  assert.deepEqual(totalsOf(same), totalsOf(after));
+  const moved = computeWizardPricingFromConfig(dedicatedDraft((d) => { d.serviceConfiguration.wheel!.quantitiesByMenu.wm1 = 6; d.review.quantityInputsByLine[WM1] = "3"; }), DEDICATED_PC, CATALOG, "detailer");
+  assert.equal(moved.lines.find((l) => wizardPricingLineId(l) === WM1)?.lineTotal, 24_000);
+  // A Step-4 quantity outside the configured bounds never reaches a line at all (B5c1), so no review edit can rescue it.
+  const oob = computeWizardPricingFromConfig(dedicatedDraft((d) => { d.serviceConfiguration.glass!.quantitiesByMenu.gm1 = 7; d.review.quantityInputsByLine[GM1] = "6"; }), DEDICATED_PC, CATALOG, "detailer");
+  assert.notEqual(oob.completeness, "complete");
+  assert.equal(oob.lines.some((l) => wizardPricingLineId(l) === GM1), false, "no glass line is invented for an out-of-bounds canonical quantity");
+});
+
+test("B5c2: reviewQuantityPolicyForLine fails closed on a stale / unknown / disagreeing / malformed source or configuration; PPF and store-option policies are unchanged", () => {
+  const d = dedicatedDraft((sd) => selectOption(sd, "go-q", "3000", 2));
+  const bundle = buildWizardPricingInputFromConfig(d, DEDICATED_PC, CATALOG, "detailer");
+  const result = computeWizardPricingFromConfig(d, DEDICATED_PC, CATALOG, "detailer");
+  const wheel = result.lines.find((l) => wizardPricingLineId(l) === WM2)!;
+  const glass = result.lines.find((l) => wizardPricingLineId(l) === GM1)!;
+  const tamper = (edit: (m: ConfigPricingInputBundle["manualLines"][number]) => ConfigPricingInputBundle["manualLines"][number]) =>
+    ({ manualLines: bundle.manualLines.map((m) => (m.sourceCategory === "wheel" && m.manualPricingIdentity === "wm2" ? edit(m) : m)) });
+
+  assert.deepEqual(reviewQuantityPolicyForLine(wheel, bundle, DEDICATED_PC), { minQuantity: 2, maxQuantity: 8, dedicatedMenu: { kind: "wheel", menuCode: "wm2" } });
+  // No backing source line ⇒ fixed (never inferred from category/label).
+  assert.equal(reviewQuantityPolicyForLine(wheel, { manualLines: [] }, DEDICATED_PC), null);
+  // Configuration no longer carries the menu / the whole collection / disagreeing bounds ⇒ fixed.
+  assert.equal(reviewQuantityPolicyForLine(wheel, bundle, { ...DEDICATED_PC, wheelMenus: DEDICATED_PC.wheelMenus!.filter((m) => m.code !== "wm2") }), null, "unknown code");
+  assert.equal(reviewQuantityPolicyForLine(wheel, bundle, { ...DEDICATED_PC, wheelMenus: undefined }), null, "absent collection");
+  assert.equal(reviewQuantityPolicyForLine(wheel, bundle, { ...DEDICATED_PC, wheelMenus: [] }), null, "empty collection");
+  assert.equal(reviewQuantityPolicyForLine(wheel, bundle, { ...DEDICATED_PC, wheelMenus: [{ code: "wm2", label: "x", minQuantity: 1, maxQuantity: 8, unitPriceConfigured: true }] }), null, "bounds drifted (min)");
+  assert.equal(reviewQuantityPolicyForLine(wheel, bundle, { ...DEDICATED_PC, wheelMenus: [{ code: "wm2", label: "x", minQuantity: 2, maxQuantity: null, unitPriceConfigured: true }] }), null, "bounds drifted (max)");
+  assert.equal(reviewQuantityPolicyForLine(wheel, bundle, { ...DEDICATED_PC, wheelMenus: [{ code: "wm2", label: "x", minQuantity: 0, maxQuantity: 8, unitPriceConfigured: true }] }), null, "malformed configured min");
+  assert.equal(reviewQuantityPolicyForLine(wheel, bundle, { ...DEDICATED_PC, wheelMenus: [{ code: "wm2", label: "x", minQuantity: 2, maxQuantity: 1, unitPriceConfigured: true }] }), null, "malformed configured max");
+  // The glass menu is never resolved through the wheel collection (and vice versa).
+  assert.equal(reviewQuantityPolicyForLine(glass, bundle, { ...DEDICATED_PC, glassMenus: [], wheelMenus: [...DEDICATED_PC.wheelMenus!, { code: "gm1", label: "x", minQuantity: 1, maxQuantity: 6, unitPriceConfigured: false }] }), null);
+  // Tampered / stale source metadata ⇒ fixed.
+  assert.equal(reviewQuantityPolicyForLine(wheel, tamper((m) => ({ ...m, metadata: { ...m.metadata, quantityRequired: false } })), DEDICATED_PC), null, "quantityRequired false");
+  assert.equal(reviewQuantityPolicyForLine(wheel, tamper((m) => ({ ...m, metadata: { ...m.metadata, menuKind: "glass_menu" } })), DEDICATED_PC), null, "wrong menuKind");
+  assert.equal(reviewQuantityPolicyForLine(wheel, tamper((m) => ({ ...m, metadata: { menuKind: "wheel_menu", quantityRequired: true } })), DEDICATED_PC), null, "no source bounds");
+  assert.equal(reviewQuantityPolicyForLine(wheel, tamper((m) => ({ ...m, metadata: { ...m.metadata, minQuantity: 3 } })), DEDICATED_PC), null, "source bounds disagree");
+  assert.equal(reviewQuantityPolicyForLine(wheel, tamper((m) => ({ ...m, metadata: { ...m.metadata, maxQuantity: 1.5 } })), DEDICATED_PC), null, "malformed source max");
+  // A wheel result line whose source is a store option with the same code can never earn the dedicated policy.
+  const option = result.lines.find((l) => l.sourceId === "store_global_options:go-q")!;
+  assert.deepEqual(reviewQuantityPolicyForLine(option, bundle, DEDICATED_PC), { minQuantity: 1, maxQuantity: 5 }, "store-option policy unchanged (no dedicatedMenu)");
+  assert.equal(reviewQuantityPolicyForLine({ ...option, category: "wheel", sourceId: "wheel:go-q" }, bundle, DEDICATED_PC), null);
+  // Stale ids (a deselected menu) are ignored, never applied.
+  const canonical = computeWizardPricingFromConfig(dedicatedDraft(), DEDICATED_PC, CATALOG, "detailer");
+  const stale = computeWizardPricingFromConfig(dedicatedDraft((sd) => { sd.review.quantityInputsByLine["manual:wheel:wm9"] = "9"; sd.review.quantityInputsByLine["manual:glass:wm1"] = "9"; }), DEDICATED_PC, CATALOG, "detailer");
+  assert.deepEqual(totalsOf(stale), totalsOf(canonical));
+  // PPF regression: the partial part policy and the fixed full-body policy are byte-identical with the dedicated collections present.
+  const ppfWithDedicated: ConfiguredPricingConfiguration = { ...PPF_PC, wheelMenus: DEDICATED_PC.wheelMenus, glassMenus: DEDICATED_PC.glassMenus };
+  const ppfBundle = buildWizardPricingInputFromConfig(ppfDraft(), ppfWithDedicated, PPF_CATALOG, "detailer");
+  const ppfResult = computeWizardPricingFromConfig(ppfDraft(), ppfWithDedicated, PPF_CATALOG, "detailer");
+  assert.deepEqual(reviewQuantityPolicyForLine(ppfResult.lines.find((l) => wizardPricingLineId(l) === BONNET)!, ppfBundle, ppfWithDedicated), { minQuantity: 1, maxQuantity: 4, ppfPartCode: "bonnet" });
+  assert.deepEqual(totalsOf(ppfResult), totalsOf(computeWizardPricingFromConfig(ppfDraft(), PPF_PC, PPF_CATALOG, "detailer")));
+});
+
+// ── GDA-OTHER-COATINGS-R1 (C4) — DISTINCT `other_coating` menu lines at final review ──
+
+const OC_PC: ConfiguredPricingConfiguration = {
+  ...DEDICATED_PC,
+  otherCoatingMenus: [
+    { code: "oc1", label: "樹脂パーツコーティング",     quantityRequired: false, minQuantity: null, maxQuantity: null, unitPriceConfigured: true },
+    { code: "oc2", label: "シートコーティング",         quantityRequired: true,  minQuantity: 1,    maxQuantity: 5,    unitPriceConfigured: true },
+    { code: "oc3", label: "エンジンルームコーティング", quantityRequired: true,  minQuantity: null, maxQuantity: null, unitPriceConfigured: false },
+  ],
+};
+const OC1 = "manual:other_coating:oc1";
+const OC2 = "manual:other_coating:oc2";
+const OC3 = "manual:other_coating:oc3";
+/** The B5c2 dedicated draft (coating + maintenance + wheel + glass, ¥1,000 authored discount + 10% coupon) plus the C3 other-coating section. */
+const ocDraft = (over?: (d: EstimateWizardDraftV22) => void) => dedicatedDraft((d) => {
+  d.serviceSelection.selectedCategories = ["coating", "maintenance", "wheel", "glass", "other_coating"];
+  d.serviceConfiguration.otherCoating = {
+    selectedMenuIds: ["oc1", "oc2", "oc3"],
+    unitPricesByMenu: { oc1: "6000", oc2: "4000", oc3: "2500" },
+    quantitiesByMenu: { oc1: 1, oc2: 2, oc3: 3 },
+  };
+  over?.(d);
+});
+const OC_SUBTOTAL_DELTA = 6_000 + 2 * 4_000 + 3 * 2_500; // 21,500
+
+test("C4: fixed-one prices 1 × unit and is annotated null; quantity-bearing prices unit × n with bounds + dedicatedMenu other_coating; wheel / glass / coating policies unchanged; coupon and authored discount counted once", () => {
+  const canonical = computeWizardPricingFromConfig(ocDraft(), OC_PC, CATALOG, "detailer");
+  assert.equal(canonical.completeness, "complete", "PRECONDITION: the other-coating draft prices cleanly");
+  assert.deepEqual(canonical.errors, []);
+  const byId = (id: string) => canonical.lines.find((l) => wizardPricingLineId(l) === id)!;
+  assert.deepEqual([byId(OC1).category, byId(OC1).label, byId(OC1).quantity, byId(OC1).unitPrice, byId(OC1).lineTotal], ["other_coating", "樹脂パーツコーティング", 1, 6_000, 6_000]);
+  assert.equal(byId(OC1).quantityPolicy, null, "fixed-one: read-only quantity");
+  assert.deepEqual([byId(OC2).quantity, byId(OC2).unitPrice, byId(OC2).lineTotal], [2, 4_000, 8_000], "unit × 2");
+  assert.deepEqual(byId(OC2).quantityPolicy, { minQuantity: 1, maxQuantity: 5, dedicatedMenu: { kind: "other_coating", menuCode: "oc2" } });
+  assert.deepEqual([byId(OC3).quantity, byId(OC3).lineTotal], [3, 7_500]);
+  assert.deepEqual(byId(OC3).quantityPolicy, { minQuantity: 1, maxQuantity: null, dedicatedMenu: { kind: "other_coating", menuCode: "oc3" } });
+  // B5 no regression: the wheel / glass policies and lines are exactly what the dedicated run produced.
+  const dedicated = computeWizardPricingFromConfig(dedicatedDraft(), DEDICATED_PC, CATALOG, "detailer");
+  const dedicatedById = (id: string) => dedicated.lines.find((l) => wizardPricingLineId(l) === id)!;
+  for (const id of [WM1, WM2, GM1]) assert.deepEqual(byId(id), dedicatedById(id), id);
+  assert.equal(canonical.lines.filter((l) => l.category === "coating").length, dedicated.lines.filter((l) => l.category === "coating").length, "no body-coating double count");
+  assert.equal(canonical.lines.some((l) => l.category === "store_global_options"), false, "no store-option fallback");
+  // Discount / tax consistency through the canonical engine.
+  assert.equal(canonical.subtotal, (dedicated.subtotal as number) + OC_SUBTOTAL_DELTA);
+  assertCouponCountedOnce(canonical, 1_000, percentOfYen(canonical.subtotal as number, 1_000));
+});
+
+test("C4: a valid in-bounds review quantity on a quantity-bearing line recomputes unit × quantity, subtotal, coupon, discount and tax; a unit-price edit on the fixed-one line keeps quantity 1", () => {
+  const d = ocDraft((sd) => { sd.review.quantityInputsByLine[OC2] = "4"; sd.review.unitPriceInputsByLine[OC1] = "7000"; });
+  const edited = computeWizardPricingFromConfig(d, OC_PC, CATALOG, "detailer");
+  assert.equal(edited.status, "success");
+  const byId = (id: string) => edited.lines.find((l) => wizardPricingLineId(l) === id)!;
+  assert.deepEqual([byId(OC2).quantity, byId(OC2).unitPrice, byId(OC2).lineTotal], [4, 4_000, 16_000]);
+  assert.deepEqual([byId(OC1).quantity, byId(OC1).unitPrice, byId(OC1).lineTotal], [1, 7_000, 7_000], "fixed-one: price editable, quantity stays 1");
+  assert.deepEqual([byId(OC3).quantity, byId(OC3).lineTotal], [3, 7_500], "untouched line unchanged");
+  const canonical = computeWizardPricingFromConfig(ocDraft(), OC_PC, CATALOG, "detailer");
+  assert.equal(edited.subtotal, (canonical.subtotal as number) + 8_000 + 1_000);
+  assertCouponCountedOnce(edited, 1_000, percentOfYen(edited.subtotal as number, 1_000));
+  assert.deepEqual(byId(OC2).quantityPolicy, canonical.lines.find((l) => wizardPricingLineId(l) === OC2)!.quantityPolicy, "annotation survives the edit");
+  // The same edit through the pure rule with the adapter bundle gives the identical totals.
+  const bundle = buildWizardPricingInputFromConfig(ocDraft(), OC_PC, CATALOG, "detailer");
+  const viaRule = applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: { [OC2]: "4" }, unitPriceInputsByLine: { [OC1]: "7000" } }, CATALOG, OC_PC);
+  assert.deepEqual(totalsOf(viaRule), totalsOf(edited));
+});
+
+test("C4: a quantity change on the fixed-one line is rejected; blank / malformed / out-of-bounds text on a quantity-bearing line fails the WHOLE result closed; identity text is accepted; stale ids are ignored", () => {
+  const fixed = computeWizardPricingFromConfig(ocDraft((d) => { d.review.quantityInputsByLine[OC1] = "2"; }), OC_PC, CATALOG, "detailer");
+  expectRejected(fixed, "fixed-one quantity change");
+  assert.ok(fixed.errors.some((e) => e.message === "「樹脂パーツコーティング」の数量は変更できません。"));
+  for (const q of ["0", "6", "99", "-1", "1.5", "abc", "04"]) {
+    const r = computeWizardPricingFromConfig(ocDraft((d) => { d.review.quantityInputsByLine[OC2] = q; }), OC_PC, CATALOG, "detailer");
+    expectRejected(r, `oc2 "${q}"`);
+  }
+  const outOfBounds = computeWizardPricingFromConfig(ocDraft((d) => { d.review.quantityInputsByLine[OC2] = "6"; }), OC_PC, CATALOG, "detailer");
+  assert.ok(outOfBounds.errors.some((e) => e.message === "「シートコーティング」の数量は1〜5の範囲で入力してください。"), "bounds message");
+  const belowUnbounded = computeWizardPricingFromConfig(ocDraft((d) => { d.review.quantityInputsByLine[OC3] = "0"; }), OC_PC, CATALOG, "detailer");
+  expectRejected(belowUnbounded, "oc3 0");
+  const blank = computeWizardPricingFromConfig(ocDraft((d) => { d.review.quantityInputsByLine[OC2] = ""; }), OC_PC, CATALOG, "detailer");
+  expectRejected(blank, "blank");
+  // identity text on every other-coating line (fixed-one included) is accepted and reproduces canonical
+  const canonical = computeWizardPricingFromConfig(ocDraft(), OC_PC, CATALOG, "detailer");
+  const identity = computeWizardPricingFromConfig(ocDraft((d) => { d.review.quantityInputsByLine[OC1] = "1"; d.review.quantityInputsByLine[OC2] = "2"; d.review.quantityInputsByLine[OC3] = "3"; }), OC_PC, CATALOG, "detailer");
+  assert.deepEqual(totalsOf(identity), totalsOf(canonical));
+  // a deselected / foreign other-coating id is ignored, never applied
+  const stale = computeWizardPricingFromConfig(ocDraft((d) => { d.review.quantityInputsByLine["manual:other_coating:oc9"] = "9"; d.review.quantityInputsByLine["manual:wheel:oc2"] = "9"; }), OC_PC, CATALOG, "detailer");
+  assert.deepEqual(totalsOf(stale), totalsOf(canonical));
+});
+
+test("C4: reviewQuantityPolicyForLine fails closed on an absent / empty collection, unknown code, a row flipped to fixed-one, drifted or malformed bounds; never resolved via the wheel / glass collections; B5 policies unchanged", () => {
+  const bundle = buildWizardPricingInputFromConfig(ocDraft(), OC_PC, CATALOG, "detailer");
+  const result = computeWizardPricingFromConfig(ocDraft(), OC_PC, CATALOG, "detailer");
+  const oc2 = result.lines.find((l) => wizardPricingLineId(l) === OC2)!;
+  const oc1 = result.lines.find((l) => wizardPricingLineId(l) === OC1)!;
+  const rows = OC_PC.otherCoatingMenus!;
+  const withRows = (menus: ConfiguredPricingConfiguration["otherCoatingMenus"]): ConfiguredPricingConfiguration => ({ ...OC_PC, otherCoatingMenus: menus });
+  const tamper = (edit: (m: ConfigPricingInputBundle["manualLines"][number]) => ConfigPricingInputBundle["manualLines"][number]) =>
+    ({ manualLines: bundle.manualLines.map((m) => (m.sourceCategory === "other_coating" && m.manualPricingIdentity === "oc2" ? edit(m) : m)) });
+
+  assert.deepEqual(reviewQuantityPolicyForLine(oc2, bundle, OC_PC), { minQuantity: 1, maxQuantity: 5, dedicatedMenu: { kind: "other_coating", menuCode: "oc2" } });
+  assert.equal(reviewQuantityPolicyForLine(oc1, bundle, OC_PC), null, "fixed-one row: never editable");
+  assert.equal(reviewQuantityPolicyForLine(oc2, { manualLines: [] }, OC_PC), null, "no source line");
+  assert.equal(reviewQuantityPolicyForLine(oc2, bundle, withRows(undefined)), null, "absent collection");
+  assert.equal(reviewQuantityPolicyForLine(oc2, bundle, withRows([])), null, "empty collection");
+  assert.equal(reviewQuantityPolicyForLine(oc2, bundle, withRows(rows.filter((m) => m.code !== "oc2"))), null, "unknown code");
+  assert.equal(reviewQuantityPolicyForLine(oc2, bundle, withRows(rows.map((m) => (m.code === "oc2" ? { ...m, quantityRequired: false } : m)))), null, "row since made fixed-one");
+  assert.equal(reviewQuantityPolicyForLine(oc2, bundle, withRows(rows.map((m) => (m.code === "oc2" ? { ...m, minQuantity: 2 } : m)))), null, "bounds drifted (min)");
+  assert.equal(reviewQuantityPolicyForLine(oc2, bundle, withRows(rows.map((m) => (m.code === "oc2" ? { ...m, maxQuantity: null } : m)))), null, "bounds drifted (max)");
+  assert.equal(reviewQuantityPolicyForLine(oc2, bundle, withRows(rows.map((m) => (m.code === "oc2" ? { ...m, minQuantity: 0 } : m)))), null, "malformed configured min");
+  assert.equal(reviewQuantityPolicyForLine(oc2, bundle, withRows(rows.map((m) => (m.code === "oc2" ? { ...m, maxQuantity: 0 } : m)))), null, "malformed configured max");
+  // Absent min on the row means 1 on BOTH sides — so the C4 builder's normalised source bounds still agree.
+  const oc3 = result.lines.find((l) => wizardPricingLineId(l) === OC3)!;
+  assert.deepEqual(reviewQuantityPolicyForLine(oc3, bundle, OC_PC), { minQuantity: 1, maxQuantity: null, dedicatedMenu: { kind: "other_coating", menuCode: "oc3" } });
+  // The other-coating code is never resolved through the wheel / glass collections (and vice versa).
+  assert.equal(reviewQuantityPolicyForLine(oc2, bundle, { ...withRows([]), wheelMenus: [...DEDICATED_PC.wheelMenus!, { code: "oc2", label: "x", minQuantity: 1, maxQuantity: 5, unitPriceConfigured: true }] }), null);
+  const wheel = result.lines.find((l) => wizardPricingLineId(l) === WM2)!;
+  assert.equal(reviewQuantityPolicyForLine(wheel, bundle, { ...OC_PC, wheelMenus: [], otherCoatingMenus: [...rows, { code: "wm2", label: "x", quantityRequired: true, minQuantity: 2, maxQuantity: 8, unitPriceConfigured: true }] }), null);
+  // Tampered source lines fail closed.
+  assert.equal(reviewQuantityPolicyForLine(oc2, tamper((m) => ({ ...m, metadata: { ...m.metadata, quantityRequired: false } })), OC_PC), null, "quantityRequired false");
+  assert.equal(reviewQuantityPolicyForLine(oc2, tamper((m) => ({ ...m, metadata: { ...m.metadata, menuKind: "wheel_menu" } })), OC_PC), null, "wrong menuKind");
+  assert.equal(reviewQuantityPolicyForLine(oc2, tamper((m) => ({ ...m, metadata: { menuKind: "other_coating_menu", quantityRequired: true } })), OC_PC), null, "no source bounds");
+  assert.equal(reviewQuantityPolicyForLine(oc2, tamper((m) => ({ ...m, metadata: { ...m.metadata, maxQuantity: 6 } })), OC_PC), null, "source bounds disagree");
+  // B5 no regression: the wheel / glass policies are unchanged with the other-coating collection present.
+  assert.deepEqual(reviewQuantityPolicyForLine(wheel, bundle, OC_PC), { minQuantity: 2, maxQuantity: 8, dedicatedMenu: { kind: "wheel", menuCode: "wm2" } });
+  const glass = result.lines.find((l) => wizardPricingLineId(l) === GM1)!;
+  assert.deepEqual(reviewQuantityPolicyForLine(glass, bundle, OC_PC), { minQuantity: 1, maxQuantity: 6, dedicatedMenu: { kind: "glass", menuCode: "gm1" } });
+});
+
+test("C4: a later Step-4 other-coating quantity change is the canonical base the review reconciles to — the same text is an identity, a different text is an edit from the NEW base", () => {
+  const after = computeWizardPricingFromConfig(ocDraft((d) => { d.serviceConfiguration.otherCoating!.quantitiesByMenu.oc2 = 4; }), OC_PC, CATALOG, "detailer");
+  assert.equal(after.lines.find((l) => wizardPricingLineId(l) === OC2)!.quantity, 4);
+  const same = computeWizardPricingFromConfig(ocDraft((d) => { d.serviceConfiguration.otherCoating!.quantitiesByMenu.oc2 = 4; d.review.quantityInputsByLine[OC2] = "4"; }), OC_PC, CATALOG, "detailer");
+  assert.deepEqual(totalsOf(same), totalsOf(after));
+  const moved = computeWizardPricingFromConfig(ocDraft((d) => { d.serviceConfiguration.otherCoating!.quantitiesByMenu.oc2 = 4; d.review.quantityInputsByLine[OC2] = "3"; }), OC_PC, CATALOG, "detailer");
+  assert.equal(moved.lines.find((l) => wizardPricingLineId(l) === OC2)!.lineTotal, 12_000);
+  assert.equal(moved.subtotal, (after.subtotal as number) - 4_000);
+});
+
+// ── GDA-OTHER-COATINGS-R1 (C5 F2) — ¥0 unit-price override on an other-coating menu line ──────────
+
+test("C5 F2: a ¥0 override on an other_coating menu line (fixed-one AND quantity-bearing) fails the WHOLE result closed — via the pure adjuster (save path) and the compute route (preview) alike", () => {
+  const canonical = computeWizardPricingFromConfig(ocDraft(), OC_PC, CATALOG, "detailer");
+  const bundle = buildWizardPricingInputFromConfig(ocDraft(), OC_PC, CATALOG, "detailer");
+  // PRECONDITION: the rule keys on the VERIFIED source metadata the C4 builder wrote, not on a label.
+  for (const code of ["oc1", "oc2", "oc3"]) {
+    const src = bundle.manualLines.find((m) => m.sourceCategory === "other_coating" && m.manualPricingIdentity === code)!;
+    assert.equal(src.metadata.menuKind, "other_coating_menu", code);
+  }
+  for (const id of [OC1, OC2, OC3]) {
+    for (const zero of ["0", "00"]) {
+      const viaRule = applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [id]: zero } }, CATALOG, OC_PC);
+      expectRejected(viaRule, `${id} "${zero}" via the shared adjuster`);
+      const viaCompute = computeWizardPricingFromConfig(ocDraft((d) => { d.review.unitPriceInputsByLine[id] = zero; }), OC_PC, CATALOG, "detailer");
+      expectRejected(viaCompute, `${id} "${zero}" via the compute route`);
+    }
+  }
+  const fixedZero = applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [OC1]: "0" } }, CATALOG, OC_PC);
+  assert.ok(fixedZero.errors.some((e) => e.message === "「樹脂パーツコーティング」の単価は1以上の整数で入力してください。"), "positive-price message on the fixed-one line");
+  assert.ok(fixedZero.errors.some((e) => e.code === "INVALID_REVIEW_ADJUSTMENT"));
+  const boundedZero = applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [OC2]: "0" } }, CATALOG, OC_PC);
+  assert.ok(boundedZero.errors.some((e) => e.message === "「シートコーティング」の単価は1以上の整数で入力してください。"), "positive-price message on the quantity-bearing line");
+  // A ¥0 combined with an otherwise valid quantity edit is still refused as a whole (no partial apply).
+  expectRejected(applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: { [OC2]: "4" }, unitPriceInputsByLine: { [OC2]: "0" } }, CATALOG, OC_PC), "qty 4 + ¥0");
+  // Negative / malformed text keeps the generic parse rejection (unchanged).
+  for (const bad of ["-1", "1.5", "abc", ""]) expectRejected(applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [OC1]: bad } }, CATALOG, OC_PC), `"${bad}"`);
+});
+
+test("C5 F2: a POSITIVE override (¥1 included) on other-coating lines is accepted and recomputed through the canonical engine; identity price text reproduces canonical", () => {
+  const canonical = computeWizardPricingFromConfig(ocDraft(), OC_PC, CATALOG, "detailer");
+  const bundle = buildWizardPricingInputFromConfig(ocDraft(), OC_PC, CATALOG, "detailer");
+  const positive = applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [OC1]: "1", [OC2]: "7000" } }, CATALOG, OC_PC);
+  assert.equal(positive.status, "success");
+  assert.deepEqual(positive.errors, []);
+  const byId = (id: string) => positive.lines.find((l) => wizardPricingLineId(l) === id)!;
+  assert.deepEqual([byId(OC1).quantity, byId(OC1).unitPrice, byId(OC1).lineTotal], [1, 1, 1], "fixed-one: ¥1 accepted, quantity stays 1");
+  assert.deepEqual([byId(OC2).quantity, byId(OC2).unitPrice, byId(OC2).lineTotal], [2, 7_000, 14_000], "quantity-bearing: unit × 2");
+  assert.equal(positive.subtotal, (canonical.subtotal as number) - 6_000 + 1 - 8_000 + 14_000);
+  assertCouponCountedOnce(positive, 1_000, percentOfYen(positive.subtotal as number, 1_000));
+  const viaCompute = computeWizardPricingFromConfig(ocDraft((d) => { d.review.unitPriceInputsByLine[OC1] = "1"; d.review.unitPriceInputsByLine[OC2] = "7000"; }), OC_PC, CATALOG, "detailer");
+  assert.deepEqual(totalsOf(viaCompute), totalsOf(positive), "preview and save agree");
+  const identity = applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [OC1]: "6000", [OC2]: "4000", [OC3]: "2500" } }, CATALOG, OC_PC);
+  assert.deepEqual(totalsOf(identity), totalsOf(canonical));
+});
+
+test("C5 F2 / GDA-PR143-R2: a ¥0 override on a wheel / glass menu line fails the WHOLE result closed (adjuster AND compute route); maintenance ¥0 keeps its existing behaviour", () => {
+  const canonical = computeWizardPricingFromConfig(ocDraft(), OC_PC, CATALOG, "detailer");
+  const bundle = buildWizardPricingInputFromConfig(ocDraft(), OC_PC, CATALOG, "detailer");
+  const MM1 = "manual:maintenance:mm1";
+  // PRECONDITION: the rule keys on the VERIFIED source metadata the B5c1 builder wrote, not on a label.
+  assert.equal(bundle.manualLines.find((m) => m.sourceCategory === "wheel" && m.manualPricingIdentity === "wm1")?.metadata.menuKind, "wheel_menu");
+  assert.equal(bundle.manualLines.find((m) => m.sourceCategory === "glass" && m.manualPricingIdentity === "gm1")?.metadata.menuKind, "glass_menu");
+  for (const id of [WM1, WM2, GM1]) {
+    for (const zero of ["0", "00"]) {
+      expectRejected(applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [id]: zero } }, CATALOG, OC_PC), `${id} "${zero}" via the shared adjuster`);
+      expectRejected(computeWizardPricingFromConfig(ocDraft((d) => { d.review.unitPriceInputsByLine[id] = zero; }), OC_PC, CATALOG, "detailer"), `${id} "${zero}" via the compute route`);
+    }
+  }
+  const wheelZero = applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [WM1]: "0" } }, CATALOG, OC_PC);
+  assert.ok(wheelZero.errors.some((e) => e.message === "「ホイールコート」の単価は1以上の整数で入力してください。"), "positive-price message on the wheel line");
+  assert.ok(wheelZero.errors.some((e) => e.code === "INVALID_REVIEW_ADJUSTMENT"));
+  const glassZero = applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [GM1]: "0" } }, CATALOG, OC_PC);
+  assert.ok(glassZero.errors.some((e) => e.message === "「ガラス撥水」の単価は1以上の整数で入力してください。"), "positive-price message on the glass line");
+  // A ¥0 combined with an otherwise valid quantity edit is still refused as a whole (no partial apply).
+  expectRejected(applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: { [WM2]: "4" }, unitPriceInputsByLine: { [WM2]: "0" } }, CATALOG, OC_PC), "qty 4 + ¥0");
+  // Maintenance (and every non-menu kind) keeps the existing non-negative rule: ¥0 still accepted.
+  const maint = applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [MM1]: "0" } }, CATALOG, OC_PC);
+  assert.equal(maint.status, "success", "maintenance ¥0 still accepted");
+  assert.deepEqual(maint.errors, []);
+  const byId = (id: string) => maint.lines.find((l) => wizardPricingLineId(l) === id)!;
+  assert.deepEqual([byId(MM1).unitPrice, byId(MM1).lineTotal], [0, 0], "maintenance ¥0");
+  assert.equal(maint.subtotal, (canonical.subtotal as number) - 5_000);
+  // the wheel / glass / other-coating lines in the same result are untouched
+  for (const [id, total] of [[WM1, 32_000], [GM1, 12_000], [OC1, 6_000], [OC2, 8_000], [OC3, 7_500]] as const) assert.equal(byId(id).lineTotal, total, id);
+  const viaCompute = computeWizardPricingFromConfig(ocDraft((d) => { d.review.unitPriceInputsByLine[MM1] = "0"; }), OC_PC, CATALOG, "detailer");
+  assert.deepEqual(totalsOf(viaCompute), totalsOf(maint), "preview and save agree on the unchanged kind");
+  // B5 baseline without any other-coating rows: the SAME positive rule applies to wheel / glass.
+  const dedicated = computeWizardPricingFromConfig(dedicatedDraft(), DEDICATED_PC, CATALOG, "detailer");
+  const dedicatedBundle = buildWizardPricingInputFromConfig(dedicatedDraft(), DEDICATED_PC, CATALOG, "detailer");
+  expectRejected(applyWizardReviewLineAdjustments(dedicated, dedicatedBundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [WM1]: "0" } }, CATALOG, DEDICATED_PC), "dedicated wheel ¥0");
+  expectRejected(applyWizardReviewLineAdjustments(dedicated, dedicatedBundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [GM1]: "0" } }, CATALOG, DEDICATED_PC), "dedicated glass ¥0");
+  // A POSITIVE override (¥1 included) on wheel / glass is accepted and recomputed; identity text reproduces canonical.
+  const positive = applyWizardReviewLineAdjustments(dedicated, dedicatedBundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [WM1]: "1", [GM1]: "13000" } }, CATALOG, DEDICATED_PC);
+  assert.equal(positive.status, "success");
+  assert.deepEqual(positive.errors, []);
+  const pos = (id: string) => positive.lines.find((l) => wizardPricingLineId(l) === id)!;
+  assert.deepEqual([pos(WM1).quantity, pos(WM1).unitPrice, pos(WM1).lineTotal], [4, 1, 4], "wheel ¥1 × 4");
+  assert.deepEqual([pos(GM1).quantity, pos(GM1).unitPrice, pos(GM1).lineTotal], [1, 13_000, 13_000], "glass ¥13,000 × 1");
+  assert.equal(positive.subtotal, (dedicated.subtotal as number) - 32_000 + 4 - 12_000 + 13_000);
+  const identity = applyWizardReviewLineAdjustments(dedicated, dedicatedBundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [WM1]: "8000", [WM2]: "3000", [GM1]: "12000" } }, CATALOG, DEDICATED_PC);
+  assert.deepEqual(totalsOf(identity), totalsOf(dedicated));
+  // The rule keys on correlated source metadata: a corrupted wheel source tagged as an
+  // other-coating menu is still rejected (fail closed), never silently repriced at ¥0.
+  const wheelTampered: ConfigPricingInputBundle = { ...bundle, manualLines: bundle.manualLines.map((m) => (m.sourceCategory === "wheel" && m.manualPricingIdentity === "wm1" ? { ...m, metadata: { ...m.metadata, menuKind: "other_coating_menu" } } : m)) };
+  expectRejected(applyWizardReviewLineAdjustments(canonical, wheelTampered, { quantityInputsByLine: {}, unitPriceInputsByLine: { [WM1]: "0" } }, CATALOG, OC_PC), "the rule follows the source metadata, never the category label");
+  // A store-option line (no menuKind) keeps accepting ¥0 — the rule never widens to it.
+  const withOption = draft((sd) => { selectOption(sd, "go-1", "3000"); });
+  const optResult = computeWizardPricingFromConfig(withOption, PC, CATALOG, "detailer");
+  const optBundle = buildWizardPricingInputFromConfig(withOption, PC, CATALOG, "detailer");
+  const optZero = applyWizardReviewLineAdjustments(optResult, optBundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { "manual:store_global_options:go-1": "0" } }, CATALOG, PC);
+  assert.equal(optZero.status, "success", "store option ¥0 unchanged");
 });

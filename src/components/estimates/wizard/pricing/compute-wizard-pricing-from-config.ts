@@ -35,7 +35,7 @@ import { buildWizardPricingInputFromConfig } from "./wizard-pricing-input-adapte
 import type { ProductionPricingConfiguration } from "./wizard-manual-pricing-config";
 import { mapProductionResultToWizard } from "./wizard-pricing-result-adapter";
 import { WIZARD_PRICING_ERRORS, type WizardPricingResult } from "./wizard-pricing-types";
-import { applyWizardReviewLineAdjustments } from "./wizard-review-line-adjustments";
+import { annotateWizardReviewQuantityPolicies, applyWizardReviewLineAdjustments } from "./wizard-review-line-adjustments";
 
 /**
  * Fresh fail-closed result. Built anew on every call so no imported constant is ever mutated and no
@@ -135,9 +135,14 @@ export function computeWizardPricingFromConfig(
     // bound by the configured manual option policy (quantityRequired + min/max) on client AND server.
     const adjusted = applyWizardReviewLineAdjustments(refined, bundle, draft.review, catalog, pricingConfig);
 
+    // GDA-ESTIMATE-QUANTITY-POLICY-R1 (Stage A): every displayed line carries the SAME canonical
+    // quantity policy the adjustment rule above enforces (display-only annotation; no arithmetic),
+    // so Screen 7 offers an editable quantity ONLY where a change would be accepted, with its bounds.
+    const annotated = annotateWizardReviewQuantityPolicies(adjusted, bundle, pricingConfig);
+
     // Fail-closed: null the aggregate totals for unavailable/error completeness so unresolved or
     // failed pricing never appears as a genuine ¥0 estimate. Partial/complete totals are untouched.
-    return normalizeAggregateTotals(adjusted);
+    return normalizeAggregateTotals(annotated);
   } catch {
     // No stack trace or internal exception text is exposed — only an operator-safe error.
     return productionErrorResult();

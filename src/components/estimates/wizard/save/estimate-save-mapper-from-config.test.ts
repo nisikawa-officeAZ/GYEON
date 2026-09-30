@@ -16,14 +16,20 @@ import {
   type ConfigSaveMapperInput, type ConfigSaveMapperResult, type ConfigSaveMapperFailure,
 } from "./estimate-save-mapper-from-config";
 import { validateEstimateSaveRequest } from "./estimate-save-validation";
+import { buildEstimateSaveRpcPayload } from "./estimate-persistence-payload";
 import { computeWizardPricingFromConfig } from "../pricing/compute-wizard-pricing-from-config";
 import { DEFAULT_PRICING_CATALOG, makePricingCatalog, type PricingCatalog } from "@/lib/pricing/canonical-pricing-engine";
 import { resetWizardDraft } from "../draft/wizard-draft-state";
 import type { EstimateWizardDraftV22, WizardServiceConfigurationDraft, WizardDiscountDraft } from "../draft/wizard-draft-types";
 import type { ShopRank } from "../screens/step-types";
-import type { ServiceCategoryId } from "@/lib/estimates/service-categories";
+import { isServiceCategoryId, type ServiceCategoryId } from "@/lib/estimates/service-categories";
+import { WIZARD_CATEGORY_MANUAL_POLICY, WIZARD_CATEGORY_PRICING_POLICY } from "../pricing/wizard-pricing-identity";
 import type { ConfiguredPricingConfiguration } from "../pricing/wizard-pricing-input-adapter-config";
 import type { WizardPricingResult } from "../pricing/wizard-pricing-types";
+import {
+  GLOBAL_PPF_COATING_ADJUSTMENT_COATING_CODE,
+  GLOBAL_PPF_COATING_ADJUSTMENT_METHOD_CODE,
+} from "@/lib/wizard-catalog/ppf-coating-adjustment-core";
 
 const RANK: ShopRank = "detailer";
 const CATALOG: PricingCatalog = makePricingCatalog({
@@ -577,4 +583,436 @@ test("F2-R1: sourceMode existing with an EMPTY-STRING vehicleId maps to NEW — 
   const emptyId = { ...d, vehicle: { ...d.vehicle, sourceMode: "existing" as const, vehicleId: "" } };
   const req = okReq(run(emptyId));
   assert.equal(req.vehicle.mode, "new", "an empty-string id must never save as existing");
+});
+
+// ── GDA-ESTIMATE-QUANTITY-POLICY-R1 (Stage B) — per-part partial PPF persistence parity ────────────
+
+const PARTIAL_CATALOG: PricingCatalog = makePricingCatalog({ ppfR1: {
+  contractVersion: "1.0",
+  frontFullPricesBySize: { SS: 1, S: 1, M: 100_000, ML: 1, L: 1, LL: 1, XL: 1 },
+  fullBodyPricesBySize: { SS: 1, S: 1, M: 500_000, ML: 1, L: 1, LL: 1, XL: 1 },
+  partialPartPrices: { bonnet: 40_000, "front-bumper": 50_000, "door-mirror": 33_333 },
+} });
+const PARTIAL_PC: ConfiguredPricingConfiguration = {
+  ...PC,
+  ppfMethods: [{ code: "full", label: "PPFフル施工" }, { code: "partial", label: "部分施工" }],
+  ppfParts: [
+    { code: "bonnet", label: "ボンネット", minQuantity: 1, maxQuantity: 4 },
+    { code: "front-bumper", label: "フロントバンパー", minQuantity: 1, maxQuantity: null },
+    { code: "door-mirror", label: "ドアミラー", minQuantity: 1, maxQuantity: 2 },
+  ],
+};
+const partialDraft = (quantities: Record<string, number>, review: Partial<EstimateWizardDraftV22["review"]> = {}) => {
+  const d = draftWith(["coating", "ppf"], {
+    ...coatingCfg("one-evo"),
+    ppf: { installationMethod: "partial", fullCoverage: null, selectedPartIds: ["door-mirror", "bonnet", "front-bumper"], quantitiesByPart: quantities, ppfTypeId: "gg1", unitPriceInput: "", vehicleCoefficientInput: "1.0", interiorRows: [] },
+  });
+  return { ...d, review: { ...d.review, ...review } };
+};
+const runPartial = (
+  quantities: Record<string, number>,
+  review: Partial<EstimateWizardDraftV22["review"]> = {},
+  pricingConfig: ConfiguredPricingConfiguration = PARTIAL_PC,
+) => {
+  const d = partialDraft(quantities, review);
+  const pricingResult = computeWizardPricingFromConfig(d, pricingConfig, PARTIAL_CATALOG, RANK);
+  return { pricingResult, mapped: mapWizardDraftToSaveRequestFromConfig({ draft: d, pricingResult, pricingConfig, catalog: PARTIAL_CATALOG, shopRank: RANK }) };
+};
+
+test("Stage B: three partial parts persist as three distinct lines with quantity, per-unit price, subtotal = unit × quantity", () => {
+  const { pricingResult, mapped } = runPartial({ bonnet: 2, "door-mirror": 2 });
+  assert.equal(pricingResult.completeness, "complete", "PRECONDITION");
+  const req = okReq(mapped);
+  const ppf = req.services.filter((s) => s.category === "ppf");
+  assert.deepEqual(ppf.map((s) => [s.lineId, s.label, s.quantity, s.unitPrice, s.subtotal]), [
+    ["manual:ppf:ppf_r1_partial_gg1_door-mirror", "PPF 部分施工 ドアミラー（PPFタイプA）", 2, 41_666, 83_332],
+    ["manual:ppf:ppf_r1_partial_gg1_bonnet", "PPF 部分施工 ボンネット（PPFタイプA）", 2, 50_000, 100_000],
+    ["manual:ppf:ppf_r1_partial_gg1_front-bumper", "PPF 部分施工 フロントバンパー（PPFタイプA）", 1, 62_500, 62_500],
+  ]);
+  assert.equal(new Set(req.services.map((s) => s.lineId)).size, req.services.length, "all line ids distinct");
+  for (const s of ppf) {
+    assert.equal(s.subtotal, s.unitPrice * s.quantity);
+    assert.deepEqual(s.selectedOptionReferenceIds, ["gg1"]);
+    assert.equal(s.metadata.ppfScope, "partial");
+    assert.equal(s.metadata.ppfPartCode, s.lineId.split("_").at(-1));
+  }
+  assert.equal(req.pricing.subtotal, pricingResult.subtotal);
+  assert.equal(req.pricing.grandTotal, pricingResult.grandTotal);
+  assert.equal(validateEstimateSaveRequest(req).ok, true, "a valid mapped request passes save validation");
+});
+
+test("Stage B: a stale pre-Stage-B aggregate id in the saved order/overrides is ignored; a valid review quantity edit persists identically to a Step-4 quantity", () => {
+  const canonical = runPartial({ bonnet: 3 });
+  const stale = runPartial({ bonnet: 3 }, {
+    serviceLineOrder: ["manual:ppf:ppf_r1_partial_gg1", "manual:ppf:ppf_r1_partial_gg1_front-bumper", "catalog:coating:base:one-evo"],
+    quantityInputsByLine: { "manual:ppf:ppf_r1_partial_gg1": "9" },
+  });
+  const staleReq = okReq(stale.mapped);
+  assert.deepEqual(staleReq.pricing, okReq(canonical.mapped).pricing, "old aggregate id never re-prices a part line");
+  assert.deepEqual(staleReq.services.map((s) => s.lineId), [
+    "manual:ppf:ppf_r1_partial_gg1_front-bumper", "catalog:coating:base:one-evo",
+    "manual:ppf:ppf_r1_partial_gg1_door-mirror", "manual:ppf:ppf_r1_partial_gg1_bonnet",
+  ], "known ids ordered as requested, stale id dropped, remaining lines appended in engine order");
+  const viaReview = runPartial({ bonnet: 2 }, { quantityInputsByLine: { "manual:ppf:ppf_r1_partial_gg1_bonnet": "3" } });
+  assert.deepEqual(okReq(viaReview.mapped).services.map((s) => [s.lineId, s.quantity, s.unitPrice, s.subtotal]), okReq(canonical.mapped).services.map((s) => [s.lineId, s.quantity, s.unitPrice, s.subtotal]));
+  assert.deepEqual(okReq(viaReview.mapped).pricing, okReq(canonical.mapped).pricing);
+  const outOfBounds = runPartial({ bonnet: 2 }, { quantityInputsByLine: { "manual:ppf:ppf_r1_partial_gg1_bonnet": "5" } });
+  expectFail(outOfBounds.mapped, "pricing-error");
+});
+
+// The dealer-wide PPF/coating rule shape below is the same one proven by ppf-r1-wizard-pricing.test.ts
+// and wizard-review-line-adjustments.test.ts (global method/coating codes, amount 5,000).
+const PARTIAL_PC_WITH_REDUCTION: ConfiguredPricingConfiguration = {
+  ...PARTIAL_PC,
+  ppfCoatingAdjustments: [{
+    ruleId: "r",
+    ppfMethodCode: GLOBAL_PPF_COATING_ADJUSTMENT_METHOD_CODE,
+    coatingCode: GLOBAL_PPF_COATING_ADJUSTMENT_COATING_CODE,
+    adjustmentType: "amount",
+    adjustmentValue: 5_000,
+    isActive: true,
+  }],
+};
+const reductionCarriers = (services: readonly { lineId: string; metadata: { ppfCoatingAdjustmentReductionYen?: unknown } }[]) =>
+  services.filter((s) => s.metadata.ppfCoatingAdjustmentReductionYen !== undefined).map((s) => [s.lineId, s.metadata.ppfCoatingAdjustmentReductionYen]);
+const yen = (value: number | null | undefined, label: string): number => {
+  assert.equal(typeof value, "number", `${label} must be a persisted yen number`);
+  return value as number;
+};
+
+test("Stage B: the PPF/coating reduction persists on exactly ONE part line and remains a single document-level discount across three part lines", () => {
+  const quantities = { bonnet: 2, "door-mirror": 2 };
+  const { pricingResult, mapped } = runPartial(quantities, {}, PARTIAL_PC_WITH_REDUCTION);
+  assert.equal(pricingResult.completeness, "complete", "PRECONDITION");
+  assert.equal(pricingResult.discountTotal, 5_000, "PRECONDITION: engine applies the reduction once");
+  const req = okReq(mapped);
+  const ppf = req.services.filter((s) => s.category === "ppf");
+  assert.equal(ppf.length, 3, "three part lines");
+  assert.deepEqual(reductionCarriers(req.services), [["manual:ppf:ppf_r1_partial_gg1_door-mirror", 5_000]],
+    "exactly one persisted line carries the reduction — the first part line — never the coating line or another part");
+  assert.equal(ppf[0]?.metadata.ppfCoatingAdjustmentRuleId, "r");
+  assert.equal(ppf[0]?.metadata.ppfCoatingAdjustmentBase, "coating_layers_total");
+
+  // The reduction is document-level: no part line's unit price / subtotal is reduced.
+  assert.deepEqual(ppf.map((s) => [s.quantity, s.unitPrice, s.subtotal]), [[2, 41_666, 83_332], [2, 50_000, 100_000], [1, 62_500, 62_500]]);
+  const withoutRule = okReq(runPartial(quantities).mapped);
+  assert.equal(req.pricing.subtotal, withoutRule.pricing.subtotal, "line subtotal is identical with or without the rule");
+  assert.equal(req.pricing.discountTotal, 5_000, "single document-level reduction");
+  assert.equal(req.pricing.taxableSubtotal, req.pricing.subtotal, "post-tax discount: the tax base is not reduced");
+  assert.equal(req.pricing.taxTotal, withoutRule.pricing.taxTotal);
+  assert.equal(req.pricing.grandTotal, yen(req.pricing.subtotal, "subtotal") + yen(req.pricing.taxTotal, "taxTotal") - 5_000);
+  assert.equal(req.pricing.grandTotal, yen(withoutRule.pricing.grandTotal, "grandTotal without rule") - 5_000, "the rule changes the document total by exactly one reduction");
+  assert.equal(validateEstimateSaveRequest(req).ok, true);
+
+  // A later quantity edit (Step 4 and review) re-prices lines but never adds a second reduction.
+  const edited = runPartial(
+    { bonnet: 3, "door-mirror": 2 },
+    { quantityInputsByLine: { "manual:ppf:ppf_r1_partial_gg1_front-bumper": "2" } },
+    PARTIAL_PC_WITH_REDUCTION,
+  );
+  const editedReq = okReq(edited.mapped);
+  assert.deepEqual(editedReq.services.filter((s) => s.category === "ppf").map((s) => [s.quantity, s.subtotal]), [[2, 83_332], [3, 150_000], [2, 125_000]]);
+  assert.deepEqual(reductionCarriers(editedReq.services), [["manual:ppf:ppf_r1_partial_gg1_door-mirror", 5_000]], "still exactly one carrier");
+  assert.equal(editedReq.pricing.discountTotal, 5_000, "still exactly one reduction");
+  assert.equal(editedReq.pricing.grandTotal, yen(editedReq.pricing.subtotal, "edited subtotal") + yen(editedReq.pricing.taxTotal, "edited taxTotal") - 5_000);
+  assert.equal(validateEstimateSaveRequest(editedReq).ok, true);
+});
+
+// ── GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c3) — dedicated wheel / glass save identity (plan §24.1) ────
+//
+// Wheel and glass are INDEPENDENT Screen-3 categories priced from dealer-authored dedicated menus:
+// one manual line per selected menu, operator tax-exclusive unit price × bounded positive-integer
+// quantity. The mapper must carry the stable `(category, menu code)` identity, the chosen quantity,
+// the unit price and the ENGINE's line total; the RPC payload must persist the category itself —
+// `wheel` / `glass` — never `other`. Nothing below hard-codes a coupon or discount figure the engine
+// owns: those are asserted as COPIED from the pricing result and internally consistent.
+
+const PERCENT_COUPON_ID = "00000000-0000-4000-8000-000000000200";
+const DEDICATED_PC: ConfiguredPricingConfiguration = {
+  ...COUPON_PC,
+  coupons: [
+    ...(COUPON_PC.coupons ?? []),
+    {
+      couponId: PERCENT_COUPON_ID,
+      code: "uat-10-percent",
+      label: "本番UAT 10%引き",
+      value: { kind: "percent", basisPoints: 1_000 },
+      combinable: true,
+      validFrom: null,
+      validTo: null,
+      isActive: true,
+      displayOrder: 2,
+    },
+  ],
+  wheelMenus: [
+    { code: "wh-coat",  label: "ホイールコーティング", minQuantity: 1, maxQuantity: null, unitPriceConfigured: true },
+    { code: "wh-clean", label: "ホイールクリーニング", minQuantity: 1, maxQuantity: 4,    unitPriceConfigured: true },
+  ],
+  glassMenus: [
+    // NO configured unit price: the operator's Step-4 text is the ONLY priced amount for this menu.
+    { code: "gl-repel", label: "ガラス撥水", minQuantity: 1, maxQuantity: 2, unitPriceConfigured: false },
+  ],
+};
+const WHEEL_COAT  = "manual:wheel:wh-coat";
+const WHEEL_CLEAN = "manual:wheel:wh-clean";
+const GLASS_REPEL = "manual:glass:gl-repel";
+
+type DedicatedSections = Pick<WizardServiceConfigurationDraft, "wheel" | "glass">;
+const canonicalSections: DedicatedSections = {
+  wheel: { selectedMenuIds: ["wh-coat", "wh-clean"], unitPricesByMenu: { "wh-coat": "5000", "wh-clean": "1500" }, quantitiesByMenu: { "wh-coat": 4, "wh-clean": 2 } },
+  glass: { selectedMenuIds: ["gl-repel"], unitPricesByMenu: { "gl-repel": "8000" }, quantitiesByMenu: { "gl-repel": 1 } },
+};
+const dedicatedDraft = (
+  sections: DedicatedSections,
+  dc: Partial<WizardDiscountDraft> = {},
+  review: Partial<EstimateWizardDraftV22["review"]> = {},
+): EstimateWizardDraftV22 => {
+  const d = draftWith(["wheel", "glass"], sections, dc);
+  return { ...d, review: { ...d.review, ...review } };
+};
+const runDedicated = (draft: EstimateWizardDraftV22) => {
+  const pricingResult = computeWizardPricingFromConfig(draft, DEDICATED_PC, CATALOG, RANK);
+  return { pricingResult, mapped: run(draft, { pricingResult, pricingConfig: DEDICATED_PC }) };
+};
+const lineTuple = (s: { lineId: string; quantity: number; unitPrice: number; subtotal: number }) =>
+  [s.lineId, s.quantity, s.unitPrice, s.subtotal] as const;
+
+test("B5c3: canonical wheel/glass menus persist one line per menu with stable identity, quantity, unit price and line total; RPC category is wheel/glass, never other", () => {
+  const { pricingResult, mapped } = runDedicated(dedicatedDraft(canonicalSections));
+  assert.equal(pricingResult.completeness, "complete", `PRECONDITION: ${JSON.stringify(pricingResult.errors)}`);
+  const req = okReq(mapped);
+  assert.deepEqual(req.services.map((s) => [s.lineId, s.category, s.manualPricingIdentity, s.label, s.quantity, s.unitPrice, s.subtotal]), [
+    [WHEEL_COAT,  "wheel", "wh-coat",  "ホイールコーティング", 4, 5_000, 20_000],
+    [WHEEL_CLEAN, "wheel", "wh-clean", "ホイールクリーニング", 2, 1_500, 3_000],
+    [GLASS_REPEL, "glass", "gl-repel", "ガラス撥水",           1, 8_000, 8_000],
+  ]);
+  for (const s of req.services) {
+    assert.equal(s.pricingSource, "manual");
+    assert.equal(s.pricingReferenceId, null);
+    assert.equal(s.subtotal, s.unitPrice * s.quantity, "line total = tax-exclusive unit price × quantity");
+    assert.equal(s.metadata.menuKind, `${s.category}_menu`, "menu kind travels with the line");
+    assert.equal(s.metadata.quantityRequired, true);
+  }
+  assert.equal(req.services.find((s) => s.lineId === GLASS_REPEL)?.metadata.unitPriceConfigured, false, "operator-priced glass keeps its provenance flag");
+  assert.equal(new Set(req.services.map((s) => s.lineId)).size, 3, "all line ids distinct");
+  assert.equal(req.pricing.subtotal, 31_000);
+  assert.equal(req.pricing.taxTotal, 3_100);
+  assert.equal(req.pricing.grandTotal, 34_100);
+  assert.equal(validateEstimateSaveRequest(req).ok, true);
+
+  // The RPC payload persists the category ITSELF. Before B5c3 neither key existed in CATEGORY_MAP,
+  // so both fell through `?? "other"` — the silent re-classification the contract forbids.
+  const payload = buildEstimateSaveRpcPayload(req, { idempotencyKey: "b5c3-dedicated-canonical" });
+  assert.deepEqual(payload.services.map((s) => [s.lineId, s.category, s.wizardCategory, s.quantity, s.unitPrice, s.lineTotal]), [
+    [WHEEL_COAT,  "wheel", "wheel", 4, 5_000, 20_000],
+    [WHEEL_CLEAN, "wheel", "wheel", 2, 1_500, 3_000],
+    [GLASS_REPEL, "glass", "glass", 1, 8_000, 8_000],
+  ]);
+  assert.equal(payload.services.some((s) => s.category === "other"), false, "wheel/glass never silently map to other");
+  // Existing categories are untouched by the map extension.
+  const maint = buildEstimateSaveRpcPayload(okReq(run(draftWith(["maintenance"], maintCfg))), { idempotencyKey: "b5c3-maint" });
+  assert.deepEqual(maint.services.map((s) => [s.category, s.wizardCategory]), [["maintenance", "maintenance"]]);
+});
+
+// The B5c2 diagnostic combination, made VALID under the existing contract: every selected dedicated
+// menu carries its Step-4 unit-price text (the glass one operator-typed, since none is configured),
+// then final review edits a wheel quantity within bounds AND the glass unit price at the same time,
+// on top of an authored amount discount, an amount coupon and a percent coupon.
+test("B5c3: amount discount + amount coupon + percent coupon + simultaneous review quantity / unit-price edits map successfully with engine figures copied verbatim", () => {
+  const draft = dedicatedDraft(
+    canonicalSections,
+    { mode: "amount", amountInput: "1000", selectedCouponIds: [COUPON_ID, PERCENT_COUPON_ID] },
+    { quantityInputsByLine: { [WHEEL_COAT]: "3" }, unitPriceInputsByLine: { [GLASS_REPEL]: "9000" } },
+  );
+  const { pricingResult: pr, mapped } = runDedicated(draft);
+  assert.equal(pr.completeness, "complete", `PRECONDITION: ${JSON.stringify(pr.errors)}`);
+  const req = okReq(mapped);
+  assert.deepEqual(req.services.map(lineTuple), [
+    [WHEEL_COAT,  3, 5_000, 15_000], // review quantity edit, within configured bounds
+    [WHEEL_CLEAN, 2, 1_500, 3_000],
+    [GLASS_REPEL, 1, 9_000, 9_000],  // review unit-price edit on the operator-priced glass line
+  ]);
+  assert.equal(req.pricing.subtotal, 27_000);
+  assert.equal(req.pricing.taxableSubtotal, 27_000, "post-tax document discount: the tax base is the subtotal");
+  assert.equal(req.pricing.taxTotal, 2_700);
+  // Engine-owned figures are COPIED, never recomputed by the mapper — and they must be coherent.
+  assert.equal(req.pricing.couponTotal, pr.couponTotal);
+  assert.equal(req.pricing.discountTotal, pr.discountTotal);
+  assert.equal(req.pricing.grandTotal, pr.grandTotal);
+  assert.equal(req.coupon.status, "applied");
+  assert.deepEqual(req.coupon.selectedCouponIds, [COUPON_ID, PERCENT_COUPON_ID]);
+  assert.deepEqual((req.coupon.applications ?? []).map((a) => [a.couponId, a.discountType, a.discountValue]), [
+    [COUPON_ID, "amount", 100],
+    [PERCENT_COUPON_ID, "percent", 1_000],
+  ]);
+  assert.equal((req.coupon.applications ?? []).reduce((s, a) => s + a.appliedAmount, 0), req.pricing.couponTotal, "per-coupon snapshot sums to couponTotal");
+  assert.equal(req.coupon.appliedAmount, req.pricing.couponTotal);
+  assert.equal(req.discount.intent.mode, "fixed_amount");
+  assert.equal(req.discount.intent.fixedAmount, 1_000, "the authored figure is intent, never conflated with the applied amount");
+  assert.equal(req.discount.appliedAmount, pr.discountTotal);
+  assert.equal(yen(req.pricing.discountTotal, "discountTotal"), 1_000 + yen(req.pricing.couponTotal, "couponTotal"), "applied document discount = authored amount + coupons, counted once");
+  assert.equal(req.pricing.grandTotal, 27_000 + 2_700 - yen(req.pricing.discountTotal, "discountTotal"), "one discount/tax engine: subtracted exactly once, after tax");
+  assert.equal(validateEstimateSaveRequest(req).ok, true);
+
+  // Identity edits (review values equal to Step 4) persist byte-identically to the canonical draft.
+  const canonical = okReq(runDedicated(dedicatedDraft(canonicalSections, { mode: "amount", amountInput: "1000", selectedCouponIds: [COUPON_ID, PERCENT_COUPON_ID] })).mapped);
+  const identity = okReq(runDedicated(dedicatedDraft(
+    canonicalSections,
+    { mode: "amount", amountInput: "1000", selectedCouponIds: [COUPON_ID, PERCENT_COUPON_ID] },
+    { quantityInputsByLine: { [WHEEL_COAT]: "4" }, unitPriceInputsByLine: { [GLASS_REPEL]: "8000" } },
+  )).mapped);
+  assert.deepEqual(identity.services, canonical.services);
+  assert.deepEqual(identity.pricing, canonical.pricing);
+  assert.deepEqual(identity.coupon, canonical.coupon);
+});
+
+// THE B5c2 REJECTION, REPRODUCED. That fixture supplied the operator-priced glass menu
+// (`unitPriceConfigured: false`) with NO Step-4 unit-price text and relied on the final-review
+// unit-price edit instead. Under the existing contract the Step-4 text is the ONLY canonical price
+// for a dedicated menu; the authoritative bundle raises MANUAL_PRICE_REQUIRED, and the mapper checks
+// `bundle.errors` BEFORE anything else (R50A-F1 A), so the result is `pricing-error` — a correct
+// fail-closed refusal, not a mapper defect. A review override is never a substitute canonical price.
+test("B5c3 (B5c2 reproduction): an operator-priced glass menu with an EMPTY Step-4 unit price fails closed as pricing-error even when final review supplies a price", () => {
+  const dc: Partial<WizardDiscountDraft> = { mode: "amount", amountInput: "1000", selectedCouponIds: [COUPON_ID, PERCENT_COUPON_ID] };
+  const review = { quantityInputsByLine: { [WHEEL_COAT]: "3" }, unitPriceInputsByLine: { [GLASS_REPEL]: "9000" } };
+  const unpricedGlass: DedicatedSections = {
+    ...canonicalSections,
+    glass: { selectedMenuIds: ["gl-repel"], unitPricesByMenu: {}, quantitiesByMenu: { "gl-repel": 1 } },
+  };
+  const draft = dedicatedDraft(unpricedGlass, dc, review);
+  const { pricingResult: pr, mapped } = runDedicated(draft);
+  assert.ok(
+    pr.errors.some((e) => e.code === "MANUAL_PRICE_REQUIRED" && e.category === "glass" && e.sourceId === "gl-repel"),
+    `the authoritative route names the exact unpriced menu: ${JSON.stringify(pr.errors)}`,
+  );
+  assert.equal(pr.lines.some((l) => l.category === "glass"), false, "no glass line is ever invented from the review override");
+  expectFail(mapped, "pricing-error");
+  // A forged complete/success result cannot hide the authoritative bundle error either.
+  const decoy = runDedicated(dedicatedDraft(canonicalSections, dc, review)).pricingResult;
+  assert.equal(decoy.completeness, "complete", "PRECONDITION: the decoy is a genuine complete result");
+  expectFail(run(draft, { pricingResult: decoy, pricingConfig: DEDICATED_PC }), "pricing-error");
+  // The SAME combination with the glass price typed in Step 4 is the positive case above.
+  assert.equal(runDedicated(dedicatedDraft(canonicalSections, dc, review)).mapped.ok, true);
+});
+
+test("B5c3: dedicated-menu review quantity edits honour configured bounds; out-of-bounds, zero and non-integer fail closed", () => {
+  const withQty = (lineId: string, q: string) =>
+    runDedicated(dedicatedDraft(canonicalSections, {}, { quantityInputsByLine: { [lineId]: q } })).mapped;
+  expectFail(withQty(GLASS_REPEL, "3"), "pricing-error");   // max 2
+  expectFail(withQty(WHEEL_CLEAN, "5"), "pricing-error");   // max 4
+  expectFail(withQty(WHEEL_COAT, "0"), "pricing-error");    // never zero
+  expectFail(withQty(WHEEL_COAT, "1.5"), "pricing-error");  // positive INTEGER only
+  const ok = okReq(withQty(GLASS_REPEL, "2"));
+  assert.deepEqual(ok.services.filter((s) => s.lineId === GLASS_REPEL).map(lineTuple), [[GLASS_REPEL, 2, 8_000, 16_000]]);
+  assert.equal(ok.pricing.subtotal, 39_000);
+  // A stale / foreign dedicated menu id in the draft is unknown-configured-item, never a line.
+  expectFail(runDedicated(dedicatedDraft({
+    ...canonicalSections,
+    wheel: { selectedMenuIds: ["wh-gone"], unitPricesByMenu: { "wh-gone": "5000" }, quantitiesByMenu: { "wh-gone": 4 } },
+  })).mapped, "unknown-configured-item");
+});
+
+// ── GDA-OTHER-COATINGS-R1 (C1) — other_coating category / persisted-category parity ──────────────
+//
+// C1 established the CATEGORY contract; C4 then added the real pricing path (dealer-authored
+// `otherCoatingMenus`). What must hold is exact identity parity across the layers a line crosses —
+// the category id is canonical, its policy maps are total, and the RPC payload persists
+// `other_coating` ITSELF (never `other`, never body `coating`). The hand-assembled line below pins
+// the payload builder (pure and total) independently of the engine; the last two tests pin the
+// CURRENT engine behaviour: missing configuration fails closed and blocks save, a positive
+// configured path prices and persists, and a ¥0 price never becomes a saveable line.
+
+test("C1: other_coating is canonical and its pricing/manual policy parity is explicit (manual_only / required)", () => {
+  assert.equal(isServiceCategoryId("other_coating"), true);
+  assert.equal(WIZARD_CATEGORY_PRICING_POLICY.other_coating, "manual_only", "never the catalog body-coating policy");
+  assert.equal(WIZARD_CATEGORY_MANUAL_POLICY.other_coating, "required", "no unpriced other-coating line may ever exist");
+  assert.equal(WIZARD_CATEGORY_PRICING_POLICY.coating, "catalog_only", "body coating policy unchanged");
+  assert.equal(WIZARD_CATEGORY_PRICING_POLICY.wheel, "manual_only");
+  assert.equal(WIZARD_CATEGORY_PRICING_POLICY.glass, "manual_only");
+  assert.equal(WIZARD_CATEGORY_PRICING_POLICY.other, "manual_only");
+});
+
+test("C1: the RPC payload persists other_coating as its OWN category — never other, never coating; existing categories untouched", () => {
+  const base = okReq(run(draftWith(["maintenance"], maintCfg)));
+  const src = base.services.find((s) => s.pricingSource === "manual");
+  assert.ok(src, "a manual source line exists to derive from");
+  if (!src) return;
+  const line = {
+    ...src,
+    lineId: "manual:other_coating:oc-trim",
+    category: "other_coating",
+    manualPricingIdentity: "oc-trim",
+    label: "樹脂トリムコーティング",
+    quantity: 1,
+    unitPrice: 15_000,
+    subtotal: 15_000,
+    metadata: { ...src.metadata },
+  };
+  const req = { ...base, services: [...base.services, line] };
+  const payload = buildEstimateSaveRpcPayload(req, { idempotencyKey: "c1-other-coating-parity" });
+  const oc = payload.services.find((s) => s.lineId === "manual:other_coating:oc-trim");
+  assert.ok(oc, "the other_coating line is carried");
+  if (!oc) return;
+  assert.equal(oc.category, "other_coating", "persisted category is other_coating itself");
+  assert.equal(oc.wizardCategory, "other_coating");
+  assert.equal(oc.pricingPolicy, "manual_only");
+  assert.equal(oc.manualPricePolicy, "required");
+  assert.deepEqual([oc.quantity, oc.unitPrice, oc.lineTotal], [1, 15_000, 15_000], "amounts passthrough");
+  assert.equal(payload.services.some((s) => s.wizardCategory === "other_coating" && s.category === "other"), false, "never silently re-classified as other");
+  assert.equal(payload.services.some((s) => s.wizardCategory === "other_coating" && s.category === "coating"), false, "never merged into body coating");
+  // The pre-existing maintenance line is byte-identical to a payload built without the extra line.
+  const alone = buildEstimateSaveRpcPayload(base, { idempotencyKey: "c1-other-coating-parity" });
+  assert.deepEqual(payload.services.filter((s) => s.wizardCategory === "maintenance"), alone.services);
+});
+
+const OC_TRIM_DRAFT = () => draftWith(["maintenance", "other_coating"], {
+  ...maintCfg,
+  otherCoating: { selectedMenuIds: ["oc-trim"], unitPricesByMenu: { "oc-trim": "15000" }, quantitiesByMenu: { "oc-trim": 1 } },
+});
+const OC_TRIM_PC: ConfiguredPricingConfiguration = {
+  ...PC,
+  otherCoatingMenus: [{ code: "oc-trim", label: "樹脂トリムコーティング", quantityRequired: false, minQuantity: null, maxQuantity: null, unitPriceConfigured: true }],
+};
+
+test("C1→C4: selecting other_coating with NO other-coating configuration fails CLOSED — DEDICATED_MENU_CONFIG_REQUIRED, no other_coating line, save blocked; the existing category still prices", () => {
+  const draft = OC_TRIM_DRAFT();
+  // `PC` carries no `otherCoatingMenus` (absent) — and an EMPTY authored collection behaves the same.
+  for (const [name, pc] of [["absent", PC], ["empty", { ...PC, otherCoatingMenus: [] }]] as const) {
+    const pr = computeWizardPricingFromConfig(draft, pc, CATALOG, RANK);
+    assert.notEqual(pr.completeness, "complete", name);
+    assert.equal(pr.lines.some((l) => l.category === "other_coating"), false, `${name}: no other_coating line is invented`);
+    assert.ok(pr.errors.some((e) => e.code === "DEDICATED_MENU_CONFIG_REQUIRED" && e.category === "other_coating"), `${name}: fail-closed config error`);
+    assert.equal(pr.lines.some((l) => l.category === "maintenance"), true, `${name}: the existing category still prices`);
+    expectFail(run(draft, { pricingConfig: pc }), "pricing-error");
+  }
+});
+
+test("C4: a POSITIVE configured other_coating path prices one fixed-one line and persists it as other_coating; a ¥0 price is never a saveable line", () => {
+  const pr = computeWizardPricingFromConfig(OC_TRIM_DRAFT(), OC_TRIM_PC, CATALOG, RANK);
+  assert.equal(pr.completeness, "complete");
+  const line = pr.lines.find((l) => l.category === "other_coating");
+  assert.ok(line, "the configured path produces an other_coating line");
+  if (!line) return;
+  assert.deepEqual([line.kind, line.label, line.quantity, line.unitPrice, line.lineTotal], ["manual", "樹脂トリムコーティング", 1, 15_000, 15_000]);
+  const req = okReq(run(OC_TRIM_DRAFT(), { pricingConfig: OC_TRIM_PC, pricingResult: pr }));
+  const saved = req.services.find((s) => s.lineId === "manual:other_coating:oc-trim");
+  assert.ok(saved, "mapped with the stable other_coating identity");
+  if (!saved) return;
+  assert.equal(saved.category, "other_coating");
+  const payload = buildEstimateSaveRpcPayload(req, { idempotencyKey: "c4-other-coating-positive" });
+  const oc = payload.services.find((s) => s.lineId === "manual:other_coating:oc-trim");
+  assert.ok(oc);
+  if (!oc) return;
+  assert.deepEqual([oc.category, oc.wizardCategory, oc.pricingPolicy, oc.manualPricePolicy], ["other_coating", "other_coating", "manual_only", "required"]);
+  assert.deepEqual([oc.quantity, oc.unitPrice, oc.lineTotal], [1, 15_000, 15_000]);
+  // The save blocker is not weakened: ¥0 (and a blank) never reaches a line, and the mapper refuses.
+  for (const price of ["0", ""]) {
+    const zero = draftWith(["maintenance", "other_coating"], {
+      ...maintCfg,
+      otherCoating: { selectedMenuIds: ["oc-trim"], unitPricesByMenu: { "oc-trim": price }, quantitiesByMenu: { "oc-trim": 1 } },
+    });
+    const zpr = computeWizardPricingFromConfig(zero, OC_TRIM_PC, CATALOG, RANK);
+    assert.equal(zpr.lines.some((l) => l.category === "other_coating"), false, `price ${JSON.stringify(price)}: no line`);
+    expectFail(run(zero, { pricingConfig: OC_TRIM_PC }), "pricing-error");
+  }
 });

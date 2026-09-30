@@ -29,6 +29,7 @@ const PPF_R1: PpfR1PriceSettings = {
   partialPartPrices: {
     bonnet: 40_000,
     "front-bumper": 50_000,
+    "door-mirror": 33_333,
     roof: null,
   },
 };
@@ -39,6 +40,12 @@ const CONFIG: ConfiguredPricingConfiguration = {
     { code: "partial", label: "部分施工" },
   ],
   ppfTypes: [{ code: "film-x", label: "PPF X" }],
+  ppfParts: [
+    { code: "bonnet", label: "ボンネット", minQuantity: 1, maxQuantity: 4 },
+    { code: "front-bumper", label: "フロントバンパー", minQuantity: 1, maxQuantity: null },
+    { code: "door-mirror", label: "ドアミラー", minQuantity: 1, maxQuantity: 2 },
+    { code: "roof", label: "ルーフ", minQuantity: 1, maxQuantity: null },
+  ],
   installCoefficientBpByCode: { "film-x": 12_500 },
   ppfCoatingAdjustments: [],
   filmTypes: [],
@@ -103,23 +110,141 @@ test("front-full and full-body stay independent in the live adapter", () => {
   assert.equal(result.manualLines[0]?.metadata.ppfBasePriceYen, 500_000);
 });
 
-test("partial PPF sums exact configured part prices before applying coefficients", () => {
-  const result = buildWizardPricingInputFromConfig(
-    draft((value) => {
-      value.serviceConfiguration.ppf.installationMethod = "partial";
-      value.serviceConfiguration.ppf.fullCoverage = null;
-      value.serviceConfiguration.ppf.selectedPartIds = ["bonnet", "front-bumper"];
-      value.serviceConfiguration.ppf.quantitiesByPart = { "front-bumper": 2 };
-      value.serviceConfiguration.ppf.vehicleCoefficientInput = "1.0";
-    }),
-    CONFIG,
-    makePricingCatalog({ ppfR1: PPF_R1 }),
-    "detailer",
-  );
+const partial = (parts: string[], quantities: Record<string, number> = {}, over?: (d: EstimateWizardDraftV22) => void) => draft((value) => {
+  value.serviceConfiguration.ppf.installationMethod = "partial";
+  value.serviceConfiguration.ppf.fullCoverage = null;
+  value.serviceConfiguration.ppf.selectedPartIds = parts;
+  value.serviceConfiguration.ppf.quantitiesByPart = quantities;
+  value.serviceConfiguration.ppf.vehicleCoefficientInput = "1.0";
+  over?.(value);
+});
+
+test("Stage B: partial PPF emits ONE priced line per selected part — per-part unit price × integer quantity", () => {
+  const result = buildWizardPricingInputFromConfig(partial(["bonnet", "front-bumper"], { "front-bumper": 2 }), CONFIG, makePricingCatalog({ ppfR1: PPF_R1 }), "detailer");
   assert.deepEqual(result.errors, []);
-  assert.equal(result.manualLines[0]?.metadata.ppfBasePriceYen, 140_000);
-  assert.equal(result.manualLines[0]?.unitPrice, 175_000);
-  assert.equal(result.manualLines[0]?.metadata.ppfPartQuantities, "bonnet:1,front-bumper:2");
+  assert.equal(result.manualLines.length, 2);
+  const [bonnet, bumper] = result.manualLines;
+  assert.equal(bonnet?.manualPricingIdentity, "ppf_r1_partial_film-x_bonnet");
+  assert.equal(bonnet?.label, "PPF 部分施工 ボンネット（PPF X）");
+  assert.equal(bonnet?.quantity, 1);
+  assert.equal(bonnet?.unitPrice, 50_000, "40,000 × 1.25 — identical to the former single-part aggregate yen");
+  assert.equal(bumper?.manualPricingIdentity, "ppf_r1_partial_film-x_front-bumper");
+  assert.equal(bumper?.quantity, 2);
+  assert.equal(bumper?.unitPrice, 62_500, "unit price is per unit — NOT the extended 125,000");
+  assert.deepEqual(
+    [bumper?.metadata.ppfScope, bumper?.metadata.ppfPartCode, bumper?.metadata.ppfPartMinQuantity, bumper?.metadata.ppfPartMaxQuantity, bumper?.metadata.ppfBasePriceYen, bumper?.metadata.ppfInstallCoefficientBp],
+    ["partial", "front-bumper", 1, null, 50_000, 12_500],
+  );
+  assert.equal("ppfPartQuantities" in (bonnet?.metadata ?? {}), false, "the aggregate string metadata is gone");
+  // Manual lines reach the canonical engine as ONE `"other"` service whose items already carry the
+  // extended (unit × quantity) price. Narrow on the `ServiceInput` discriminant — no cast.
+  const engineService = result.services[0];
+  assert.ok(engineService !== undefined && engineService.type === "other", "manual PPF lines reach the engine as the \"other\" service");
+  assert.deepEqual(
+    engineService.items,
+    [
+      { name: bonnet?.label, price: 50_000 },
+      { name: bumper?.label, price: 62_500 * 2 },
+    ],
+    "engine receives unit × quantity per line: 50,000 × 1 and 62,500 × 2 = 125,000",
+  );
+  assert.equal(engineService.items.reduce((total, item) => total + item.price, 0), 50_000 + 125_000, "engine receives unit × quantity per line");
+});
+
+test("Stage B: quantity 1 of one part reproduces the legacy yen exactly through the compute route (parity)", () => {
+  const catalog = makePricingCatalog({ ppfR1: PPF_R1 });
+  const one = computeWizardPricingFromConfig(partial(["bonnet"]), CONFIG, catalog, "detailer");
+  assert.equal(one.completeness, "complete");
+  assert.equal(one.lines.length, 1);
+  assert.equal(one.lines[0]?.unitPrice, 50_000);
+  assert.equal(one.lines[0]?.lineTotal, 50_000);
+  assert.equal(one.subtotal, 50_000);
+  assert.equal(one.grandTotal, 55_000, "same tax-inclusive total as before Stage B");
+});
+
+test("Stage B: quantity 2 is two identical units at the rounded unit price (rounding boundary pinned)", () => {
+  const catalog = makePricingCatalog({ ppfR1: PPF_R1 });
+  const r = computeWizardPricingFromConfig(partial(["door-mirror"], { "door-mirror": 2 }), CONFIG, catalog, "detailer");
+  assert.equal(r.completeness, "complete");
+  assert.equal(r.lines[0]?.unitPrice, 41_666, "33,333 × 1.25 → 41,666 (rounded once per part)");
+  assert.equal(r.lines[0]?.quantity, 2);
+  assert.equal(r.lines[0]?.lineTotal, 83_332, "= unit × 2, never the sum-then-round 83,333");
+  assert.equal(r.subtotal, 83_332);
+});
+
+test("Stage B: three distinct parts keep draft order and stable unique identities; the coating reduction is applied ONCE", () => {
+  const catalog = makePricingCatalog({ ppfR1: PPF_R1 });
+  const config = { ...CONFIG, ppfCoatingAdjustments: [globalRule({ adjustmentValue: 5_000 })] };
+  const d = partial(["door-mirror", "bonnet", "front-bumper"], { bonnet: 3 }, (v) => {
+    v.serviceSelection.selectedCategories = ["ppf", "coating"];
+    v.serviceConfiguration.coating.layer1Id = "pure-evo";
+  });
+  const bundle = buildWizardPricingInputFromConfig(d, config, catalog, "detailer");
+  assert.deepEqual(bundle.errors, []);
+  assert.deepEqual(bundle.manualLines.map((l) => l.manualPricingIdentity), ["ppf_r1_partial_film-x_door-mirror", "ppf_r1_partial_film-x_bonnet", "ppf_r1_partial_film-x_front-bumper"]);
+  assert.equal(new Set(bundle.manualLines.map((l) => l.manualPricingIdentity)).size, 3);
+  assert.deepEqual(Object.keys(bundle.ppfAdjustmentsByIdentity), ["ppf_r1_partial_film-x_door-mirror"], "exactly ONE reduction key, on the first part line");
+  assert.equal(bundle.discounts.extraAmount, 5_000, "reduction yen identical to a single aggregate line");
+  assert.equal(bundle.manualLines[0]?.metadata.ppfCoatingAdjustmentReductionYen, 5_000);
+  assert.equal(bundle.manualLines[1]?.metadata.ppfCoatingAdjustmentReductionYen, undefined);
+  assert.equal(bundle.manualLines[2]?.metadata.ppfCoatingAdjustmentReductionYen, undefined);
+  const r = computeWizardPricingFromConfig(d, config, catalog, "detailer");
+  assert.equal(r.completeness, "complete");
+  assert.equal(r.discountTotal, 5_000, "post-tax discount rule: one reduction in the document discount");
+  assert.equal(r.subtotal, 60_000 + 41_666 + 150_000 + 62_500);
+});
+
+test("Stage B: unknown, unpriced, duplicate and out-of-bounds parts fail the whole PPF selection closed — no line, no zero", () => {
+  const catalog = makePricingCatalog({ ppfR1: PPF_R1 });
+  const cases: Array<[string, EstimateWizardDraftV22, string, string]> = [
+    ["unknown", partial(["bonnet", "spoiler"]), "UNKNOWN_CONFIGURED_ITEM", "spoiler"],
+    ["unpriced", partial(["roof"]), "PPF_R1_PRICE_UNAVAILABLE", "roof"],
+    ["duplicate", partial(["bonnet", "bonnet"]), "PPF_R1_PRICE_UNAVAILABLE", "bonnet"],
+    ["above-max", partial(["bonnet"], { bonnet: 5 }), "INVALID_QUANTITY", "bonnet"],
+    ["zero", partial(["bonnet"], { bonnet: 0 }), "INVALID_QUANTITY", "bonnet"],
+    ["fraction", partial(["bonnet"], { bonnet: 1.5 }), "INVALID_QUANTITY", "bonnet"],
+    ["none", partial([]), "PPF_R1_PRICE_UNAVAILABLE", "partial"],
+  ];
+  for (const [label, value, code, sourceId] of cases) {
+    const bundle = buildWizardPricingInputFromConfig(value, CONFIG, catalog, "detailer");
+    assert.ok(bundle.errors.some((e) => e.code === code && e.sourceId === sourceId), `${label}: ${code}/${sourceId}`);
+    assert.equal(bundle.manualLines.length, 0, `${label}: no PPF line at all`);
+    const r = computeWizardPricingFromConfig(value, CONFIG, catalog, "detailer");
+    assert.notEqual(r.completeness, "complete", label);
+    assert.equal(r.grandTotal, null, label);
+    assert.equal(mapWizardDraftToSaveRequestFromConfig({ draft: value, pricingResult: r, pricingConfig: CONFIG, catalog, shopRank: "detailer" }).ok, false, `${label}: unsaveable`);
+  }
+  const noParts = buildWizardPricingInputFromConfig(partial(["bonnet"]), { ...CONFIG, ppfParts: undefined }, catalog, "detailer");
+  assert.ok(noParts.errors.some((e) => e.code === "UNKNOWN_CONFIGURED_ITEM"), "no configured parts ⇒ unknown, never a raw-code label");
+});
+
+test("Stage B: client/server parity and saved mapping parity for multi-part partial PPF", () => {
+  const catalog = makePricingCatalog({ ppfR1: PPF_R1 });
+  const d = partial(["bonnet", "front-bumper"], { bonnet: 2, "front-bumper": 3 });
+  const client = computeWizardPricingFromConfig(d, CONFIG, catalog, "detailer");
+  const server = computeWizardPricingFromConfig(structuredClone(d), CONFIG, catalog, "detailer");
+  assert.deepEqual(server, client, "same draft + same config ⇒ byte-identical result on both sides");
+  const mapped = mapWizardDraftToSaveRequestFromConfig({ draft: d, pricingResult: server, pricingConfig: CONFIG, catalog, shopRank: "detailer" });
+  assert.equal(mapped.ok, true);
+  if (!mapped.ok) return;
+  const ppf = mapped.request.services.filter((s) => s.category === "ppf");
+  assert.deepEqual(ppf.map((s) => [s.lineId, s.quantity, s.unitPrice, s.subtotal]), [
+    ["manual:ppf:ppf_r1_partial_film-x_bonnet", 2, 50_000, 100_000],
+    ["manual:ppf:ppf_r1_partial_film-x_front-bumper", 3, 62_500, 187_500],
+  ]);
+  assert.equal(mapped.request.pricing.subtotal, 287_500);
+  for (const s of ppf) assert.equal(s.subtotal, s.unitPrice * s.quantity, "unit_price × quantity = line_total exactly");
+});
+
+test("Stage B: full / front-full PPF are unchanged — one fixed line, quantity 1, no part code", () => {
+  const catalog = makePricingCatalog({ ppfR1: PPF_R1 });
+  const bundle = buildWizardPricingInputFromConfig(draft(), CONFIG, catalog, "detailer");
+  assert.equal(bundle.manualLines.length, 1);
+  assert.equal(bundle.manualLines[0]?.manualPricingIdentity, "ppf_r1_front_full_film-x");
+  assert.equal(bundle.manualLines[0]?.quantity, 1);
+  assert.equal(bundle.manualLines[0]?.metadata.ppfPartCode, undefined);
+  const r = computeWizardPricingFromConfig(draft(), CONFIG, catalog, "detailer");
+  assert.equal(r.lines[0]?.quantityPolicy, null, "fixed at final review");
 });
 
 test("missing R1 settings blocks instead of falling back to legacy tables or manual input", () => {

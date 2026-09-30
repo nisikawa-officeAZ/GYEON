@@ -30,7 +30,12 @@ export type EstimateStatus =
 
 export type EstimateCategory =
   | 'coating' | 'ppf' | 'window' | 'interior' | 'glass' | 'other'
-  | 'maintenance' | 'carwash' | 'roomclean'; // Plan A (migration 093, gated by ESTIMATE_TAXONOMY_READY)
+  | 'maintenance' | 'carwash' | 'roomclean' // Plan A (migration 093, gated by ESTIMATE_TAXONOMY_READY)
+  // GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c3, plan §24.1): dedicated wheel service menus persist as
+  // their OWN category — never 'other'. `glass` was already an allowed persisted value; `wheel` is
+  // added to the estimate/invoice item CHECK sets by the Book-local B5 migration (not applied here).
+  | 'wheel'
+  | 'other_coating';
 
 export interface EstimateItemDB {
   id:            string;

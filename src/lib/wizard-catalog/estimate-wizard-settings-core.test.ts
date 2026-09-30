@@ -62,24 +62,175 @@ test("view.canEdit follows permission", () => {
 });
 
 // ── section grouping ───────────────────────────────────────────────────────
-test("sections group by family; service holds three kind-groups", () => {
+test("sections group by family; service holds the three legacy menus, other_coating holds B5a wheel/glass", () => {
   const v = buildEstimateWizardSettingsView(raw({
     items: [
       item({ code: "film-1", kind: "film_type" }),
       item({ code: "maint-1", kind: "maintenance_menu" }),
       item({ code: "wash-1", kind: "wash_menu" }),
       item({ code: "room-1", kind: "room_cleaning_menu" }),
+      item({ code: "wheel-1", kind: "wheel_menu", quantityRequired: true, minQuantity: 1 }),
+      item({ code: "glass-1", kind: "glass_menu", quantityRequired: true, minQuantity: 1 }),
       item({ code: "other-1", kind: "other_work_preset" }),
       item({ code: "store-1", kind: "store_global_option" }),
     ],
   }));
   const ids = v.sections.map((s) => s.id);
   // B1.1 added the `ppf` and `coupon` sections; the original four keep their identity and order.
-  assert.deepEqual(ids, ["film", "ppf", "service", "otherwork", "store", "coupon"]);
+  // GDA-OTHER-COATINGS-R1 Stage A moves ONLY wheel/glass out of `service` into the dedicated
+  // `other_coating` section directly after it. No offering family is introduced.
+  assert.deepEqual(ids, ["film", "ppf", "service", "other_coating", "otherwork", "store", "coupon"]);
   const service = v.sections.find((s) => s.id === "service")!;
   assert.deepEqual(service.groups.map((g) => g.kind), ["maintenance_menu", "wash_menu", "room_cleaning_menu"]);
   assert.equal(service.itemCount, 3);
+  assert.equal(service.anchorId, "section-service", "the existing section id / anchor is reused");
+  const otherCoating = v.sections.find((s) => s.id === "other_coating")!;
+  // B1 adds the extensible other_coating_menu group after the two B5 kinds.
+  assert.deepEqual(otherCoating.groups.map((g) => g.kind), ["wheel_menu", "glass_menu", "other_coating_menu"]);
+  assert.equal(otherCoating.itemCount, 2);
+  assert.equal(otherCoating.anchorId, "section-other-coating");
+  assert.equal(otherCoating.labelJa, "その他のコーティング");
+  assert.equal(otherCoating.required, false, "Stage A never gates review on the new section");
   assert.equal(v.sections.find((s) => s.id === "film")!.itemCount, 1);
+  assert.equal(v.sections.find((s) => s.id === "store")!.itemCount, 1, "wheel/glass never land in the store-option section");
+});
+
+// ── GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5a): dedicated wheel / glass menu groups ─────────────────
+test("B5a: wheel/glass items carry a NULLABLE per-unit price (null ⇒ no label, never ¥0) and their quantity bounds", () => {
+  const v = buildEstimateWizardSettingsView(raw({
+    items: [
+      item({ code: "wheel-1", kind: "wheel_menu", labelJa: "ホイールコーティング", defaultUnitPrice: null, quantityRequired: true, minQuantity: 1, maxQuantity: null }),
+      item({ code: "glass-1", kind: "glass_menu", labelJa: "ガラスコーティング", defaultUnitPrice: 12000, quantityRequired: true, minQuantity: 1, maxQuantity: 6 }),
+    ],
+  }));
+  const otherCoating = v.sections.find((s) => s.id === "other_coating")!;
+  const wheel = otherCoating.groups.find((g) => g.kind === "wheel_menu")!;
+  const glass = otherCoating.groups.find((g) => g.kind === "glass_menu")!;
+  assert.equal(wheel.labelJa, "ホイール");
+  assert.equal(glass.labelJa, "ガラス");
+  assert.match(otherCoating.descriptionJa, /ホイール/);
+  assert.match(otherCoating.descriptionJa, /ガラス/);
+  // Stage A: the legacy service section no longer describes or hosts wheel/glass.
+  const service = v.sections.find((s) => s.id === "service")!;
+  assert.doesNotMatch(service.descriptionJa, /ホイール|ガラス/);
+  assert.equal(service.groups.some((g) => g.kind === "wheel_menu" || g.kind === "glass_menu"), false);
+
+  const w = wheel.items[0];
+  assert.equal(w.code, "wheel-1", "identity is the stable code");
+  assert.equal(w.itemId, "id-wheel-1");
+  assert.equal(w.priceYen, null, "an unconfigured price stays null");
+  assert.equal(w.priceLabelJa, null, "…and renders NO label — never ¥0（税抜）");
+  assert.equal(w.quantityRequired, true);
+  assert.equal(w.minQuantity, 1);
+  assert.equal(w.maxQuantity, null, "no configured maximum is null, not an invented bound");
+
+  const g = glass.items[0];
+  assert.equal(g.priceYen, 12000);
+  assert.equal(g.priceLabelJa, "¥12,000（税抜）");
+  assert.equal(g.maxQuantity, 6);
+
+  for (const s of v.sections) {
+    if (s.id === "other_coating") continue;
+    assert.ok(s.groups.every((grp) => grp.kind !== "wheel_menu" && grp.kind !== "glass_menu"), `${s.id} must not host wheel/glass`);
+  }
+});
+
+test("B5a: wheel/glass have NO offering family — their empty groups are never reported as an incomplete family", () => {
+  const v = buildEstimateWizardSettingsView(raw({
+    items: [],
+    serviceOfferings: { window_film: false, ppf: false, maintenance: true, room_cleaning: true, car_wash: true },
+  }));
+  assert.equal(v.reviewStatus.reviewReady, true);
+  assert.equal(v.reviewStatus.missingSections.length, 1, "exactly the service section, for the three ON families");
+  const service = v.reviewStatus.missingSections[0];
+  assert.equal(service.sectionId, "service");
+  assert.doesNotMatch(service.reasonJa, /ホイール/, "no wheel family exists to be incomplete");
+  assert.doesNotMatch(service.reasonJa, /ガラス/, "no glass family exists to be incomplete");
+  // …and the offering map itself is untouched: still exactly the five managed families.
+  assert.deepEqual(Object.keys(v.serviceOfferings).sort(), ["car_wash", "maintenance", "ppf", "room_cleaning", "window_film"]);
+});
+
+// ── GDA-OTHER-COATINGS-R1 Stage A: settings surface only ─────────────────────────────────────
+test("Stage A: other_coating is a settings-only section — no seeded rows, no offering family, never review-gating", () => {
+  const empty = buildEstimateWizardSettingsView(raw({ items: [] }));
+  const section = empty.sections.find((s) => s.id === "other_coating")!;
+  assert.deepEqual(section.kinds, ["wheel_menu", "glass_menu", "other_coating_menu"], "the two B5 kinds plus the B1 extensible kind");
+  assert.equal(section.itemCount, 0, "Stage A / B1 seed nothing");
+  assert.equal(section.required, false);
+  assert.equal(section.satisfied, true);
+  assert.equal(empty.reviewStatus.reviewReady, true);
+  assert.equal(empty.reviewStatus.missingSections.length, 0);
+
+  // Every family ON with nothing registered: the warning list names only offering-backed sections.
+  // other_coating has no family, so it is never reported, and the family map is unchanged.
+  const allOn = buildEstimateWizardSettingsView(raw({
+    items: [],
+    serviceOfferings: { window_film: true, ppf: true, maintenance: true, room_cleaning: true, car_wash: true },
+  }));
+  assert.ok(allOn.reviewStatus.missingSections.every((m) => m.sectionId !== "other_coating"));
+  assert.deepEqual(Object.keys(allOn.serviceOfferings).sort(), ["car_wash", "maintenance", "ppf", "room_cleaning", "window_film"]);
+});
+
+// ── GDA-OTHER-COATINGS-R1 (B1): the extensible other_coating_menu kind ───────────────────────────
+test("B1: other_coating_menu items present in the other_coating section with a NULLABLE positive price and an explicit quantity flag", () => {
+  const v = buildEstimateWizardSettingsView(raw({
+    items: [
+      item({ code: "oc-2", kind: "other_coating_menu", labelJa: "ヘッドライトコーティング", defaultUnitPrice: null, quantityRequired: false, minQuantity: null, maxQuantity: null, displayOrder: 2 }),
+      item({ code: "oc-1", kind: "other_coating_menu", labelJa: "ホイールハウスコーティング", defaultUnitPrice: 6000, quantityRequired: true, minQuantity: 1, maxQuantity: 2, displayOrder: 1 }),
+      item({ code: "wheel-1", kind: "wheel_menu", quantityRequired: true, minQuantity: 1 }),
+    ],
+  }));
+  const section = v.sections.find((s) => s.id === "other_coating")!;
+  assert.equal(section.itemCount, 3);
+  assert.match(section.descriptionJa, /その他コーティング/);
+  const group = section.groups.find((g) => g.kind === "other_coating_menu")!;
+  assert.equal(group.labelJa, "その他コーティング");
+  assert.deepEqual(group.items.map((i) => i.code), ["oc-1", "oc-2"], "sorted by displayOrder then code");
+
+  const priced = group.items[0];
+  assert.equal(priced.itemId, "id-oc-1");
+  assert.equal(priced.priceYen, 6000);
+  assert.equal(priced.priceLabelJa, "¥6,000（税抜）");
+  assert.equal(priced.quantityRequired, true);
+  assert.equal(priced.minQuantity, 1);
+  assert.equal(priced.maxQuantity, 2);
+  assert.equal(priced.durationLabelJa, null, "no duration on this kind");
+
+  const unpriced = group.items[1];
+  assert.equal(unpriced.priceYen, null, "unconfigured stays null");
+  assert.equal(unpriced.priceLabelJa, null, "…and renders no label — never ¥0（税抜）");
+  assert.equal(unpriced.quantityRequired, false, "an explicit false survives to the view");
+  assert.equal(unpriced.minQuantity, null);
+  assert.equal(unpriced.maxQuantity, null);
+
+  // The wheel group is unaffected by the sibling kind, and no other section hosts the new kind.
+  assert.equal(section.groups.find((g) => g.kind === "wheel_menu")!.items.length, 1);
+  for (const s of v.sections) {
+    if (s.id === "other_coating") continue;
+    assert.ok(s.groups.every((grp) => grp.kind !== "other_coating_menu"), `${s.id} must not host other_coating_menu`);
+  }
+});
+
+test("B1: other_coating_menu has NO offering family and never gates or warns the review", () => {
+  const allOn = buildEstimateWizardSettingsView(raw({
+    items: [],
+    serviceOfferings: { window_film: true, ppf: true, maintenance: true, room_cleaning: true, car_wash: true },
+  }));
+  const section = allOn.sections.find((s) => s.id === "other_coating")!;
+  assert.equal(section.required, false);
+  assert.equal(section.satisfied, true);
+  assert.equal(allOn.reviewStatus.reviewReady, true);
+  assert.ok(allOn.reviewStatus.missingSections.every((m) => m.sectionId !== "other_coating"));
+  assert.ok(allOn.reviewStatus.missingSections.every((m) => !/その他コーティング/.test(m.reasonJa)));
+  assert.deepEqual(Object.keys(allOn.serviceOfferings).sort(), ["car_wash", "maintenance", "ppf", "room_cleaning", "window_film"], "no new family");
+});
+
+test("B1: the authoritative settings loader reads all three other_coating kinds", () => {
+  const source = readFileSync("src/lib/wizard-catalog/get-estimate-wizard-settings-view.ts", "utf8");
+  const allowlist = source.match(/const EDITABLE_KINDS = \[([\s\S]*?)\] as const;/)?.[1] ?? "";
+  for (const kind of ["wheel_menu", "glass_menu", "other_coating_menu"]) {
+    assert.match(allowlist, new RegExp(`"${kind}"`), `${kind} must be visible after authoring`);
+  }
 });
 
 test("identity is the stable code; items sort by displayOrder then code (not label/index)", () => {
@@ -316,10 +467,11 @@ test("PPF+coating adjustment: archived rules are excluded, labels fall back to t
 });
 
 // ── empty catalog ──────────────────────────────────────────────────────────
-test("empty catalog yields six empty sections without crashing", () => {
+test("empty catalog yields seven empty sections without crashing", () => {
   const v = buildEstimateWizardSettingsView(raw({ items: [] }));
-  // B1.1 added the ppf and coupon sections to the original four.
-  assert.equal(v.sections.length, 6);
+  // B1.1 added the ppf and coupon sections to the original four; GDA-OTHER-COATINGS-R1 Stage A
+  // added other_coating.
+  assert.equal(v.sections.length, 7);
   assert.equal(v.sections.reduce((n, s) => n + s.itemCount, 0), 0);
 });
 

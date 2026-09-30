@@ -5765,3 +5765,720 @@ git_actions:
 decision: ACCEPT_PR128_AS_D5A_R2_PUBLICATION_AND_RECORD_SEQUENCING_DEVIATION_WITHOUT_DUPLICATE_COMMIT
 next: "INDEPENDENT_BOOK_REVIEW_OF_THIS_TWO_PATH_LEDGER_APPEND; PUSH_PR_READY_MERGE_AND_D5B_REMAIN_SEPARATE_OWNER_GATES."
 ```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — Owner decision and local Stage A activation
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_OWNER_DECISION_V1
+date: 2026-09-30
+status: STAGE_A_LOCAL_IMPLEMENTATION_AUTHORIZED_STAGE_B_CONTRACT_PENDING
+owner_authorization: "The Owner answered yes to a separate estimate price-repair phase: partial PPF per-part lines with quantity editing in Step 4 and final review, and independent quantity-bearing wheel and glass menus. Body coating and full/front-full PPF have no quantity entry."
+diagnosis_marker: GDA_ESTIMATE_QUANTITY_POLICY_COMPLETE_PATH_AUDIT_RESULT_V1
+diagnosis_verdict: COMPLETE_DIAGNOSIS_SOURCE_ONLY_RUNTIME_NOT_VERIFIED
+base_commit: 0b6a1fdb9c97d6254d4482aa5c3dddc67560676f
+base_tree: 3e5837f9c20e48f640c94ef226cc77a95c57a8b5
+branch: work/estimate-quantity-policy-20260930
+responsibility: MACBOOK_BOOK_SPEC_AND_ACCEPTANCE_MACBOOK_CLAUDE_BOUNDED_IMPLEMENTATION_STUDIO_OFFICE_AZ_INVENTORY_ONLY
+stage_a_edit_allowlist:
+  - src/components/estimates/wizard/pricing/wizard-pricing-types.ts
+  - src/components/estimates/wizard/pricing/compute-wizard-pricing-from-config.ts
+  - src/components/estimates/wizard/pricing/wizard-review-line-adjustments.ts
+  - src/components/estimates/wizard/steps/Step7Review.tsx
+  - src/components/estimates/wizard/steps/Step7Review.test.tsx
+  - src/components/estimates/wizard/pricing/compute-wizard-pricing-from-config.test.ts
+  - src/components/estimates/wizard/pricing/wizard-review-line-adjustments.test.ts
+stage_b: DIAGNOSIS_AND_LITERAL_CONTRACT_ONLY_NO_SOURCE_EDIT_YET
+known_unrelated_dirty: NINE_GIT_LFS_CHECKOUT_IMAGES_UNDER_docs/estimate-wizard/archive/ver2.1/genspark-ui/package/
+protected: ScreensPreview.tsx_METADATA_ONLY_OTHER_ROOT_AGENTS_PROTECTIONS_UNCHANGED
+not_authorized:
+  - commit_push_pr_ready_merge_deploy
+  - database_or_migration_apply
+  - production_or_customer_data_access
+next: "CLAUDE_STAGE_A_IMPLEMENTATION_AND_FOCUSED_TESTS_THEN_BOOK_LITERAL_DIFF_ACCEPTANCE; PREPARE_STAGE_B_EXACT_CONTRACT_AND_ALLOWLIST."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — Stage A local source acceptance
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_STAGE_A_LOCAL_ACCEPTANCE_V1
+date: 2026-09-30
+status: STAGE_A_E2_LOCAL_CANDIDATE_ACCEPTED_UNCOMMITTED_STAGE_B_PENDING
+base_commit: 0b6a1fdb9c97d6254d4482aa5c3dddc67560676f
+branch: work/estimate-quantity-policy-20260930
+claude_initial_attempt: BLOCKED_ENV_NO_CHANGES_PERMISSION_DENIED
+claude_implementation_marker: GDA_ESTIMATE_QUANTITY_POLICY_PHASE_A_IMPLEMENTATION_RESULT_V1
+claude_correction_marker: GDA_ESTIMATE_QUANTITY_POLICY_PHASE_A_STALE_REPAIR_RESULT_V1
+book_acceptance: "Seven exact Stage A paths only; fixed lines have no editable quantity, quantity-required options retain configured bounds, and stale fixed-line draft values have an explicit operator-triggered reset. Formula, DTO, SQL and PDF unchanged."
+verification:
+  npm_ci_temp_cache: PASS_EXIT_0
+  focused_quantity_tests_initial: PASS_53_OF_53
+  related_pricing_tests_initial: PASS_113_OF_113
+  step7_after_stale_repair: PASS_30_OF_30
+  pricing_after_stale_repair: PASS_28_OF_28
+  typecheck: PASS_EXIT_0
+  build_including_canonical_estimate: PASS_EXIT_0_CANONICAL_28_OF_28
+  diff_check_exact_candidate: PASS_EXIT_0
+protected_and_unrelated: SCREENS_PREVIEW_METADATA_UNCHANGED_NINE_LFS_IMAGES_PRESERVED
+book_scope_deviation: "A pre-dispatch broad rg search used the wizard directory without excluding protected ScreensPreview.tsx. No match/content from that file was returned and no file changed, but the command may have scanned its contents. Subsequent searches used filenames or exact paths; do not repeat."
+git_actions: UNSTAGED_UNCOMMITTED_UNPUSHED
+not_authorized: COMMIT_PUSH_PR_READY_MERGE_DEPLOY_DB_OR_MIGRATION_APPLY
+remaining: PARTIAL_PPF_PER_PART_PRICING_WHEEL_GLASS_QUANTITY_MENUS_STAGE_B_CONTRACT_AND_TESTS
+evidence_level: E2_LOCAL_SOURCE_ONLY_NO_PREVIEW_OR_FIELD_PROOF
+next: "CLAUDE_STAGE_B_READ_ONLY_PATH_AND_CONTRACT_DISCOVERY_THEN_BOOK_LITERAL_ALLOWLIST_AND_IMPLEMENTATION_GATE."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — Stage B contract discovery and external-transfer gate
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_STAGE_B_CONTRACT_DISCOVERY_V1
+date: 2026-09-30
+status: STAGE_B_READ_ONLY_CONTRACT_FOUND_IMPLEMENTATION_NOT_STARTED
+claude_discovery_marker: GDA_ESTIMATE_QUANTITY_POLICY_STAGE_B_CONTRACT_DISCOVERY_RESULT_V1
+claude_discovery_run: 2026-09-30T00-16-31-837Z-1ee59f09
+discovery_verdict: READY_FOR_LITERAL_IMPLEMENTATION_B1_TO_B4_WITH_SYNC_CONTRACT_PENDING
+book_acceptance: "Per-part tax-exclusive unit price is coefficient-adjusted and rounded once; quantity multiplies that price. One part at quantity 1 retains current yen parity, multiple part lines get one PPF/coating reduction, and stale aggregate line IDs must not leak into new lines. Step 4 and final-review quantities require last-valid-write consistency."
+wheel_glass: OWNER_CHOICE_PENDING_EXISTING_STORE_GLOBAL_OPTION_OTHER_VS_DEDICATED_SERVICE_CATEGORY
+additional_claude_diagnosis_attempt: REJECTED_BY_AUTO_REVIEW_NO_TRANSFER
+additional_claude_diagnosis_reason: "The requested pricing/wizard source transfer to Anthropic was not covered by the earlier OCR-only transfer consent. Explicit approval was requested; no workaround was used."
+source_edits: NONE_FOR_STAGE_B
+git_actions: UNSTAGED_UNCOMMITTED_UNPUSHED
+not_authorized: COMMIT_PUSH_PR_READY_MERGE_DEPLOY_DB_OR_MIGRATION_APPLY
+next: "WAIT_FOR_EXPLICIT_PRICING_SOURCE_TRANSFER_CONSENT_FOR_CLAUDE_FOLLOW_UP; FINALIZE_SYNC_LITERAL_ALLOWLIST; IMPLEMENT_AND_VERIFY_B1_TO_B4_WITHOUT_TOUCHING_STUDIO_OR_OCR."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — Stage B literal local implementation gate
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_STAGE_B_LITERAL_GATE_V1
+date: 2026-09-30
+status: STAGE_B_B1_TO_B4_LOCAL_IMPLEMENTATION_AUTHORIZED_UNCOMMITTED
+owner_transfer_consent: "Owner explicitly approved sending only estimate pricing/wizard related source code to Claude; no customer records, vehicle certificates, screenshots, PDFs or secrets."
+claude_sync_discovery_run: 2026-09-30T00-31-39-227Z-89cb8b40
+claude_sync_discovery_marker: GDA_ESTIMATE_QUANTITY_POLICY_STAGE_B_SYNC_DISCOVERY_RESULT_V1
+claude_sync_discovery: BOOK_ACCEPTED_READ_ONLY_EXIT_0_FABLE_MODEL_MARKER_SCOPE
+contract: "Per-part partial PPF quantity in Step 4 and final review is reconciled by valid write-through and later Step-4 buffer clearing. Invalid review text stays visible and blocks save; no silent restored-draft rewrite."
+edit_allowlist: "Exact 16 Stage B source/test paths recorded in plan §24; governance docs Book-only."
+wheel_glass: OWNER_CHOICE_PENDING_NO_B5_EDIT
+not_authorized: COMMIT_PUSH_PR_READY_MERGE_DEPLOY_DB_OR_MIGRATION_APPLY
+next: CLAUDE_B1_TO_B4_BOUNDED_IMPLEMENTATION_TEST_TYPECHECK_BUILD_THEN_BOOK_LITERAL_ACCEPTANCE
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — Stage B1–B4 local source acceptance
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_STAGE_B_E2_LOCAL_ACCEPTANCE_V1
+date: 2026-09-30
+status: STAGE_B_B1_TO_B4_E2_LOCAL_CANDIDATE_ACCEPTED_UNCOMMITTED_B5_PENDING
+base_commit: 0b6a1fdb9c97d6254d4482aa5c3dddc67560676f
+branch: work/estimate-quantity-policy-20260930
+claude_implementation_run: 2026-09-30T01-03-32-610Z-71e3b178
+claude_implementation_initial_verdict: FAILED_TEST_TYPECHECK_AND_MISSING_COUNTS
+claude_test_repair_run: 2026-09-30T01-17-14-282Z-c1551e54
+claude_test_repair_verdict: BLOCKED_SCOPE_ONE_ORIGINAL_ALLOWLIST_TEST_FILE
+claude_final_typecheck_run: 2026-09-30T01-23-44-906Z-f9922f14
+claude_final_marker: GDA_ESTIMATE_QUANTITY_POLICY_STAGE_B_FINAL_TYPECHECK_RESULT_V1
+book_acceptance: "The exact Stage B 16-file source/test allowlist is met. Partial PPF has one priced line per selected part; quantity multiplies a coefficient-adjusted tax-exclusive unit price. Review and Step-4 valid edits reconcile, invalid review input blocks save, the PPF/coating reduction persists once, and the save mapping has quantity/unit/total parity."
+verification:
+  focused_eight_files: PASS_258_OF_258
+  canonical_estimate: PASS_28_OF_28
+  typecheck: PASS_EXIT_0
+  build: PASS_EXIT_0
+  diff_check: PASS_EXIT_0
+  protected_screens_preview: MODE_100644_HASH_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f_STATUS_CLEAN
+  changed_paths: 28_MODIFIED_9_UNRELATED_LFS_2_BOOK_GOVERNANCE_7_STAGE_A_16_STAGE_B_WITH_OVERLAP
+process_deviation: "The initial Stage B Claude run used a temporary Node rewriting helper for some test edits despite the packet requesting Edit/apply_patch. Later repairs used Edit. Book accepted only the final literal diff and executable evidence; future packets must retain the edit-tool restriction."
+unverified: AUTHENTICATED_PREVIEW_E3_DETAILER_FIELD_E4_LIVE_CATALOG_ROWS_PRODUCTION
+wheel_glass: B5_OWNER_CLASSIFICATION_DECISION_PENDING_NO_CHANGES
+git_actions: UNSTAGED_UNCOMMITTED_UNPUSHED
+not_authorized: COMMIT_PUSH_PR_READY_MERGE_DEPLOY_DB_OR_MIGRATION_APPLY
+next: "OWNER_DECIDES_WHEEL_GLASS_EXISTING_GLOBAL_OPTIONS_OTHER_VS_DEDICATED_SERVICE_CATEGORIES; SEPARATE_E3_PREVIEW_AND_GIT_PUBLICATION_GATES."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5 owner economics and coordination candidate
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5_OWNER_RULE_AND_COORDINATION_V1
+date: 2026-09-30
+status: OWNER_WHEEL_GLASS_RULE_ACCEPTED_COORDINATION_DOCS_ONLY_CANDIDATE
+base_commit: 0b6a1fdb9c97d6254d4482aa5c3dddc67560676f
+branch: work/estimate-quantity-policy-20260930
+owner_decision: "Dedicated wheel/glass service menus rather than store-global Other; tax-exclusive unit price per wheel with initial quantity 4, per glass pane with initial quantity 1."
+quantity_contract: "Configured unit price times bounded positive-integer quantity; maximum bounds and catalogue rows are not silently invented. Body coating and full/front-full PPF remain quantity 1; partial PPF B1-B4 remains unchanged."
+claude_app_source_diagnosis_run: 2026-09-30T01-36-17-000Z-6d66f803
+claude_marker: GDA_ESTIMATE_QUANTITY_POLICY_B5_DEDICATED_READ_ONLY_CONTRACT_RESULT_V1
+claude_execution: EXIT_0_FABLE_MODEL_AND_MARKER_PRESENT_APP_SOURCE_ONLY_NO_EDITS
+book_sql_local_only: "Existing glass item category; no wheel item category; catalogue quantity scope only store_global_option; authoring RPC rejects unknown kinds. SQL/schema was not sent to Anthropic."
+diagnosis_scope_caveat: "A broad src search appeared in the Claude tool log. No protected-file result was returned, but non-scanning is not proven. Use literal paths and exclude ScreensPreview.tsx in the next instruction."
+source_implementation: NOT_STARTED_NO_B5_EDIT_ALLOWLIST_YET
+owner_git_authorization: TWO_GOVERNANCE_DOCS_ONLY_LIMITED_COMMIT_THEN_NORMAL_PUSH_THEN_DEDICATED_DRAFT_PR
+excluded: STAGE_A_B_SOURCE_TEST_FILES_UNRELATED_LFS_IMAGES_SQL_PROTECTED_PATHS_STUDIO_INVENTORY
+not_authorized: B5_SOURCE_EDITS_DB_OR_MIGRATION_APPLY_READY_MERGE_DEPLOY_PRODUCTION_USE
+next: "PUBLISH_DOCS_ONLY_COORDINATION_DRAFT_PR_THEN_POST_LITERAL_READ_ONLY_B5_CLAUDE_INSTRUCTION; RESOLVE_CATEGORY_AND_SQL_CONTRACT_BEFORE_ANY_IMPLEMENTATION."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5 Screen-3 category and app implementation gate
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5_SCREEN3_APP_GATE_V1
+date: 2026-09-30
+status: OWNER_SCREEN3_DECISION_ACCEPTED_LOCAL_APP_IMPLEMENTATION_GATED
+head_at_gate: 540e82beff9ab7672992c7e6dd737f9cc418efd6
+owner_decision: "Wheel and glass are independent Screen-3 categories and dedicated dealer service menus; wheel initial quantity 4, glass initial quantity 1; both priced tax-exclusive per unit."
+book_assumption: "Configured unit price prefills an operator-editable amount; dealer-authored rows rather than new opt-in families govern availability. No row means an explicit setup prompt, not an invented price or item."
+claude_read_only_run: 2026-09-30T01-55-58-948Z-666aeaca
+claude_read_only_marker: GDA_ESTIMATE_QUANTITY_POLICY_B5_PR143_READ_ONLY_DIAGNOSIS_V1
+claude_read_only_acceptance: EXIT_0_FABLE_MODEL_MARKER_LITERAL_APP_SOURCE_ONLY
+superseding_pr143_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/143#issuecomment-5902757387
+app_edit_allowlist: "Initially 37 exact app source/test paths in plan 24.1; corrected to 38 after the first BLOCKED_SCOPE result. No directory wildcard or SQL transfer."
+sql_gate: "Book-local exact migration path and contract to be recorded separately before SQL edit; no live apply."
+protected: ScreensPreview.tsx_METADATA_ONLY
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+next: "DISPATCH_BOUNDED_CLAUDE_FABLE_APP_IMPLEMENTATION; STOP_ON_NEW_PATH_OR_MATERIAL_CONTRACT_CONFLICT; THEN_BOOK_LOCAL_SQL_CONTRACT_AND_E2_ACCEPTANCE."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5 first implementation stop and corrected path
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5_SCOPE_CORRECTION_V1
+date: 2026-09-30
+run: 2026-09-30T02-21-18-276Z-d1436f95
+runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+verdict: BLOCKED_SCOPE_BEFORE_EDITS
+book_correction: "Claude named ew-ui1-controller.ts, but exact source shows it delegates to draft-to-ew-ui1.ts, whose fixed clone drops new sections. Add only draft-to-ew-ui1.ts; wizard-types.ts already imports the draft type."
+app_edit_allowlist: "Exact 38 paths in plan 24.1, including corrected projection path; no directory wildcard."
+contract: "Multiple dealer menu selections per wheel/glass category; optional old-fixture/draft fields fail closed, explicit empty dealer catalog prompts settings, configured prices prefill editable amounts, 4/1 initial quantities are not minimums."
+source_edits: NONE_IN_CLAUDE_RUN
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+next: "RETRY_SAME_BOUNDED_APP_TASK_WITH_CORRECTED_PROJECTION_ALLOWLIST_AND_RULES; SQL_REMAINS_BOOK_LOCAL."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5 bounded-run decomposition
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5_STAGED_EXECUTION_GATE_V1
+date: 2026-09-30
+second_run: 2026-09-30T02-30-16-433Z-5e8c146a
+runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+verdict: BLOCKED_SCOPE_BEFORE_EDITS_AND_RUN_BUDGET_INSUFFICIENT
+book_source_check: "estimate-wizard-settings-types.ts re-exports the authoring kind union and retains the existing service section id; no edit needed, exact-path read now authorized."
+stages: "B5a settings/catalog/runtime projection; B5b draft/Screen-3/Step-4; B5c pricing/review/save/revision; then full E2 and Book-local SQL."
+b5a_edit_allowlist: "Nine exact paths in plan 24.1 staged refinement."
+b5a_read_only_extra: src/lib/wizard-catalog/estimate-wizard-settings-types.ts
+source_edits: NONE_IN_SECOND_CLAUDE_RUN
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+next: "RUN_NARROW_B5A_FABLE_PACKET_WITH_FOCUSED_TESTS_THEN_CHECK_LITERAL_DIFF."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5a partial implementation and B5a2 scope
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5A_PARTIAL_ACCEPTANCE_V1
+date: 2026-09-30
+run: 2026-09-30T02-37-17-339Z-f52912fb
+runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+verdict: COMPLETE_PARTIAL_NINE_EXACT_APP_PATHS_NOT_E2
+focused_tests: PASS_135_OF_135_THREE_EXACT_TEST_FILES
+diff_check: PASS_NINE_EXACT_PATHS
+typecheck: FAIL_ONE_MISSING_KIND_LABEL_IN_SettingsClient_OUTSIDE_B5A_GATE
+process_deviation: "Claude ran informational whole-project tsc despite requested deferral; no direct protected-file read reported, but command scope exceeded the narrow packet."
+book_acceptance: "Kinds, nullable-price runtime projection, quantity-required semantics, dealer-scoped settings groups and focused tests accepted as a partial candidate only."
+b5a2_edit_allowlist:
+  - src/app/settings/estimate-wizard/EstimateWizardSettingsClient.tsx
+  - src/lib/wizard-catalog/get-estimate-wizard-settings-view.ts
+source_state: LOCAL_UNCOMMITTED_UNPUSHED_NO_SQL
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+next: "BOUNDED_B5A2_SETTINGS_UI_LOADER_COMPLETION_THEN_B5B_DRAFT_SCREEN3_STEP4."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5 local SQL path gate
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5_SQL_SOURCE_GATE_V1
+date: 2026-09-30
+migration_path: supabase/migrations/20260930025030_estimate_wheel_glass_service_menus.sql
+creation: SUPABASE_CLI_MIGRATION_NEW_LOCAL_EMPTY_FILE_ONLY
+edit_allowlist: THIS_ONE_NEW_MIGRATION_ONLY
+contract: "Wheel estimate/invoice/save category; wheel_menu/glass_menu dealer-owned kind policy and quantity constraints; current wizard authoring RPC extended with no grant/tenant widening; no seeded item or amount."
+remote_db: NOT_ACCESSED_NOT_APPLIED
+external_transfer: SQL_NOT_SENT_TO_ANTHROPIC
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+next: "BOOK_AUTHORS_EXACT_LOCAL_MIGRATION_AFTER_APP_SHAPE_CHECK_THEN_DISPOSABLE_DB_VALIDATION."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5a2 partial acceptance and B5b1 gate
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5A2_PARTIAL_ACCEPTANCE_B5B1_GATE_V1
+date: 2026-09-30
+run: 2026-09-30T02-49-02-863Z-9e6d8110
+runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+verdict: COMPLETE_PARTIAL_TWO_EXACT_SETTINGS_PATHS_NOT_E2
+focused_tests: PASS_135_OF_135
+typecheck: PASS_EXIT_0
+diff_check: PASS_TWO_EXACT_PATHS
+b5b1_edit_allowlist: "Nine exact category/draft/bridge/Screen-3/save-intent paths in plan 24.1."
+sql_migration: EMPTY_LOCAL_FILE_ONLY_NOT_APPLIED
+process_note: "Claude attempted npx vitest before using the project test runner; no source effect. Future packets give exact runner command."
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+next: "RUN_B5B1_NARROW_FABLE_PACKET_THEN_B5B2_STEP4_AND_B5C_PRICING_SAVE."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5b1 partial acceptance and B5b2 start
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5B1_PARTIAL_ACCEPTANCE_B5B2_START_V1
+date: 2026-09-30
+b5b1_run: 2026-09-30T02-55-08-441Z-e934f8a3
+b5b1_runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+b5b1_verdict: COMPLETE_PARTIAL_NINE_EXACT_PATHS_NOT_E2
+b5b1_focused_tests: PASS_20_OF_20_SCREEN3_AND_68_OF_68_SAVE_INTENT
+b5b1_diff_check: PASS_NINE_EXACT_PATHS
+b5b2_run: 2026-09-30T11-38-42-083Z-f0a6b373
+b5b2_state: STARTED_PID_76784_NOT_YET_ACCEPTED
+b5b2_edit_allowlist: "Three exact Step-4 host, bindings and binding-test paths in plan 24.1."
+typecheck_note: "B5b1 informational tsc found exhaustive category maps needing B5c fixes; catalog/project-production-catalog.ts is outside the 38-path gate and must be expressly added before any edit."
+sql_migration: LOCAL_SOURCE_ONLY_NOT_APPLIED_NOT_YET_DISPOSABLE_DB_TESTED
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+next: "ACCEPT_B5B2_EVIDENCE_THEN_NARROW_B5C_PRICING_SAVE_AND_DISPOSABLE_DB_VALIDATION."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5b2 partial acceptance and disposable SQL execution
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5B2_PARTIAL_SQL_DISPOSABLE_PASS_V1
+date: 2026-09-30
+b5b2_run: 2026-09-30T11-38-42-083Z-f0a6b373
+b5b2_runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+b5b2_verdict: COMPLETE_PARTIAL_THREE_EXACT_PATHS_NOT_E2
+b5b2_focused_tests: PASS_71_OF_71
+b5b2_diff_check: PASS_THREE_EXACT_PATHS
+b5b2_process_note: "Claude appended a new test block with a shell heredoc despite the edit-method request; Book inspected the literal test-only diff."
+app_gate_revision: "Added only catalog/project-production-catalog.ts as the 39th exact path after B5b1's 2-file exhaustive-map typecheck failure; no production wheel/glass catalogue rows may be fabricated."
+sql_migration: 20260930025030_estimate_wheel_glass_service_menus.sql
+sql_execution: "PASS in isolated disposable PostgreSQL 16 container, synthetic baseline plus actual current author/save function definitions; no remote DB."
+sql_assertions: "PASS new categories/policies, positive required quantity, unchanged unrelated-menu quantity scope, function source patch and security modes."
+sql_limitation: "Not a full-schema migration replay; migration remains local and unapplied to production."
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+next: "NARROW_B5C_PRICING_LINES_THEN_REVIEW_SAVE_REVISION_AND_FULL_APP_E2."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5c1 pricing acceptance and B5c2 transfer pause
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5C1_PARTIAL_B5C2_TRANSFER_PAUSED_V1
+date: 2026-09-30
+b5c1_run: 2026-09-30T12-00-02-443Z-bf725eab
+b5c1_runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+b5c1_verdict: COMPLETE_PARTIAL_SIX_EXACT_PATHS_NOT_E2
+b5c1_focused_tests: PASS_78_OF_78_RUNTIME_AND_25_OF_25_PRICING
+b5c1_typecheck: PASS_EXIT_0
+b5c1_diff_check: PASS_SIX_EXACT_PATHS
+b5c2_dry_run: PASS_FABLE_5_1
+b5c2_implementation_launch: REJECTED_BY_SAFETY_REVIEW_BEFORE_SOURCE_TRANSFER_OR_EDITS
+b5c2_reason: "The reviewer could not confirm explicit consent for sending the specific private pricing/review source payload to Anthropic. Do not bypass; request exact transfer consent or another owner-approved route."
+book_pdf_edit_allowlist: "Only src/lib/pdf/estimate-document-data.ts and src/lib/pdf/estimate-document-data.test.ts; no PDF source transfer to Anthropic."
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+next: "BOOK_LOCAL_ESTIMATE_PDF_PARITY_THEN_RESUME_NARROW_B5C2_ONLY_AFTER_TRANSFER_AUTHORIZATION; B5C3_SAVE_REVISION_AND_FULL_E2_REMAIN."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5 Book-local estimate PDF adapter parity
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5_PDF_ADAPTER_LOCAL_PARTIAL_V1
+date: 2026-09-30
+edit_allowlist: "Exactly src/lib/pdf/estimate-document-data.ts and src/lib/pdf/estimate-document-data.test.ts."
+source_contract: "Wheel and glass PDF lines use persisted quantity, unit price and line total; no PDF pricing recomputation. Wheel receives its explicit category tag."
+focused_tests: PASS_6_OF_6
+typecheck: PASS_EXIT_0
+diff_check: PASS_TWO_EXACT_PATHS
+limitation: "Wheel item category is not yet part of the shared EstimateCategory type until B5c3; the focused fixture uses a temporary cast. No live DB or production PDF was exercised."
+external_transfer: PDF_SOURCE_NOT_SENT_TO_ANTHROPIC
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+next: "RESUME_B5C2_AFTER_EXPLICIT_TRANSFER_DECISION_THEN_B5C3_PERSISTENCE_REVISION_AND_FULL_E2."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5c3 revision-test exact path correction
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5C3_REVISION_TEST_PATH_V1
+date: 2026-09-30
+reason: "The existing estimateToWizardDraft integration suite is required to pin the new wheel/glass Screen-3 identity while preserving fail-closed unresolved Screen-4 selection provenance."
+new_app_edit_path: src/components/estimates/wizard/integration/estimateWizardIntegration.test.ts
+cumulative_app_edit_paths: 42_EXACT_PATHS
+scope: B5C3_ONLY_NO_FLAT_ROW_TO_MENU_SELECTION_INVENTION
+status: PREPARED_NOT_STARTED
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5c2 owner consent and partial acceptance
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5C2_PARTIAL_ACCEPTANCE_B5C3_GATE_V1
+date: 2026-09-30
+owner_transfer_consent: "Owner explicitly answered yes to sending only pricing, final-review and save-related application source to Anthropic; customer records, vehicle documents, PDFs, images, secrets and SQL excluded."
+b5c2_run: 2026-09-30T12-36-04-920Z-0f62a7f4
+b5c2_pid: 78771
+b5c2_runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+b5c2_verdict: COMPLETE_PARTIAL_SIX_EXACT_PATHS_NOT_E2
+b5c2_focused_tests: PASS_20_OF_20_REVIEW_POLICY_AND_46_OF_46_STEP7
+b5c2_typecheck_build_diff: PASS_ALL_EXIT_0
+b5c2_full_src_tests: "3562 pass / 45 fail / 1 skip of 3608; failing suites outside B5c2's six paths; pre-existing attribution not proven."
+b5c2_open_finding: "Combined discount/coupon/multi-edit save fixture rejected; B5c3 must identify whether fixture or mapper contract is at fault."
+b5c3_edit_allowlist: "Six exact estimate-type, persistence payload, save mapper/test, revision hydration/test paths in plan 24.1."
+status: B5C3_PREPARED_NOT_STARTED
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+next: "RUN_B5C3_NARROW_FABLE_PACKET_THEN_BOOK_FULL_E2_AND_DISPOSABLE_SQL_REVIEW."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5c3 partial acceptance and local E2 candidate
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5C3_LOCAL_E2_CANDIDATE_V1
+date: 2026-09-30
+b5c3_run: 2026-09-30T12-50-12-178Z-c00e948e
+b5c3_pid: 80430
+b5c3_runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+b5c3_result_marker: GDA_ESTIMATE_QUANTITY_POLICY_B5C3_SAVE_REVISION_RESULT_V1
+b5c3_verdict: COMPLETE_PARTIAL_FIVE_OF_SIX_EXACT_PATHS
+b5c3_fix: "Explicit wheel/glass persistence categories; prior fallback silently mapped both to other. Revision retains Screen-3 identity but leaves flat-row menu provenance unresolved."
+b5c3_fixture_finding: "The combined negative case lacked glass Step-4 unit price; MANUAL_PRICE_REQUIRED is correct. The corresponding priced positive case saves without relaxing validation."
+b5c3_focused_tests: PASS_47_OF_47_MAPPER_AND_103_OF_103_INTEGRATION
+book_pdf_parity: PASS_6_OF_6_NO_PDF_SOURCE_OR_RECORD_TRANSFER
+combined_related_tests: PASS_546_OF_546_IN_TWELVE_EXACT_FILES
+canonical_estimate_prebuild: PASS_28_OF_28
+typecheck: PASS_EXIT_0
+build: "PASS_EXIT_0 after retrying the identical command in a permitted context; first sandbox attempt failed only to bind Turbopack internal port."
+changed_path_review: "46 changed app paths all in B5 cumulative, pre-existing Stage A/B or Book-local two-path PDF gate; two governance documents and one exact new B5 SQL migration."
+protected_path: "ScreensPreview.tsx metadata-only: unchanged index blob c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f, mode 100644, clean status."
+diff_check: "PASS_EXIT_0 for 48 changed tracked paths; untracked SQL no whitespace diagnostics."
+sql_proof: "Isolated disposable PostgreSQL 16 execution on synthetic old-schema tables and actual prior authoring/save function bodies passed; full-schema replay unproven; no remote DB touched."
+full_src_caveat: "Earlier B5c2 run had 3562 pass / 45 fail / 1 skip of 3608 outside its six paths. Failure baseline attribution remains unproven; do not claim full-suite green."
+evidence_level: E2_LOCAL_ESTIMATE_CANDIDATE_UNCOMMITTED_NOT_E3_OR_E4
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+next: "REQUEST_SEPARATE_OWNER_PUBLICATION_GATE; KEEP_DRAFT_PR_143_AND_SQL_UNAPPLIED_UNTIL_APPROVED."
+```
+
+## GDA-OTHER-COATINGS-R1 — owner request and read-only diagnosis
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_STAGE_A
+marker: GDA_OTHER_COATINGS_R1_DIAGNOSIS_AND_STAGE_A_GATE_V1
+date: 2026-09-30
+owner_request: "Add その他のコーティング設定 under 店舗設定 > 見積・価格, with dealer-editable approximate prices for wheel, glass, resin TRIM, seat, and engine room; allow later additions and make selected services usable in estimates."
+source_transfer_consent: "Owner approved related settings/catalogue/pricing application code only; exclude customer data, vehicle documents, images, PDF, SQL, secrets and governance document contents."
+coordination_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/143#issuecomment-5912364181
+claude_diagnosis_run: 2026-09-30T13-34-48-960Z-677fa4dc
+claude_diagnosis_result: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER_READ_ONLY_NO_EDIT
+decision: "Keep B5 wheel/glass categories; add one extensible other_coating_menu kind/category for TRIM/seat/engine and later dealer entries; do not collapse into store_global_option or body coating."
+stage_a_edit_allowlist: "Eight exact settings hub/panel/section/client/test paths in completion plan 25; wheel/glass settings regrouping only."
+status: STAGE_A_PREPARED_NOT_STARTED_B5_E2_LOCAL_CANDIDATE_PRESERVED
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_REMOTE_DB_APPLY_PRODUCTION_SETTINGS
+next: "Implement Stage A in exact allowlist, verify focused tests/typecheck/diff, then gate later catalogue/runtime/pricing/SQL/PDF packets separately."
+```
+
+## GDA-OTHER-COATINGS-R1 — Stage A permission-mode block and exact retry
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_STAGE_A
+marker: GDA_OTHER_COATINGS_R1_STAGE_A_FIRST_RUN_BLOCKED_NO_EDIT_V1
+date: 2026-09-30
+coordination_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/143#issuecomment-5912609460
+run: 2026-09-30T13-48-42-341Z-0e0db883
+runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+verdict: BLOCKED_PERMISSION_MODE_NO_FILES_EDITED
+evidence: "dontAsk denied Edit/Write; 49-path dirty/untracked baseline and clean index remained identical; no tests or typecheck were run."
+retry: "Same eight-path Stage A packet, same model/branch/HEAD, with approved local implementation permission mode; no scope expansion."
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY
+```
+
+## GDA-OTHER-COATINGS-R1 — Stage A partial source acceptance and test-path correction
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_STAGE_A
+marker: GDA_OTHER_COATINGS_R1_STAGE_A_PARTIAL_AND_TEST_GATE_V1
+date: 2026-09-30
+run: 2026-09-30T13-56-04-954Z-57be744c
+runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+changed_paths: SEVEN_OF_EIGHT_EXACT_STAGE_A_PATHS
+focused_tests: PASS_38_OF_38
+typecheck: PASS_EXIT_0
+diff_check: PASS_EXIT_0
+adjacent_contract: "Two failures in gda-category-shell.test.ts caused by the newly required five-card hub; one unrelated gda-pricing-settings-ui badge failure already existed at HEAD and is not authorized for repair."
+new_exact_test_edit_path: src/lib/navigation/gda-category-shell.test.ts
+scope: UPDATE_FIVE_CARD_EXPECTATIONS_ONLY_PRESERVE_OTHER_GROUPS_AND_UNRELATED_BASELINE
+status: PARTIAL_LOCAL_STAGE_A_NOT_FEATURE_COMPLETE
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY
+```
+
+## GDA-OTHER-COATINGS-R1 — Stage A local settings acceptance
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_STAGE_A
+marker: GDA_OTHER_COATINGS_R1_STAGE_A_LOCAL_ACCEPTANCE_V1
+date: 2026-09-30
+correction_run: 2026-09-30T14-06-38-323Z-16df0004
+runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+correction_changed_path: src/lib/navigation/gda-category-shell.test.ts
+targeted_contract_tests: PASS_28_OF_28
+stage_a_focused_tests: PASS_38_OF_38
+typecheck: PASS_EXIT_0
+diff_check: PASS_EXIT_0
+baseline_caveat: "Unrelated gda-pricing-settings-ui badge-literal test remains failing already at HEAD; no edit authorized."
+evidence_level: PARTIAL_LOCAL_SETTINGS_ONLY_NOT_FEATURE_COMPLETE
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+next: "AUTHORIZE_EXACT_B1_GENERIC_CATALOG_KIND_APP_PACKET_THEN_BOOK_LOCAL_SQL_DEFAULT_SEED_AND_END_TO_END_WIZARD_GATES."
+```
+
+## GDA-OTHER-COATINGS-R1 — Stage B1 exact generic-kind authoring gate
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_STAGE_B1
+marker: GDA_OTHER_COATINGS_R1_B1_APP_GATE_V1
+date: 2026-09-30
+edit_allowlist: "Eight exact authoring type/form/core/view/settings client/test paths in completion plan 25."
+read_only: "wizard-catalog-authoring-core.ts and estimate-wizard-settings-types.ts."
+contract: "One dealer-authored other_coating_menu kind; positive tax-exclusive unit price; optional quantity-required with positive bounds; no SQL/default rows or estimate workflow yet."
+status: PREPARED_NOT_STARTED_STAGE_A_LOCAL_ACCEPTED
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+```
+
+## GDA-OTHER-COATINGS-R1 — Stage B1 read-only diagnosis acceptance
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_STAGE_B1
+marker: GDA_OTHER_COATINGS_R1_B1_DIAGNOSIS_ACCEPTED_V1
+date: 2026-09-30
+coordination_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/143#issuecomment-5913036476
+run: 2026-09-30T14-13-18-359Z-e180dd23
+runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER_READ_ONLY_NO_EDIT
+finding: "Eight exact app edit paths suffice; form/client must explicitly parse and emit quantity toggle/bounds; new kind price positive, blank null; SQL later."
+status: B1_IMPLEMENTATION_PREPARED_NOT_STARTED
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+```
+
+## GDA-OTHER-COATINGS-R1 — Stage B1 local catalogue-authoring acceptance
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_STAGE_B1
+marker: GDA_OTHER_COATINGS_R1_B1_IMPLEMENTATION_RESULT_V1
+date: 2026-09-30
+coordination_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/143#issuecomment-5913138717
+run: 2026-09-30T14-19-00-318Z-1f75ddfb
+runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+scope: EXACT_EIGHT_APP_PATHS_ONLY_WITH_PREEXISTING_DIRTY_FILES_PRESERVED
+tests: FORM_36_OF_36_CORE_38_OF_38_AUTHORING_41_OF_41_NEIGHBOUR_102_OF_102
+typecheck: PASS_EXIT_0
+diff_check: PASS_EXIT_0
+protected_path: SCREENSPREVIEW_BLOB_AND_INDEX_UNCHANGED
+status: PARTIAL_LOCAL_AUTHORING_ONLY_NO_DB_PERSISTENCE_NO_ESTIMATE_LINE
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+```
+
+## GDA-OTHER-COATINGS-R1 — Stage B2 read-only estimate-path diagnosis
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_STAGE_B2
+marker: GDA_OTHER_COATINGS_R1_B2_READ_ONLY_DIAGNOSIS_V1
+date: 2026-09-30
+coordination_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/143#issuecomment-5913381773
+run: 2026-09-30T14-31-36-296Z-c065ff19
+runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER_READ_ONLY_NO_EDIT
+finding: "B5 wheel/glass app path exists; other_coating_menu has no Screen-3 category, runtime projection, draft, pricing, save or document mapping. Split C1 category/draft, C2 runtime, C3 selection, C4 pricing/review; Book-local SQL and PDF parity later."
+baseline: DIRTY_54_MODIFIED_1_UNTRACKED_INDEX_CLEAN_PROTECTED_PATH_CLEAN
+status: C1_EXACT_APP_GATE_PREPARED_NOT_STARTED
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+```
+
+## GDA-OTHER-COATINGS-R1 — C1 partial and C1b local PDF parity
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_STAGE_C1
+marker: GDA_OTHER_COATINGS_R1_C1_RESULT_V1
+date: 2026-09-30
+coordination_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/143#issuecomment-5913534291
+run: 2026-09-30T14-40-19-182Z-4622d3b5
+runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+verdict: PARTIAL_CATEGORY_DRAFT_CONTRACT_16_EXACT_PATHS
+focused_tests: PASS_27_72_50_106
+typecheck: PASS_EXIT_0
+diff_check: PASS_EXIT_0
+boundary_incident: "A broad grep emitted three protected ScreensPreview matching lines. No file edit; later searches excluded it. The incident is recorded, not accepted as compliant read behavior."
+c1b_book_local_paths: "estimate-types.ts, estimate-document-data.ts, estimate-document-data.test.ts, estimateToWizardDraft.ts, estimateWizardIntegration.test.ts"
+c1b_focused_tests: PASS_114_OF_114
+c1b_typecheck: PASS_EXIT_0
+status: PARTIAL_LOCAL_NO_RUNTIME_PROJECTION_NO_PRICE_LINE_NO_SQL
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+```
+
+## GDA-OTHER-COATINGS-R1 — C2 runtime projection local acceptance
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_STAGE_C2
+marker: GDA_OTHER_COATINGS_R1_C2_RESULT_V1
+date: 2026-10-01-JST
+coordination_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/143#issuecomment-5913834281
+run: 2026-09-30T14-56-52-064Z-ee23e20b
+runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+scope: EXACT_FIVE_APP_PATHS_ONLY_INDEX_AND_PROTECTED_METADATA_UNCHANGED
+focused_tests: PASS_87_OF_87
+typecheck: PASS_EXIT_0
+diff_check: PASS_EXIT_0
+contract: "Active other_coating_menu rows project to optional runtime config; positive price only is configured; null or zero is unconfigured, malformed row fails closed; quantity flag and bounds preserved."
+status: PARTIAL_LOCAL_NO_SELECTABLE_LINE_NO_SQL
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+```
+
+## GDA-OTHER-COATINGS-R1 — C3 Step-4 selection local acceptance
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_STAGE_C3
+marker: GDA_OTHER_COATINGS_R1_C3_RESULT_V1
+date: 2026-10-01-JST
+coordination_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/143#issuecomment-5913983185
+run: 2026-09-30T15-05-16-234Z-e0103bea
+runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+scope: EXACT_THREE_APP_PATHS_ONLY_INDEX_AND_PROTECTED_METADATA_UNCHANGED
+focused_tests: PASS_87_OF_87
+typecheck: PASS_EXIT_0
+diff_check: PASS_EXIT_0
+contract: "other_coating Step-4 selection; fixed-one no quantity control, quantity-bearing bounded input; null/zero price not prefilled as zero; B5 wheel/glass regression green."
+status: PARTIAL_LOCAL_NO_PRICED_LINE_NO_SQL
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+```
+
+## GDA-OTHER-COATINGS-R1 — C4 pricing and review local acceptance
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_STAGE_C4
+marker: GDA_OTHER_COATINGS_R1_C4_RESULT_V1
+date: 2026-10-01-JST
+coordination_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/143#issuecomment-5914158707
+run: 2026-09-30T15-15-05-040Z-2b2e4d9b
+runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+scope: EXACT_EIGHT_APP_PATHS_ONLY_INDEX_AND_PROTECTED_METADATA_UNCHANGED
+focused_tests: PASS_32_25_53
+typecheck: PASS_EXIT_0
+diff_check: PASS_EXIT_0
+contract: "Distinct positive-price other_coating line; fixed-one qty 1 read-only; quantity-bearing bounded x unit price, Step-7 sync; malformed price/selection/quantity fail closed; wheel/glass regressions green."
+status: PARTIAL_LOCAL_NO_DEFAULT_ROWS_NO_SQL
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+```
+
+## GDA-OTHER-COATINGS-R1 — Stage D local SQL/defaults candidate
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_STAGE_D
+date: 2026-10-01-JST
+source: supabase/migrations/20260930153106_add_optional_coating_menus_defaults.sql
+runner: BOOK_LOCAL_SQL_ONLY_NOT_SENT_TO_ANTHROPIC
+prerequisite: UNTRACKED_B5_MIGRATION_PRESERVED
+disposable_database: PGLITE_POSTGRES_18_SYNTHETIC_SCHEMA
+result: PASS_B5_THEN_NEW_MIGRATION_AND_SEED_AUTHORING_CATEGORY_ASSERTIONS
+scope: FIVE_REFERENCE_TAX_EXCLUSIVE_PRICES_DEALER_EDITABLE
+limitation: NOT_FULL_SCHEMA_OR_POSTGRES_16_OR_HOSTED_APPLY
+status: PARTIAL_LOCAL_SOURCE_ONLY_UNTRACKED
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+```
+
+## GDA-OTHER-COATINGS-R1 — Book-local settings/detail/invoice display parity
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_DISPLAY_PARITY
+date: 2026-10-01-JST
+scope: SETTINGS_REFERENCE_PRICE_TEXT_AND_BADGE_ESTIMATE_DETAIL_AND_INVOICE_CATEGORY_LABELS
+focused_tests: PASS_66_AND_19
+typecheck: PASS_EXIT_0
+status: LOCAL_SOURCE_ONLY_PENDING_COMBINED_E2
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+```
+
+## GDA-OTHER-COATINGS-R1 — E2 combined and independent review
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_E2_REVIEW
+date: 2026-10-01-JST
+focused_tests: PASS_709_OF_709_AFTER_STALE_C2_TEST_EXPECTATION_CORRECTION
+typecheck: PASS_EXIT_0
+prebuild: PASS_28_OF_28
+build: PASS_EXIT_0_WITH_EXISTING_DYNAMIC_ROUTE_WARNINGS
+diff_check: PASS_EXIT_0
+review_run: 2026-09-30T16-05-08-276Z-590c269f
+review_marker: GDA_OTHER_COATINGS_R1_APP_REVIEW_RESULT_V1
+review_runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+review_verdict: CHANGES_REQUIRED_THREE_BOUNDED_DEFECTS
+findings: STALE_FIXED_ONE_DRAFT_HAS_NO_REPAIR; REVIEW_ZERO_UNIT_PRICE_ALLOWED; FIXED_ONE_SETTINGS_SHOW_BOUNDS
+status: C5_REPAIR_REQUIRED_NOT_PUBLICATION_READY
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+```
+
+## GDA-OTHER-COATINGS-R1 — C5 repair and combined local acceptance
+
+```yaml
+phase: GDA_OTHER_COATINGS_R1_C5_E2
+date: 2026-10-01-JST
+first_implement_run: 2026-09-30T16-13-02-828Z-150c868f
+first_result: BLOCKED_TOOL_PERMISSION_NO_EDIT
+retry_implement_run: 2026-09-30T16-18-08-767Z-83989b46
+retry_result: FAILED_TIMEOUT_EXIT_143_NO_MARKER_NINE_ALLOWLISTED_PATHS_CHANGED
+book_focused_tests: PASS_211_OF_211
+book_combined_related_tests: PASS_719_OF_719
+book_typecheck: PASS_EXIT_0
+book_canonical_prebuild: PASS_28_OF_28
+book_build: PASS_EXIT_0_WITH_EXISTING_DYNAMIC_ROUTE_WARNINGS
+book_diff_check: PASS_EXIT_0
+disposable_database_extra: QUANTITY_BEARING_TO_FIXED_ONE_EDIT_CLEARS_BOUNDS_PASS
+postfix_review_run: 2026-09-30T16-58-27-670Z-f2c37ecf
+postfix_review_marker: GDA_OTHER_COATINGS_R1_C5_VERIFICATION_REVIEW_V1
+postfix_review_result: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER_READ_ONLY_PASS
+contract: F1_EXPLICIT_STALE_QUANTITY_RESET_F2_REVIEW_ZERO_PRICE_REJECT_F3_FIXED_ONE_BOUNDS_HIDDEN_AND_REJECTED
+status: LOCAL_APP_AND_SYNTHETIC_DB_CANDIDATE_ONLY
+limitations: NO_CLAUDE_IMPLEMENT_COMPLETION_MARKER; NO_AUTHENTICATED_PREVIEW; NO_FULL_SCHEMA_REPLAY; NO_HOSTED_DB_APPLY; WHOLE_SRC_BASELINE_FAILURES_UNATTRIBUTED
+not_authorized: COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+```
+
+## PR #143 — independent-review R2 app corrections
+
+```yaml
+phase: GDA_PR143_APP_REVIEW_R2_CORRECTIONS
+date: 2026-10-01-JST
+base_head: f869de9e9e6df60ce6b00c6d6897a2b24ba5c760
+coordination_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/143#issuecomment-5921043818
+first_implement_run: 2026-09-30T22-49-41-508Z-ec00d6ae
+first_result: REJECTED_SCOPE_READ_PACKAGE_JSON_STOPPED_EXIT_130_NO_SOURCE_EDITS
+accepted_implement_run: 2026-09-30T22-52-36-198Z-fb05af59
+accepted_marker: GDA_PR143_APP_REVIEW_R2_CORRECTIONS_RESULT_V1
+accepted_runner: BOOK_ACCEPTED_EXIT_0_FABLE_MODEL_MARKER
+claude_focused_tests: PASS_337_OF_337
+book_focused_tests: PASS_337_OF_337
+book_canonical_tests: PASS_28_OF_28
+book_typecheck: PASS_EXIT_0
+book_build: PASS_EXIT_0_WITH_EXISTING_TURBOPACK_WARNINGS
+book_diff_check: PASS_EXIT_0
+app_scope: EXACT_TWELVE_EXISTING_APP_PATHS_PLUS_ONE_NEW_TEST_PATH_NO_OTHER_SOURCE_CHANGES
+protected_path: SCREENS_PREVIEW_INDEX_OID_C1EB0DC88954F3A17CC85E313B62D5BB6A4FDA3F_UNCHANGED
+contract: WHEEL_GLASS_ZERO_PRICE_REJECTED_AND_EXISTING_ZERO_UNCONFIGURED; WHEEL_SORTS_WITH_GLASS_BEFORE_OTHER; STALE_DEDICATED_QUANTITY_SHOWN_WITH_EXPLICIT_REPAIR; OBSOLETE_C1_TEST_UPDATED
+status: LOCAL_APP_CANDIDATE_ONLY_PR143_STILL_DRAFT
+limitations: NO_FULL_RELATED_OR_WHOLE_SRC_GREEN_CLAIM; NO_AUTHENTICATED_PREVIEW; NO_DB_AUTHORING_POLICY_CHANGE_OR_APPLY; NO_PRODUCTION_VALIDATION
+at_local_acceptance_not_authorized: STAGE_COMMIT_PUSH_READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS
+subsequent_delivery_gate: OWNER_APPROVED_EXACT_13_APP_PATHS_PLUS_TWO_GOVERNANCE_DOCS_ONE_NORMAL_COMMIT_AND_PUSH_TO_EXISTING_DRAFT_PR143
+still_not_authorized: READY_MERGE_DEPLOY_DB_APPLY_PRODUCTION_SETTINGS_OR_OTHER_PATHS
+```

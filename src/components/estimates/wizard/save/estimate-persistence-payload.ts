@@ -70,6 +70,17 @@ export type EstimateSaveRpcPayload = {
 
 // wizard category → estimate_items.category (allowed CHECK set). store_global_options has no allowed
 // value, so it maps to 'other' while the true category is kept in wizardCategory (per 11F-A spec).
+//
+// GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c3, plan §24.1): `wheel` and `glass` are dedicated Screen-3
+// categories with their OWN persisted values. Before B5c3 neither key existed here, so a wheel /
+// glass line fell through the `?? "other"` default — exactly the silent "map to Other" the contract
+// forbids. Both are now EXPLICIT (`glass` is an existing CHECK value; `wheel` is added by the
+// Book-local B5 migration, which this module neither references nor applies).
+//
+// GDA-OTHER-COATINGS-R1 (C1): `other_coating` is EXPLICIT for the same reason — a non-body coating
+// line must persist as its own category, never fall through to `other` and never merge into body
+// `coating`. Its CHECK-set value is a Book-local follow-up migration (not referenced or applied here);
+// C1 produces no such line yet (no pricing path), so this is contract parity, fail-closed at the DB.
 const CATEGORY_MAP: Record<string, string> = {
   coating:              "coating",
   ppf:                  "ppf",
@@ -77,6 +88,9 @@ const CATEGORY_MAP: Record<string, string> = {
   maintenance:          "maintenance",
   carwash:              "carwash",
   roomclean:            "roomclean",
+  wheel:                "wheel",
+  glass:                "glass",
+  other_coating:        "other_coating",
   other:                "other",
   store_global_options: "other",
 };

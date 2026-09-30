@@ -357,6 +357,60 @@ test("coupon: a well-formed rule reaches the RPC with the server-injected dealer
   assert.equal(rec.calls[0].dealerId, DEALER);
 });
 
+// ── GDA-OTHER-COATINGS-R1 (B1): the extensible other_coating_menu kind ───────────────────────────
+
+test("B1: buildUpsertPayload carries quantity_required=false EXPLICITLY and a null price as null", () => {
+  const p = buildUpsertPayload({
+    kind: "other_coating_menu",
+    labelJa: "ヘッドライトコーティング",
+    defaultUnitPrice: null,
+    quantityRequired: false,
+    minQuantity: 1,
+    maxQuantity: 2,
+  });
+  assert.deepEqual(Object.keys(p).sort(), [
+    "default_unit_price",
+    "label_ja",
+    "max_quantity",
+    "min_quantity",
+    "quantity_required",
+  ]);
+  assert.equal(p.quantity_required, false, "false must travel as a stated value, never an omission");
+  assert.equal(p.default_unit_price, null, "blank price is null (unconfigured), never 0");
+  assert.equal(p.min_quantity, 1);
+  assert.equal(p.max_quantity, 2);
+  assert.ok(!("priceable" in p) && !("duration_minutes" in p), "no priceable toggle and no duration on this kind");
+  assert.ok(!("dealer_id" in p) && !("dealerId" in p) && !("owner_scope" in p));
+});
+
+test("B1: buildUpsertPayload keeps a positive price and quantity_required=true; unset bounds are omitted", () => {
+  const p = buildUpsertPayload({ kind: "other_coating_menu", labelJa: "x", defaultUnitPrice: 6000, quantityRequired: true });
+  assert.deepEqual(p, { label_ja: "x", default_unit_price: 6000, quantity_required: true });
+});
+
+test("B1: other_coating_menu is a SUPPORTED kind — it passes the kind gate and reaches the RPC with the dealer id and the flag intact", async () => {
+  for (const quantityRequired of [true, false]) {
+    const rec = recorder();
+    const input: WizardCatalogItemInput = {
+      kind: "other_coating_menu", labelJa: "ヘッドライトコーティング", defaultUnitPrice: 6000, quantityRequired,
+    };
+    const res = await runSaveCatalogItem(upsertDeps({ rec }), input);
+    assert.equal(res.ok, true, `quantityRequired=${quantityRequired}`);
+    assert.equal(rec.calls.length, 1);
+    assert.equal(rec.calls[0].dealerId, DEALER);
+    assert.equal((rec.calls[0].arg as WizardCatalogItemInput).quantityRequired, quantityRequired, "the stated boolean reaches the RPC unchanged");
+  }
+});
+
+test("B1: other_coating_menu still obeys the shared gate (blank label, staff role) without calling the RPC", async () => {
+  const rec = recorder();
+  const blank = await runSaveCatalogItem(upsertDeps({ rec }), { kind: "other_coating_menu", labelJa: "  ", quantityRequired: false });
+  assert.equal(blank.ok === false && blank.code, "VALIDATION_ERROR");
+  const staff = await runSaveCatalogItem(upsertDeps({ rec, getStaffRole: async () => "staff" }), { kind: "other_coating_menu", labelJa: "x", quantityRequired: false });
+  assert.equal(staff.ok === false && staff.code, "PERMISSION_DENIED");
+  assert.equal(rec.calls.length, 0);
+});
+
 test("the still-global PPF vocabulary kinds remain unauthorable", async () => {
   for (const kind of ["ppf_method", "ppf_part", "window_area"]) {
     const rec = recorder();

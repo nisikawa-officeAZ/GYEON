@@ -242,6 +242,18 @@ const HUB_GROUPS: HubGroup[] = [
         getState: () => "active",
         badge: "solid_unset",
       },
+      {
+        // The card does not claim "未設定" from a static flag: catalogue state belongs to the
+        // dealer-scoped settings loader, and defaults may exist after the migration is applied.
+        id:            "other_coatings",
+        icon:          "coating",
+        label:         "その他のコーティング設定",
+        labelEn:       "OTHER COATINGS",
+        description:   "ホイール・ガラスなどボディ以外のコーティングメニュー、単価、数量範囲",
+        minVisibility: "readonly",
+        action:        { kind: "route", href: "/settings/estimate-wizard/other-coatings" },
+        getState: () => "active",
+      },
     ],
   },
 

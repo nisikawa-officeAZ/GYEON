@@ -17,11 +17,29 @@ import type { ShopRank } from "@/lib/dealer-settings/authoritative-shop-rank-cor
  * Still deliberately absent: `ppf_method`, `ppf_part` and `window_area`. Those are the fixed
  * global vocabulary of WHERE film is applied, not WHICH film a dealer sells, so they stay
  * global read-only.
+ *
+ * GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5a) adds `wheel_menu` and `glass_menu`: DEDICATED dealer-authored
+ * service menus priced tax-exclusive PER UNIT (per wheel / per glass pane) and multiplied by an
+ * operator-entered bounded positive-integer quantity. They are NOT store-global options and NOT a
+ * new offering family — the dealer-authored row itself is the sole availability authority. The
+ * dealer authoring RPC allowlist and the catalogue quantity constraints for these two kinds are a
+ * separate Book-local SQL contract; this union alone does not make them persistable.
+ *
+ * GDA-OTHER-COATINGS-R1 (B1) adds `other_coating_menu`: the ONE extensible dealer-authored kind of
+ * the Stage A `other_coating` settings section. A dealer names the coating and gives it a POSITIVE
+ * tax-exclusive unit price (a blank price is null = "not configured", never 0), and states
+ * EXPLICITLY whether the estimate must ask for a quantity (`quantityRequired`, false is a stated
+ * value and is never omitted) together with optional positive min/max bounds. It carries no
+ * duration and no priceable toggle. B1 seeds no default rows, produces no estimate line, and — like
+ * wheel/glass — is not persistable until the Book-local SQL contract admits the kind.
  */
 export const SUPPORTED_AUTHORING_KINDS = [
   "maintenance_menu",
   "wash_menu",
   "room_cleaning_menu",
+  "wheel_menu",
+  "glass_menu",
+  "other_coating_menu",
   "film_type",
   "other_work_preset",
   "store_global_option",

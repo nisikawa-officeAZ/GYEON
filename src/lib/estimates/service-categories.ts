@@ -3,9 +3,15 @@
 // Single source of truth for estimate service categories. Pure module (no schema,
 // no I/O) — safe to import from both server and client.
 //
-// Approved categories per 05_Business_Rules.md §5.9. Wheel and Tire are
-// INTENTIONALLY NOT included here — they are out of scope and require a separate
-// approved specification before being added.
+// Approved categories per 05_Business_Rules.md §5.9, plus the two dedicated categories the Owner
+// approved on 2026-09-30 (GYEON_DA_COMPLETION_PLAN §24.1): `wheel` (ホイール) and `glass` (ガラス)
+// are independent Screen-3 categories driven by dealer-authored wheel/glass service menus — never
+// "Other", never a store-global option. Tire remains INTENTIONALLY NOT included (no approved spec).
+//
+// GDA-OTHER-COATINGS-R1 (C1): `other_coating` (その他コーティング) is the dedicated Screen-3 category for
+// NON-BODY coatings — resin trim, seats, engine room and future dealer-added items. It is distinct from
+// body `coating` (catalog-priced layers), from the B5 `wheel` / `glass` menus and from `other` (free
+// work). C1 establishes the category + draft contract ONLY: no price calculation, no row selection.
 //
 // Multi-service: any non-empty SUBSET of these categories may be combined into a
 // single estimate (e.g. Coating + PPF, Coating + Window, PPF + Window,
@@ -14,7 +20,10 @@
 // src/lib/pricing/pricing-engine.ts).
 
 export type ServiceCategoryId =
-  | "coating" | "ppf" | "window" | "maintenance" | "carwash" | "roomclean" | "other";
+  | "coating" | "ppf" | "window" | "maintenance" | "carwash" | "roomclean"
+  | "wheel" | "glass"
+  | "other_coating"
+  | "other";
 
 export interface ServiceCategory {
   id:    ServiceCategoryId;
@@ -24,7 +33,9 @@ export interface ServiceCategory {
 
 // Order matters — this is the canonical selection/sequence order used by the
 // estimate wizard. (coating … carwash are the Sprint-2 approved categories;
-// roomclean and other are pre-existing approved categories per 05 §5.9.)
+// roomclean and other are pre-existing approved categories per 05 §5.9;
+// wheel and glass are the B5 dedicated categories, kept ahead of `other`;
+// other_coating is the C1 non-body coating category, after wheel/glass and ahead of `other`.)
 export const SERVICE_CATEGORIES: ServiceCategory[] = [
   { id: "coating",     label: "ボディコーティング",     emoji: "✨" },
   { id: "ppf",         label: "PPF",                   emoji: "🛡" },
@@ -32,6 +43,9 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
   { id: "maintenance", label: "ボディ定期メンテナンス", emoji: "🔧" },
   { id: "carwash",     label: "メンテナンス洗車",       emoji: "🚿" },
   { id: "roomclean",   label: "ルームクリーニング",     emoji: "🧹" },
+  { id: "wheel",       label: "ホイール",               emoji: "🛞" },
+  { id: "glass",       label: "ガラス",                 emoji: "🪞" },
+  { id: "other_coating", label: "その他コーティング",     emoji: "🧴" },
   { id: "other",       label: "その他作業",             emoji: "📋" },
 ];
 
@@ -60,6 +74,11 @@ export function isServiceCategoryId(id: string): id is ServiceCategoryId {
 // A family is DEALER-OWNED and opt-in: rank never decides eligibility for any of these five.
 // `coating` and `other` are deliberately absent — they are outside the offering model and keep
 // their existing behaviour, coating included with its rank rule.
+// `wheel` and `glass` (B5, plan §24.1) are ALSO deliberately absent: they are NOT a sixth/seventh
+// opt-in family. A dealer-authored wheel/glass catalogue menu row is their availability authority,
+// enforced in Step 4 — never a store offering switch, never a rank rule, never an invented opt-in.
+// `other_coating` (C1) is likewise NOT a family: dealer-authored other-coating items are its future
+// availability authority (C2+); it is never a store offering switch and never a rank rule.
 
 export const SERVICE_FAMILIES = [
   "window_film",
@@ -92,7 +111,7 @@ export const SERVICE_FAMILY_LABEL_JA: Readonly<Record<ServiceFamily, string>> = 
   room_cleaning: "ルームクリーニング",
 };
 
-/** Which family, if any, governs a category. `null` ⇒ unmanaged (coating / other). */
+/** Which family, if any, governs a category. `null` ⇒ unmanaged (coating / wheel / glass / other_coating / other). */
 export function serviceFamilyForCategory(id: string): ServiceFamily | null {
   for (const f of SERVICE_FAMILIES) if (SERVICE_FAMILY_CATEGORY[f] === id) return f;
   return null;

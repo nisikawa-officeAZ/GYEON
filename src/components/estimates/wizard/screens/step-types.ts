@@ -364,6 +364,67 @@ export interface RoomCleaningSelectorProps {
   onAddOrUpdate:        () => void;
 }
 
+// ── Screen 4 (GDA-ESTIMATE-QUANTITY-POLICY-R1 B5a: dedicated Wheel / Glass menus) ────────────
+/** Shared shape of the two DEDICATED PER-UNIT service menus. Both are dealer-authored catalogue
+ *  rows (`wheel_menu` / `glass_menu`), priced tax-exclusive per unit (per wheel / per glass pane)
+ *  and multiplied by an operator-entered bounded positive-integer quantity. No price logic here.
+ *  - `id` is the STABLE catalogue code (never a label or an array index).
+ *  - `defaultUnitPrice` is NULLABLE: null means the dealer has not configured a price. It must
+ *    never be coerced to 0 — an unconfigured price is a settings prompt, not a ¥0 line.
+ *  - Quantity is required BY KIND. `minQty` (≥ 1) is the dealer's configured minimum and `maxQty`
+ *    null means no configured maximum. The INITIAL quantity (wheel 4 / glass 1) is Step-4
+ *    behaviour and is deliberately NOT part of this contract: initial and minimum are distinct.
+ *  These are NOT store-global options and belong to no offering family: the row is the sole
+ *  availability authority. */
+interface DedicatedUnitMenuBase {
+  id:               string;        // stable catalogue code
+  name:             string;
+  description?:     string;
+  defaultUnitPrice: number | null; // tax-exclusive, per unit; null = not configured (never 0)
+  quantityRequired: true;
+  minQty:           number;        // ≥ 1
+  maxQty:           number | null; // null = no configured maximum
+  displayOrder?:    number;
+  disabled?:        boolean;
+  disabledReason?:  string;
+}
+
+/** A dealer-authored wheel menu (priced per wheel). `kind` keeps the two collections
+ *  non-interchangeable at the type level. */
+export interface WheelMenu extends DedicatedUnitMenuBase {
+  kind: "wheel_menu";
+}
+
+/** A dealer-authored glass menu (priced per glass pane). */
+export interface GlassMenu extends DedicatedUnitMenuBase {
+  kind: "glass_menu";
+}
+
+// ── Screen 4 (GDA-OTHER-COATINGS-R1 C2: dealer-authored OTHER-COATING menus) ─────────────────
+/** A dealer-authored non-body coating menu (`other_coating_menu` catalogue row), projected for the
+ *  optional Step-4 surface. PROJECTION ONLY at this stage: no Screen-3 category, no draft section
+ *  and no priced line exists for it yet. No price logic here.
+ *  - `id` is the STABLE catalogue code (never a label or an array index).
+ *  - `defaultUnitPrice` is the row's POSITIVE tax-exclusive unit price, or null when the row carries
+ *    no positive price (null / 0 = "not configured"). It is NEVER coerced to 0 and 0 is never
+ *    "configured": an unconfigured price is a settings prompt, not a ¥0 line.
+ *  - Unlike wheel / glass, quantity is NOT required by kind: `quantityRequired` is READ from the
+ *    row. A fixed-one item carries `false` (and no bounds); a quantity-bearing item carries `true`
+ *    with its configured `minQty` (≥ 1) and optional `maxQty` (absent = no configured maximum). */
+export interface OtherCoatingMenu {
+  kind:             "other_coating_menu";
+  id:               string;        // stable catalogue code
+  name:             string;
+  description?:     string;
+  defaultUnitPrice: number | null; // POSITIVE tax-exclusive per item; null = not configured (never 0)
+  quantityRequired: boolean;       // read from the row: false = fixed one, true = quantity-bearing
+  minQty?:          number;        // only when quantityRequired; ≥ 1
+  maxQty?:          number;        // only when quantityRequired; absent = no configured maximum
+  displayOrder?:    number;
+  disabled?:        boolean;
+  disabledReason?:  string;
+}
+
 // ── Screen 4 (Phase 4G: Other Work) ─────────────────────────────────────────────
 /** A store-configured preset "other work" item. `estimatedDurationMinutes` is internal
  *  (future calendar/workload) and is NEVER shown on the Estimate UI. No price logic. */

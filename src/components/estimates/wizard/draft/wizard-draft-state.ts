@@ -10,8 +10,15 @@ import type {
   EstimateWizardDraftV22,
   WizardCustomerDraft, WizardVehicleDraft, WizardServiceSelectionDraft,
   WizardServiceConfigurationDraft, WizardDiscountDraft, WizardNotesDraft, WizardReviewDraft,
-  WizardServiceCategory, CustomerRegistrationMethod,
+  WizardServiceCategory, CustomerRegistrationMethod, WizardDedicatedMenuDraft,
 } from "./wizard-draft-types";
+
+/** B5b1 — a FRESH, empty dedicated wheel/glass menu section (new arrays/records on every call;
+ *  nothing selected, no price, no quantity). The only canonical "empty" for these sections
+ *  (C1: the optional `otherCoating` section shares this shape and this empty value). */
+export function emptyDedicatedMenuDraft(): WizardDedicatedMenuDraft {
+  return { selectedMenuIds: [], unitPricesByMenu: {}, quantitiesByMenu: {} };
+}
 
 const EMPTY_NEW_CUSTOMER: NewCustomerDraft = {
   name: "", phone: "", email: "", postal: "", address: "", lineId: "",
@@ -42,6 +49,11 @@ export const initialEstimateWizardDraftV22: EstimateWizardDraftV22 = {
     roomCleaning: { selectedMenuIds: [], unitPricesByMenu: {} },
     otherWork: { selectedPresetIds: [], unitPricesByItem: {}, quantitiesByItem: {}, customRows: [] },
     storeGlobalOptions: { selectedOptionIds: [], unitPricesByOption: {}, quantitiesByOption: {} },
+    // B5b1: new drafts ALWAYS carry both dedicated sections, empty (no selection implied).
+    wheel: { selectedMenuIds: [], unitPricesByMenu: {}, quantitiesByMenu: {} },
+    glass: { selectedMenuIds: [], unitPricesByMenu: {}, quantitiesByMenu: {} },
+    // GDA-OTHER-COATINGS-R1 (C1): likewise always present and empty on a new draft.
+    otherCoating: { selectedMenuIds: [], unitPricesByMenu: {}, quantitiesByMenu: {} },
   },
   discountAndCoupon: { mode: "none", percentInput: "", amountInput: "", selectedCouponIds: [], adjustmentReason: "" },
   notes: { customerNotes: "", internalMemo: "" },
@@ -99,15 +111,20 @@ export function updateServiceSelection(d: EstimateWizardDraftV22, patch: Partial
   const next = { ...d.serviceSelection, ...patch };
   return { ...d, serviceSelection: { selectedCategories: dedupeCategories(next.selectedCategories) } };
 }
-/** Update one service-configuration section immutably (section key is typed — no string paths). */
+/** Update one service-configuration section immutably (section key is typed — no string paths).
+ *  The eight original sections are always present. The OPTIONAL wheel/glass/otherCoating sections may
+ *  be absent on an older/restored draft: a patch then merges onto a FRESH empty canonical section, so the result
+ *  is always structurally complete (never a partial section carrying only the patched keys). */
 export function updateServiceConfiguration<K extends keyof WizardServiceConfigurationDraft>(
   d: EstimateWizardDraftV22, section: K, patch: Partial<WizardServiceConfigurationDraft[K]>,
 ): EstimateWizardDraftV22 {
+  const prev = d.serviceConfiguration[section];
+  const base = prev === undefined ? emptyDedicatedMenuDraft() : prev;
   return {
     ...d,
     serviceConfiguration: {
       ...d.serviceConfiguration,
-      [section]: { ...d.serviceConfiguration[section], ...patch },
+      [section]: { ...base, ...patch },
     },
   };
 }
@@ -140,6 +157,9 @@ export function resetWizardDraft(): EstimateWizardDraftV22 {
       roomCleaning: { selectedMenuIds: [], unitPricesByMenu: {} },
       otherWork: { selectedPresetIds: [], unitPricesByItem: {}, quantitiesByItem: {}, customRows: [] },
       storeGlobalOptions: { selectedOptionIds: [], unitPricesByOption: {}, quantitiesByOption: {} },
+      wheel: emptyDedicatedMenuDraft(),
+      glass: emptyDedicatedMenuDraft(),
+      otherCoating: emptyDedicatedMenuDraft(),
     },
     discountAndCoupon: { mode: "none", percentInput: "", amountInput: "", selectedCouponIds: [], adjustmentReason: "" },
     notes: { customerNotes: "", internalMemo: "" },

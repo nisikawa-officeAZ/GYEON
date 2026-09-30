@@ -23,6 +23,45 @@ export interface WizardPricingIssue {
   message:  string;
 }
 
+/**
+ * GDA-ESTIMATE-QUANTITY-POLICY-R1 (Stage A) — configured quantity bounds a final-review quantity edit
+ * must satisfy (`maxQuantity` null = unbounded above). Defined here so the presentation layer and the
+ * adjustment rule share ONE type; `wizard-review-line-adjustments` re-exports it unchanged.
+ */
+export type WizardReviewQuantityBounds = {
+  readonly minQuantity: number;
+  readonly maxQuantity: number | null;
+  /**
+   * GDA-ESTIMATE-QUANTITY-POLICY-R1 (Stage B) — present ONLY on a partial PPF part line: the selected
+   * part whose canonical Step-4 quantity a valid final-review edit writes through to. Absent on every
+   * other editable line (store options keep their review-only override).
+   */
+  readonly ppfPartCode?: string;
+  /**
+   * GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c2) — present ONLY on a DEDICATED wheel / glass menu line
+   * (plan §24.1): the section kind and the stable dealer menu code whose canonical Step-4
+   * `quantitiesByMenu` entry a valid final-review edit writes through to. Absent on every other line.
+   * Mutually exclusive with `ppfPartCode`.
+   * GDA-OTHER-COATINGS-R1 (C4) — ALSO present on a QUANTITY-BEARING other-coating menu line
+   * (`quantityRequired: true` on the dealer row) with kind `other_coating`; a FIXED-ONE other-coating
+   * line (`quantityRequired: false`) is annotated `null` (read-only quantity 1), never with bounds.
+   */
+  readonly dedicatedMenu?: WizardReviewDedicatedMenuRef;
+};
+
+/**
+ * B5c2 — the dedicated per-unit menu section kinds. For `wheel` / `glass` the Step-4 section key
+ * equals the category; for `other_coating` (GDA-OTHER-COATINGS-R1 C4) the section key is
+ * `otherCoating` — callers map kind → key explicitly and never compute it from the string.
+ */
+export type WizardReviewDedicatedMenuKind = "wheel" | "glass" | "other_coating";
+
+/** B5c2 — stable reference to ONE selected dedicated menu (never a label, never an index). */
+export type WizardReviewDedicatedMenuRef = {
+  readonly kind: WizardReviewDedicatedMenuKind;
+  readonly menuCode: string;
+};
+
 /** Fields shared by every displayed line, independent of its price-identity source. */
 export interface WizardPricingLineBase {
   category:       string;
@@ -34,6 +73,20 @@ export interface WizardPricingLineBase {
   discountAmount: number | null; // document-level discount not distributed to lines → null
   taxAmount:      number | null; // document-level tax not distributed to lines → null
   lineTotal:      number | null;
+  /**
+   * GDA-ESTIMATE-QUANTITY-POLICY-R1 (Stage A) — the SAME canonical quantity policy
+   * `applyWizardReviewLineAdjustments` enforces (`reviewQuantityPolicyForLine`), annotated once by the
+   * authoritative compute route so Screen 7 never guesses editability from label/category/kind:
+   *   • bounds  → the quantity may be edited at final review within these configured bounds;
+   *   • null    → the quantity is fixed by the authoritative route (body coating, topcoats, full /
+   *               front-full PPF, window film, maintenance, non-quantity options, …); a partial PPF
+   *               PART line (Stage B) carries its configured bounds plus `ppfPartCode`; a DEDICATED
+   *               wheel / glass menu line (B5c2) carries its configured bounds plus `dedicatedMenu`;
+   *   • absent  → not annotated (a result that did not pass through the compute route); the UI
+   *               treats it EXACTLY like null (fail closed: no editable quantity).
+   * DISPLAY-ONLY: pricing and save validation never read this field — they re-resolve the policy.
+   */
+  quantityPolicy?: WizardReviewQuantityBounds | null;
 }
 
 // EW-UI-5A1-B1/B1E — the authoritative-identity invariant is encoded IN THE TYPE (discriminated on

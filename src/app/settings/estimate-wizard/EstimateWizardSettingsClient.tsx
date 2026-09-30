@@ -229,13 +229,46 @@ const KIND_LABEL: Record<SupportedAuthoringKind, string> = {
   maintenance_menu: "メンテナンス",
   wash_menu: "洗車",
   room_cleaning_menu: "室内清掃",
+  // GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5a2) — dedicated per-unit menus. Same labels as the core.
+  wheel_menu: "ホイール",
+  glass_menu: "ガラス",
+  // GDA-OTHER-COATINGS-R1 (B1) — the extensible dealer-named other-coating menu. Same label as the core.
+  other_coating_menu: "その他コーティング",
   other_work_preset: "その他作業",
   store_global_option: "店舗オプション",
   coupon: "クーポン",
   ppf_type_group: "PPF種類",
 };
 
+/** The duration-bearing service menus. Wheel/glass are NOT here: they carry no duration input. */
 const SERVICE_KINDS: SupportedAuthoringKind[] = ["maintenance_menu", "wash_menu", "room_cleaning_menu"];
+/**
+ * B5a2 — dedicated per-unit service menus (per wheel / per glass pane). Quantity is required BY
+ * KIND, so the editor shows the tax-exclusive unit price and the min/max quantity bounds only:
+ * no duration field, no 価格対象 / 数量必須 toggle. Those two flags are never sent for these kinds
+ * (the form validator does not allowlist them and fixes quantityRequired=true itself).
+ */
+const UNIT_MENU_KINDS: SupportedAuthoringKind[] = ["wheel_menu", "glass_menu"];
+const UNIT_MENU_PER_UNIT_JA: Partial<Record<SupportedAuthoringKind, string>> = {
+  wheel_menu: "1本あたり",
+  glass_menu: "1枚あたり",
+};
+
+/**
+ * GDA-OTHER-COATINGS-R1 (B1) — the extensible other-coating menu. The editor shows the name, a
+ * POSITIVE tax-exclusive unit price, an EXPLICIT 数量必須 checkbox and optional min/max bounds. No
+ * duration and no 価格対象 toggle. The checkbox value is ALWAYS sent (false included): the validator
+ * requires the boolean and the payload records the dealer's decision either way.
+ */
+const OTHER_COATING_MENU_KIND: SupportedAuthoringKind = "other_coating_menu";
+
+/** `数量 2〜4` / `数量 2〜` / `数量 〜4`; null when no bound is configured. Never invents a bound. */
+function unitMenuBoundsLabel(it: WizardSettingsItemView): string | null {
+  const min = it.minQuantity !== null && Number.isInteger(it.minQuantity) ? String(it.minQuantity) : "";
+  const max = it.maxQuantity !== null && Number.isInteger(it.maxQuantity) ? String(it.maxQuantity) : "";
+  if (min === "" && max === "") return null;
+  return `数量 ${min}〜${max}`;
+}
 /** The kinds that carry an installation coefficient. */
 const COEFFICIENT_KINDS: SupportedAuthoringKind[] = ["film_type", "ppf_type_group"];
 const BP_PER_UNIT = 10_000;
@@ -271,7 +304,8 @@ const glassSectionCls =
 function emptyDraft(kind: SupportedAuthoringKind): DraftFields {
   return {
     itemId: null, kind, labelJa: "", displayOrder: "", priceYen: "", durationMinutes: "",
-    priceable: true, quantityRequired: false, minQuantity: "", maxQuantity: "",
+    // Wheel/glass are quantity-bearing by kind; the flag is display-only for them and never sent.
+    priceable: true, quantityRequired: UNIT_MENU_KINDS.includes(kind), minQuantity: "", maxQuantity: "",
     brand: "", vlt: "", heatRejection: "", color: "",
     coefficient: "", couponDiscountType: "amount", couponDiscountValue: "",
     couponCombinable: true, couponValidFrom: "", couponValidTo: "",
@@ -312,13 +346,37 @@ function buildRaw(d: DraftFields): Record<string, unknown> {
   if (d.itemId) raw.itemId = d.itemId;
   if (d.displayOrder.trim() !== "") raw.displayOrder = d.displayOrder.trim();
   const isMenu = SERVICE_KINDS.includes(d.kind);
+  const isUnitMenu = UNIT_MENU_KINDS.includes(d.kind);
+  // A blank unit price is OMITTED (never "0"): the validator then leaves defaultUnitPrice out of
+  // the payload and the server stores null — "not configured", which Step 4 must refuse to price.
+  const isOtherCoating = d.kind === OTHER_COATING_MENU_KIND;
   if (
-    (isMenu || d.kind === "film_type" || d.kind === "ppf_type_group" || d.kind === "store_global_option") &&
+    (isMenu || isUnitMenu || isOtherCoating || d.kind === "film_type" || d.kind === "ppf_type_group" || d.kind === "store_global_option") &&
     d.priceYen.trim() !== ""
   ) {
     raw.priceYen = d.priceYen.trim();
   }
   if (isMenu && d.durationMinutes.trim() !== "") raw.durationMinutes = d.durationMinutes.trim();
+  // B5a2 — wheel/glass: bounds only. No priceable / quantityRequired / durationMinutes keys, so the
+  // per-kind allowlist in the validator is never tripped.
+  if (isUnitMenu) {
+    if (d.minQuantity.trim() !== "") raw.minQuantity = d.minQuantity.trim();
+    if (d.maxQuantity.trim() !== "") raw.maxQuantity = d.maxQuantity.trim();
+  }
+  // GDA-OTHER-COATINGS-R1 (B1) — other_coating_menu: the quantity-required boolean is ALWAYS sent
+  // (an unchecked box travels as `false`, never as an omission); bounds only when entered. A blank
+  // price was left out above, which the validator turns into an explicit null ("not configured").
+  // No priceable / durationMinutes keys — the kind has neither.
+  if (isOtherCoating) {
+    raw.quantityRequired = d.quantityRequired;
+    // C5 F3 — bounds travel ONLY for a quantity-bearing row. A fixed-one row has no quantity to
+    // bound (the SQL policy refuses bounds on it), so its bound text — hidden in the editor and
+    // cleared when the box is unchecked — is never sent.
+    if (d.quantityRequired) {
+      if (d.minQuantity.trim() !== "") raw.minQuantity = d.minQuantity.trim();
+      if (d.maxQuantity.trim() !== "") raw.maxQuantity = d.maxQuantity.trim();
+    }
+  }
   if (d.kind === "film_type") {
     const pres: Record<string, string> = {};
     if (d.brand.trim()) pres.brand = d.brand.trim();
@@ -694,8 +752,12 @@ function SectionCard({
   onEdit: (i: WizardSettingsItemView) => void;
   onArchive: (i: WizardSettingsItemView) => void;
 }) {
-  const isService = section.id === "service";
-  const activeKind = isService ? serviceTab : section.kinds[0];
+  // GDA-OTHER-COATINGS-R1 Stage A — every multi-kind section gets kind tabs: the legacy service
+  // section (maintenance / wash / room) and the other_coating section (wheel / glass). One shared
+  // tab state suffices because a panel page renders exactly one section; a tab that does not
+  // belong to this section falls back to the section's own first kind, never to a foreign kind.
+  const hasKindTabs = section.kinds.length > 1;
+  const activeKind = hasKindTabs && section.kinds.includes(serviceTab) ? serviceTab : section.kinds[0];
   const activeGroup = section.groups.find((g) => g.kind === activeKind) ?? section.groups[0];
 
   return (
@@ -719,17 +781,19 @@ function SectionCard({
         )}
       </div>
 
-      {isService && (
-        <div className="flex gap-1.5" role="tablist" aria-label="サービス種別">
-          {SERVICE_KINDS.map((k) => (
+      {/* Tabs come from the DTO's own kind list (the core owns section membership), so the B5a2
+          wheel/glass groups appear here without a second, client-side copy of that list. */}
+      {hasKindTabs && (
+        <div className="flex flex-wrap gap-1.5" role="tablist" aria-label={section.id === "other_coating" ? "コーティング種別" : "サービス種別"}>
+          {section.kinds.map((k) => (
             <button
               key={k}
               type="button"
               role="tab"
-              aria-selected={serviceTab === k}
+              aria-selected={activeKind === k}
               onClick={() => onServiceTab(k)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${
-                serviceTab === k
+                activeKind === k
                   ? "bg-gradient-to-br from-[#60a5fa] to-[#2563eb] text-white border-transparent shadow-[0_2px_8px_rgba(37,99,235,.35)]"
                   : "bg-[#0b1220]/70 text-[#8191ad] border-[#263955] hover:border-[#3b6eb4] hover:text-[#c3cee2]"
               }`}
@@ -749,7 +813,10 @@ function SectionCard({
                 <span className="text-[11px] text-[#7788a4]">
                   {getWizardSettingsItemValueLabel(it)}
                   {it.durationLabelJa ? `・${it.durationLabelJa}` : ""}
-                  {it.kind === "store_global_option" && it.quantityRequired ? "・数量指定あり" : ""}
+                  {(it.kind === "store_global_option" || it.kind === OTHER_COATING_MENU_KIND) && it.quantityRequired ? "・数量指定あり" : ""}
+                  {UNIT_MENU_KINDS.includes(it.kind) && UNIT_MENU_PER_UNIT_JA[it.kind] ? `・${UNIT_MENU_PER_UNIT_JA[it.kind]}` : ""}
+                  {/* C5 F3 — an other-coating row shows bounds ONLY when it is quantity-bearing; a fixed-one row has none to show. */}
+                  {(UNIT_MENU_KINDS.includes(it.kind) || (it.kind === OTHER_COATING_MENU_KIND && it.quantityRequired)) && unitMenuBoundsLabel(it) ? `・${unitMenuBoundsLabel(it)}` : ""}
                 </span>
                 {it.presentation && (
                   <span className="text-[10px] text-[#5C6B84] truncate">
@@ -798,6 +865,13 @@ function DraftOverlay({
 
   const set = (patch: Partial<DraftFields>) => onChange({ ...draft, ...patch });
   const isMenu = SERVICE_KINDS.includes(draft.kind);
+  // B5a2 — wheel/glass: unit price + quantity bounds only. `isMenu` is false for them, so the
+  // duration field never renders; `isStore` is false, so neither toggle renders.
+  const isUnitMenu = UNIT_MENU_KINDS.includes(draft.kind);
+  const perUnitJa = UNIT_MENU_PER_UNIT_JA[draft.kind] ?? null;
+  // B1 — other_coating_menu: positive unit price + explicit 数量必須 + optional bounds. `isMenu`,
+  // `isUnitMenu` and `isStore` are all false for it, so no duration field and no 価格対象 toggle render.
+  const isOtherCoating = draft.kind === OTHER_COATING_MENU_KIND;
   const isFilm = draft.kind === "film_type";
   const isStore = draft.kind === "store_global_option";
   const hasCoefficient = COEFFICIENT_KINDS.includes(draft.kind);
@@ -845,7 +919,9 @@ function DraftOverlay({
 
           {supportsPrice && (
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] text-[#93A4BD]">価格（税抜・円）</span>
+              <span className="text-[11px] text-[#93A4BD]">
+                {isUnitMenu && perUnitJa ? `単価（税抜・円・${perUnitJa}）` : isOtherCoating ? "単価（税抜・円・1以上）" : "価格（税抜・円）"}
+              </span>
               <input
                 className={inputCls}
                 inputMode="numeric"
@@ -855,8 +931,86 @@ function DraftOverlay({
                 aria-invalid={!!errors.priceYen}
                 aria-describedby={errors.priceYen ? "err-priceYen" : undefined}
               />
+              {isUnitMenu && (
+                <span className="text-[10px] text-[#7788a4]">
+                  見積では「単価 × 数量」で計算されます。未入力の場合は価格未設定となり、見積で選択できません。
+                </span>
+              )}
+              {isOtherCoating && (
+                <span className="text-[10px] text-[#7788a4]">
+                  1以上の税抜単価を入力してください（0は登録できません）。未入力の場合は価格未設定として保存されます。
+                </span>
+              )}
               <Err id="priceYen" />
             </label>
+          )}
+
+          {isOtherCoating && (
+            <div className="flex flex-col gap-3 rounded-xl bg-[#0b1220]/70 border border-[#263955] px-3 py-3">
+              <span className="text-[10px] font-semibold text-[#7788a4] uppercase tracking-wider">数量設定</span>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={draft.quantityRequired}
+                  // C5 F3 — unchecking clears the bound text as well: a fixed-one row carries no bounds,
+                  // so nothing stale can be re-sent if the box is toggled back later.
+                  onChange={(e) => set(e.target.checked
+                    ? { quantityRequired: true }
+                    : { quantityRequired: false, minQuantity: "", maxQuantity: "" })}
+                  disabled={isPending}
+                  aria-invalid={!!errors.quantityRequired}
+                  aria-describedby={errors.quantityRequired ? "err-quantityRequired" : undefined}
+                />
+                <span className="text-[11px] text-[#c3cee2]">数量入力を必須にする</span>
+              </label>
+              <Err id="quantityRequired" />
+              {draft.quantityRequired ? (
+                <>
+                  <span className="text-[10px] text-[#7788a4]">
+                    数量の下限・上限を設定する場合のみ入力してください（1以上）。
+                  </span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="flex flex-col gap-1">
+                      <span className="text-[11px] text-[#93A4BD]">最小数量</span>
+                      <input className={inputCls} inputMode="numeric" value={draft.minQuantity} onChange={(e) => set({ minQuantity: e.target.value })} disabled={isPending} aria-invalid={!!errors.minQuantity} aria-describedby={errors.minQuantity ? "err-minQuantity" : undefined} />
+                      <Err id="minQuantity" />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-[11px] text-[#93A4BD]">最大数量</span>
+                      <input className={inputCls} inputMode="numeric" value={draft.maxQuantity} onChange={(e) => set({ maxQuantity: e.target.value })} disabled={isPending} aria-invalid={!!errors.maxQuantity} aria-describedby={errors.maxQuantity ? "err-maxQuantity" : undefined} />
+                      <Err id="maxQuantity" />
+                    </label>
+                  </div>
+                </>
+              ) : (
+                // C5 F3 — fixed-one: no bound inputs at all (the quantity is exactly 1; the SQL policy
+                // refuses bounds on such a row), so nothing the dealer can type here is later rejected.
+                <span className="text-[10px] text-[#7788a4]">
+                  数量は1点（固定）として見積に計上されます。数量の下限・上限は設定できません。
+                </span>
+              )}
+            </div>
+          )}
+
+          {isUnitMenu && (
+            <div className="flex flex-col gap-3 rounded-xl bg-[#0b1220]/70 border border-[#263955] px-3 py-3">
+              <span className="text-[10px] font-semibold text-[#7788a4] uppercase tracking-wider">数量範囲（任意）</span>
+              <span className="text-[10px] text-[#7788a4]">
+                この種別は見積時に数量の入力が必須です。数量の下限・上限を設定する場合のみ入力してください。
+              </span>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] text-[#93A4BD]">最小数量</span>
+                  <input className={inputCls} inputMode="numeric" value={draft.minQuantity} onChange={(e) => set({ minQuantity: e.target.value })} disabled={isPending} aria-invalid={!!errors.minQuantity} aria-describedby={errors.minQuantity ? "err-minQuantity" : undefined} />
+                  <Err id="minQuantity" />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] text-[#93A4BD]">最大数量</span>
+                  <input className={inputCls} inputMode="numeric" value={draft.maxQuantity} onChange={(e) => set({ maxQuantity: e.target.value })} disabled={isPending} aria-invalid={!!errors.maxQuantity} aria-describedby={errors.maxQuantity ? "err-maxQuantity" : undefined} />
+                  <Err id="maxQuantity" />
+                </label>
+              </div>
+            </div>
           )}
 
           {isMenu && (

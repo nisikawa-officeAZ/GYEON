@@ -28,6 +28,8 @@ import {
 import type { EstimateWizardApi } from "../useEstimateWizard";
 import type { WizardRuntimeInputs } from "../contract/wizard-runtime-inputs";
 import type { WizardStorePatch } from "../bridge/ew-ui1-to-draft";
+import type { WizardDedicatedMenuDraft } from "../draft/wizard-draft-types";
+import type { WheelMenu, GlassMenu, OtherCoatingMenu } from "../screens/step-types";
 
 import { Step4Estimate as Step4EstimateShell } from "../screens/Step4Estimate";
 import { CoatingSelector } from "../screens/CoatingSelector";
@@ -45,7 +47,22 @@ import {
   thirdLayerOptionsForRank,
 } from "../screens/coating-matrix";
 
-import { createStep4Bindings, type RowCreateResult } from "./step4-bindings";
+import {
+  createStep4Bindings,
+  dedicatedMenuDraftOf,
+  initialDedicatedMenuQuantity,
+  isDedicatedMenuUsable,
+  isQuantityWithinMenuBounds,
+  initialOtherCoatingQuantity,
+  isOtherCoatingFixedOne,
+  otherCoatingDraftOf,
+  toOtherCoatingMenuRef,
+  type DedicatedMenuActionResult,
+  type DedicatedMenuBindings,
+  type DedicatedMenuKind,
+  type OtherCoatingBindings,
+  type RowCreateResult,
+} from "./step4-bindings";
 import {
   isWindowFilmV1RuntimeReady,
   windowFilmV1SuggestedUnitPrice,
@@ -130,6 +147,389 @@ const PPF_PRICING_REASON: Readonly<Record<"price-table-missing" | "coefficient-m
     "PPFを利用するには、設定 > PPF種類・施工係数 ですべてのPPF種類の施工係数を登録してください。",
 };
 
+// ── GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5b2): dedicated wheel / glass sections ─────────────────
+//
+// `wheel` and `glass` are independent Screen-3 categories (plan §24.1). They belong to NO offering
+// family and are NOT store-global options: the dealer-authored `wheel_menu` / `glass_menu` row is
+// the sole availability authority, so this host reads `screenConfig.wheelMenus` / `glassMenus`
+// and nothing else. Three states, kept deliberately distinct:
+//   • collection ABSENT (`undefined`) → wiring/legacy state → FAIL CLOSED: locked, nothing selectable,
+//     and NOT described as "no menus" (nobody proved that);
+//   • collection EMPTY (`[]`)        → the dealer has authored none → settings-required text;
+//   • rows present                  → the menus render; each is selectable only if well-formed.
+// Every write goes selector event → binding → api.updateStore({ services: { wheel|glass } }).
+// No subtotal or tax is computed here; the configured price is DISPLAYED and prefilled as text.
+
+interface DedicatedMenuSectionCopy {
+  readonly title: string;
+  readonly unit: string;
+  readonly setupRequired: string;
+  readonly unavailable: string;
+}
+
+const DEDICATED_MENU_COPY: Readonly<Record<DedicatedMenuKind, DedicatedMenuSectionCopy>> = {
+  wheel: {
+    title: "ホイール施工メニュー",
+    unit: "本",
+    setupRequired: "ホイールを利用するには、見積設定（見積ウィザード設定）でホイールメニューを登録してください。",
+    unavailable: "ホイールメニューの情報を取得できませんでした。この状態ではホイールを選択できません。画面を再読み込みしても解消しない場合は管理者にお問い合わせください。",
+  },
+  glass: {
+    title: "ガラス施工メニュー",
+    unit: "枚",
+    setupRequired: "ガラスを利用するには、見積設定（見積ウィザード設定）でガラスメニューを登録してください。",
+    unavailable: "ガラスメニューの情報を取得できませんでした。この状態ではガラスを選択できません。画面を再読み込みしても解消しない場合は管理者にお問い合わせください。",
+  },
+};
+
+const DEDICATED_MENU_HINT = "税抜単価 × 数量で見積に計上されます。複数のメニューを選択できます。";
+const DEDICATED_MENU_ROW_INVALID = "このメニューは数量範囲または単価の設定が不正なため選択できません。見積設定を確認してください。";
+const DEDICATED_MENU_PRICE_REQUIRED = "単価が未設定です。税抜単価を入力するか、見積設定で単価を登録してください。";
+const DEDICATED_MENU_QUANTITY_REQUIRED = "数量が未設定です。＋で初期数量を設定してください。";
+
+const DEDICATED_MENU_ACTION_MESSAGE: Readonly<Record<"menu-invalid" | "quantity-out-of-bounds", string>> = {
+  "menu-invalid": DEDICATED_MENU_ROW_INVALID,
+  "quantity-out-of-bounds": "数量は設定された範囲内で入力してください。",
+};
+
+/**
+ * GDA-PR143-R2 — a SELECTED wheel / glass row can hold a draft quantity that the CURRENT catalogue
+ * bounds reject (the dealer tightened min/max after the draft was written). The builder refuses to
+ * price that line (fail closed), so this host must SHOW the actual stale value instead of a bare
+ * "unset" and offer an explicit one-click repair through the SAME existing binding
+ * (`onQuantityChange(menu, target)` → one section-scoped patch). Nothing is clamped or cleared on
+ * mount, and the draft is never rewritten without the operator's activation.
+ */
+const dedicatedMenuBoundsText = (menu: { readonly minQty: number; readonly maxQty: number | null }): string =>
+  menu.maxQty !== null ? `最小${menu.minQty}・最大${menu.maxQty}` : `最小${menu.minQty}`;
+const dedicatedMenuStaleQuantityNotice = (stale: number, menu: { readonly minQty: number; readonly maxQty: number | null }): string =>
+  `下書きに残った数量「${stale}」は現在の数量範囲（${dedicatedMenuBoundsText(menu)}）外のため使用できません。`;
+const dedicatedMenuStaleQuantityRepairLabel = (target: number): string => `数量を${target}に修正`;
+
+/**
+ * PURE: the explicit repair target for a stale dedicated-menu quantity — the NEAREST configured
+ * bound (below min → min; above max → max; a non-integer inside the range → rounded and clamped).
+ * `null` when the bounds themselves are malformed (nothing can be offered) or the value is already
+ * valid (nothing to repair). Display-only: the write still goes through the validating binding.
+ */
+export function repairedDedicatedMenuQuantity(
+  stale: number,
+  menu: { readonly minQty: number; readonly maxQty: number | null },
+): number | null {
+  const { minQty, maxQty } = menu;
+  if (!Number.isSafeInteger(minQty) || minQty < 1) return null;
+  if (maxQty !== null && (!Number.isSafeInteger(maxQty) || maxQty < minQty)) return null;
+  if (Number.isSafeInteger(stale) && stale >= minQty && (maxQty === null || stale <= maxQty)) return null;
+  if (!Number.isFinite(stale)) return minQty;
+  const rounded = Math.round(stale);
+  if (rounded < minQty) return minQty;
+  if (maxQty !== null && rounded > maxQty) return maxQty;
+  return rounded;
+}
+
+/** A menu section is usable only when the runtime collection is present AND non-empty. */
+const dedicatedMenusLocked = (menus: readonly (WheelMenu | GlassMenu | OtherCoatingMenu)[] | undefined): boolean =>
+  menus === undefined || menus.length === 0;
+
+function DedicatedMenuLockCard({ title, reason }: { title: string; reason: string }) {
+  return (
+    <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
+      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{title}</h3>
+      <p className="text-xs text-amber-300/90 mt-3">{reason}</p>
+    </div>
+  );
+}
+
+/**
+ * Presentation-only dedicated menu section. Reads the canonical section projection and the trusted
+ * runtime menus; every change is routed through the supplied bindings. Holds no state of its own.
+ */
+function DedicatedMenuSection({ kind, menus, draft, bindings, onResult }: {
+  kind: DedicatedMenuKind;
+  menus: readonly (WheelMenu | GlassMenu)[] | undefined;
+  draft: WizardDedicatedMenuDraft;
+  bindings: DedicatedMenuBindings;
+  onResult: (r: DedicatedMenuActionResult) => void;
+}) {
+  const copy = DEDICATED_MENU_COPY[kind];
+  if (menus === undefined) return <DedicatedMenuLockCard title={copy.title} reason={copy.unavailable} />;
+  if (menus.length === 0) return <DedicatedMenuLockCard title={copy.title} reason={copy.setupRequired} />;
+
+  return (
+    <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
+      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{copy.title}</h3>
+      <p className="text-[11px] text-slate-500 mt-1">{DEDICATED_MENU_HINT}</p>
+      <ul className="mt-3 flex flex-col gap-2">
+        {menus.map((menu) => {
+          const usable = isDedicatedMenuUsable(menu);
+          const selected = draft.selectedMenuIds.includes(menu.id);
+          const draftQty: number | undefined = draft.quantitiesByMenu[menu.id];
+          // Only a draft quantity that is valid for THESE bounds is the effective quantity; anything
+          // else is NOT displayed as the quantity. GDA-PR143-R2: a PRESENT draft value the current
+          // bounds reject is a STALE quantity — surfaced verbatim below with an explicit repair, never
+          // silently clamped, cleared or shown as the effective number.
+          const qty = draftQty !== undefined && isQuantityWithinMenuBounds(draftQty, menu) ? draftQty : null;
+          const staleQty = draftQty !== undefined && qty === null ? draftQty : null;
+          const repairTarget = staleQty !== null ? repairedDedicatedMenuQuantity(staleQty, menu) : null;
+          const priceText: string = draft.unitPricesByMenu[menu.id] ?? "";
+          const initial = initialDedicatedMenuQuantity(kind, menu);
+          // GDA-PR143-R2: only a POSITIVE configured price is a price; null (and a persisted 0 that a
+          // non-resolver caller might still hand over) reads as not configured — never "¥0".
+          const configuredPriceLabel = menu.defaultUnitPrice !== null && menu.defaultUnitPrice > 0
+            ? `税抜 ¥${menu.defaultUnitPrice.toLocaleString("ja-JP")} / ${copy.unit}`
+            : "単価未設定";
+          const boundsLabel = menu.maxQty !== null
+            ? `（最小${menu.minQty}・最大${menu.maxQty}）`
+            : `（最小${menu.minQty}）`;
+          const decrementDisabled = qty === null || qty <= menu.minQty;
+          const incrementDisabled = qty !== null && menu.maxQty !== null && qty >= menu.maxQty;
+          return (
+            <li key={menu.id} className={`rounded-lg border p-3 ${selected ? "border-[#1d4ed8] bg-blue-950/30" : "border-slate-700 bg-[#0f172a]"}`}>
+              <button
+                type="button"
+                aria-pressed={selected}
+                disabled={!usable}
+                onClick={usable ? () => onResult(bindings.onMenuToggle(menu)) : undefined}
+                className="w-full min-h-[44px] flex items-center justify-between gap-3 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="text-sm text-slate-100">{menu.name}</span>
+                <span className="text-xs text-slate-400 shrink-0">{configuredPriceLabel}</span>
+              </button>
+              {!usable && (
+                <p className="text-[11px] text-amber-300/90 mt-1">
+                  {menu.disabled ? (menu.disabledReason ?? DEDICATED_MENU_ROW_INVALID) : DEDICATED_MENU_ROW_INVALID}
+                </p>
+              )}
+              {selected && usable && (
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <label className="flex flex-col gap-1 text-[11px] text-slate-400">
+                    <span>税抜単価（円）</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={priceText}
+                      aria-label={`${menu.name} 税抜単価`}
+                      onChange={(e) => bindings.onUnitPriceChange(menu.id, e.target.value)}
+                      className="min-h-[44px] rounded-lg bg-[#0f172a] border border-slate-700 px-3 text-sm text-slate-100 tabular-nums"
+                    />
+                    {priceText === "" && <span className="text-amber-300/90">{DEDICATED_MENU_PRICE_REQUIRED}</span>}
+                  </label>
+                  <div className="flex flex-col gap-1 text-[11px] text-slate-400">
+                    <span>数量（{copy.unit}）{boundsLabel}</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        aria-label={`${menu.name} 数量を減らす`}
+                        disabled={decrementDisabled}
+                        onClick={qty === null ? undefined : () => onResult(bindings.onQuantityChange(menu, qty - 1))}
+                        className="min-h-[44px] min-w-[44px] rounded-lg border border-slate-700 bg-[#0f172a] text-slate-100 disabled:opacity-40"
+                      >
+                        −
+                      </button>
+                      <span className="min-w-[2ch] text-center text-sm text-slate-100 tabular-nums">{qty ?? "—"}</span>
+                      <button
+                        type="button"
+                        aria-label={`${menu.name} 数量を増やす`}
+                        disabled={incrementDisabled || initial === null}
+                        onClick={initial === null ? undefined : () => onResult(bindings.onQuantityChange(menu, qty === null ? initial : qty + 1))}
+                        className="min-h-[44px] min-w-[44px] rounded-lg border border-slate-700 bg-[#0f172a] text-slate-100 disabled:opacity-40"
+                      >
+                        ＋
+                      </button>
+                    </div>
+                    {qty === null && staleQty === null && <span className="text-amber-300/90">{DEDICATED_MENU_QUANTITY_REQUIRED}</span>}
+                    {staleQty !== null && (
+                      // GDA-PR143-R2: the stale draft value is shown, not hidden behind "unset"; the
+                      // ONLY way it changes is the operator's activation of this repair, which writes
+                      // the nearest configured bound through the existing validating binding.
+                      <>
+                        <span data-testid="dedicated-menu-stale-quantity-notice" className="text-amber-300/90">
+                          {dedicatedMenuStaleQuantityNotice(staleQty, menu)}
+                        </span>
+                        {repairTarget !== null && (
+                          <button
+                            type="button"
+                            data-testid="dedicated-menu-stale-quantity-repair"
+                            aria-label={`${menu.name} ${dedicatedMenuStaleQuantityRepairLabel(repairTarget)}`}
+                            onClick={() => onResult(bindings.onQuantityChange(menu, repairTarget))}
+                            className="min-h-[44px] rounded-lg border border-amber-500/60 bg-[#0f172a] px-3 text-sm text-amber-200"
+                          >
+                            {dedicatedMenuStaleQuantityRepairLabel(repairTarget)}
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+// ── GDA-OTHER-COATINGS-R1 (C3): the distinct `other_coating` section ────────────────────────────
+//
+// A DISTINCT Screen-3 category with its own draft section (`services.otherCoating`) and its own
+// runtime collection (`screenConfig.otherCoatingMenus`). Same three availability states as
+// wheel/glass (absent → fail closed; empty → settings required; rows → selectable if well-formed).
+// Per row, quantity is READ from the dealer item:
+//   • fixed-one (`quantityRequired: false`) → the effective quantity is exactly 1 and NO quantity
+//     control renders (nothing to edit);
+//   • quantity-bearing (`quantityRequired: true`) → the B5b2 stepper with the configured bounds.
+// A POSITIVE configured price is displayed and prefilled as text; null / 0 shows "単価未設定" and
+// the price text stays empty for manual positive entry — never a prepared ¥0 line.
+const OTHER_COATING_COPY: DedicatedMenuSectionCopy = {
+  title: "その他コーティングメニュー",
+  unit: "点",
+  setupRequired: "その他コーティングを利用するには、見積設定（見積ウィザード設定）でその他コーティングメニューを登録してください。",
+  unavailable: "その他コーティングメニューの情報を取得できませんでした。この状態ではその他コーティングを選択できません。画面を再読み込みしても解消しない場合は管理者にお問い合わせください。",
+};
+const OTHER_COATING_HINT = "税抜単価 × 数量で見積に計上されます。数量固定の項目は1点として計上されます。複数の項目を選択できます。";
+const OTHER_COATING_FIXED_ONE_LABEL = "数量：1（固定）";
+/**
+ * GDA-OTHER-COATINGS-R1 (C5 F1) — a restored, SELECTED fixed-one row can still hold a stale draft
+ * quantity (e.g. 3) written while the dealer item was quantity-bearing. The builder refuses to price
+ * that line (fail closed, never silently 1), so this host must SHOW the contradiction instead of the
+ * static fixed label and offer an explicit one-click repair through the SAME existing binding
+ * (`onQuantityChange(menu, 1)` → one `otherCoating`-scoped patch). Nothing is normalised on mount.
+ */
+const otherCoatingStaleFixedOneNotice = (stale: number): string =>
+  `下書きに残った数量「${stale}」は使用できません。この項目の数量は1（固定）です。`;
+const OTHER_COATING_STALE_FIXED_ONE_RESET_LABEL = "数量を1に戻す";
+
+function OtherCoatingSection({ menus, draft, bindings, onResult }: {
+  menus: readonly OtherCoatingMenu[] | undefined;
+  draft: WizardDedicatedMenuDraft;
+  bindings: OtherCoatingBindings;
+  onResult: (r: DedicatedMenuActionResult) => void;
+}) {
+  const copy = OTHER_COATING_COPY;
+  if (menus === undefined) return <DedicatedMenuLockCard title={copy.title} reason={copy.unavailable} />;
+  if (menus.length === 0) return <DedicatedMenuLockCard title={copy.title} reason={copy.setupRequired} />;
+
+  return (
+    <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
+      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{copy.title}</h3>
+      <p className="text-[11px] text-slate-500 mt-1">{OTHER_COATING_HINT}</p>
+      <ul className="mt-3 flex flex-col gap-2">
+        {menus.map((menu) => {
+          // The row is normalised ONCE into the dedicated-menu contract; every rule below reads it.
+          const ref = toOtherCoatingMenuRef(menu);
+          const usable = isDedicatedMenuUsable(ref);
+          const fixedOne = isOtherCoatingFixedOne(menu);
+          const selected = draft.selectedMenuIds.includes(menu.id);
+          const draftQty: number | undefined = draft.quantitiesByMenu[menu.id];
+          const qty = draftQty !== undefined && isQuantityWithinMenuBounds(draftQty, ref) ? draftQty : null;
+          const priceText: string = draft.unitPricesByMenu[menu.id] ?? "";
+          const initial = initialOtherCoatingQuantity(ref);
+          // C5 F1: a selected fixed-one row whose draft quantity is PRESENT and not 1 is a contradiction
+          // the pricing route fails closed on; surface it and offer the reset — never auto-repair.
+          const staleFixedOneQty = fixedOne && draftQty !== undefined && draftQty !== 1 ? draftQty : null;
+          const configuredPriceLabel = ref.defaultUnitPrice !== null
+            ? `税抜 ¥${ref.defaultUnitPrice.toLocaleString("ja-JP")} / ${copy.unit}`
+            : "単価未設定";
+          const boundsLabel = ref.maxQty !== null
+            ? `（最小${ref.minQty}・最大${ref.maxQty}）`
+            : `（最小${ref.minQty}）`;
+          const decrementDisabled = qty === null || qty <= ref.minQty;
+          const incrementDisabled = qty !== null && ref.maxQty !== null && qty >= ref.maxQty;
+          return (
+            <li key={menu.id} className={`rounded-lg border p-3 ${selected ? "border-[#1d4ed8] bg-blue-950/30" : "border-slate-700 bg-[#0f172a]"}`}>
+              <button
+                type="button"
+                aria-pressed={selected}
+                disabled={!usable}
+                onClick={usable ? () => onResult(bindings.onMenuToggle(menu)) : undefined}
+                className="w-full min-h-[44px] flex items-center justify-between gap-3 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="text-sm text-slate-100">{menu.name}</span>
+                <span className="text-xs text-slate-400 shrink-0">{configuredPriceLabel}</span>
+              </button>
+              {!usable && (
+                <p className="text-[11px] text-amber-300/90 mt-1">
+                  {menu.disabled ? (menu.disabledReason ?? DEDICATED_MENU_ROW_INVALID) : DEDICATED_MENU_ROW_INVALID}
+                </p>
+              )}
+              {selected && usable && (
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <label className="flex flex-col gap-1 text-[11px] text-slate-400">
+                    <span>税抜単価（円）</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={priceText}
+                      aria-label={`${menu.name} 税抜単価`}
+                      onChange={(e) => bindings.onUnitPriceChange(menu.id, e.target.value)}
+                      className="min-h-[44px] rounded-lg bg-[#0f172a] border border-slate-700 px-3 text-sm text-slate-100 tabular-nums"
+                    />
+                    {priceText === "" && <span className="text-amber-300/90">{DEDICATED_MENU_PRICE_REQUIRED}</span>}
+                  </label>
+                  {fixedOne ? (
+                    // Fixed-one: the effective quantity is exactly 1 — displayed, never editable.
+                    <div className="flex flex-col gap-1 text-[11px] text-slate-400">
+                      <span>数量（{copy.unit}）</span>
+                      {staleFixedOneQty === null ? (
+                        <span className="min-h-[44px] flex items-center text-sm text-slate-100 tabular-nums">{OTHER_COATING_FIXED_ONE_LABEL}</span>
+                      ) : (
+                        // C5 F1: the stale draft value is shown, not hidden behind the fixed label; the
+                        // ONLY way it changes is the operator's activation of this reset, which writes
+                        // exactly 1 through the existing binding (bounds {1,1} accept it).
+                        <>
+                          <span data-testid="other-coating-fixed-one-stale-notice" className="text-amber-300/90">
+                            {otherCoatingStaleFixedOneNotice(staleFixedOneQty)}
+                          </span>
+                          <button
+                            type="button"
+                            data-testid="other-coating-fixed-one-stale-reset"
+                            aria-label={`${menu.name} ${OTHER_COATING_STALE_FIXED_ONE_RESET_LABEL}`}
+                            onClick={() => onResult(bindings.onQuantityChange(menu, 1))}
+                            className="min-h-[44px] rounded-lg border border-amber-500/60 bg-[#0f172a] px-3 text-sm text-amber-200"
+                          >
+                            {OTHER_COATING_STALE_FIXED_ONE_RESET_LABEL}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1 text-[11px] text-slate-400">
+                      <span>数量（{copy.unit}）{boundsLabel}</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          aria-label={`${menu.name} 数量を減らす`}
+                          disabled={decrementDisabled}
+                          onClick={qty === null ? undefined : () => onResult(bindings.onQuantityChange(menu, qty - 1))}
+                          className="min-h-[44px] min-w-[44px] rounded-lg border border-slate-700 bg-[#0f172a] text-slate-100 disabled:opacity-40"
+                        >
+                          −
+                        </button>
+                        <span className="min-w-[2ch] text-center text-sm text-slate-100 tabular-nums">{qty ?? "—"}</span>
+                        <button
+                          type="button"
+                          aria-label={`${menu.name} 数量を増やす`}
+                          disabled={incrementDisabled || initial === null}
+                          onClick={initial === null ? undefined : () => onResult(bindings.onQuantityChange(menu, qty === null ? initial : qty + 1))}
+                          className="min-h-[44px] min-w-[44px] rounded-lg border border-slate-700 bg-[#0f172a] text-slate-100 disabled:opacity-40"
+                        >
+                          ＋
+                        </button>
+                      </div>
+                      {qty === null && <span className="text-amber-300/90">{DEDICATED_MENU_QUANTITY_REQUIRED}</span>}
+                    </div>
+                  )}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export interface Step4EstimateProps extends WizardRuntimeInputs {
   api: EstimateWizardApi;
   /** REQUIRED — no default. Absence would be a wiring failure, not "ready". */
@@ -139,7 +539,7 @@ export interface Step4EstimateProps extends WizardRuntimeInputs {
 export function Step4Estimate({ api, shopRank, screenConfig, ppfPricingReadiness }: Step4EstimateProps) {
   // Local UI-only state — NOTHING else lives here (no second copy of services or categories).
   const [activeSection, setActiveSection] = useState<string>("coating");
-  const [rowIdError, setRowIdError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const categories = api.store.categories;
   const cfg = api.store.services; // canonical projection (read-only)
@@ -208,9 +608,18 @@ export function Step4Estimate({ api, shopRank, screenConfig, ppfPricingReadiness
   for (const family of SERVICE_FAMILIES) {
     if (familyLocked(family)) disabledSections.add(SERVICE_FAMILY_CATEGORY[family]);
   }
+  // B5b2 — dedicated wheel/glass: locked when the runtime collection is absent (fail closed) or
+  // empty (settings required). The section stays VISIBLE because the operator selected it on
+  // Screen 3; the content explains the state and offers nothing selectable.
+  if (dedicatedMenusLocked(screenConfig.wheelMenus)) disabledSections.add("wheel");
+  if (dedicatedMenusLocked(screenConfig.glassMenus)) disabledSections.add("glass");
+  // C3 — the distinct other-coating category: same absent/empty lock rule over its own collection.
+  if (dedicatedMenusLocked(screenConfig.otherCoatingMenus)) disabledSections.add("other_coating");
 
   // Row-creation callbacks surface the fail-closed result to the operator; success clears the notice.
-  const withRowResult = (run: () => RowCreateResult) => () => setRowIdError(run().ok ? null : ROW_ID_ERROR_MESSAGE);
+  const withRowResult = (run: () => RowCreateResult) => () => setActionError(run().ok ? null : ROW_ID_ERROR_MESSAGE);
+  // Dedicated-menu callbacks do the same with their own reasons.
+  const noteMenuResult = (r: DedicatedMenuActionResult) => setActionError(r.ok ? null : DEDICATED_MENU_ACTION_MESSAGE[r.reason]);
 
   // ── GDA-ESTIMATE-PPF-OFFERING-R1-A — attached partial PPF from a coating-only-so-far selection ──
   // Visible only while the operator has not selected the main PPF category and the dealer offers
@@ -372,6 +781,35 @@ export function Step4Estimate({ api, shopRank, screenConfig, ppfPricingReadiness
             onAddOrUpdate={() => {}}
           />
         );
+      case "wheel":
+        return (
+          <DedicatedMenuSection
+            kind="wheel"
+            menus={screenConfig.wheelMenus}
+            draft={dedicatedMenuDraftOf(cfg, "wheel")}
+            bindings={bindings.wheel}
+            onResult={noteMenuResult}
+          />
+        );
+      case "glass":
+        return (
+          <DedicatedMenuSection
+            kind="glass"
+            menus={screenConfig.glassMenus}
+            draft={dedicatedMenuDraftOf(cfg, "glass")}
+            bindings={bindings.glass}
+            onResult={noteMenuResult}
+          />
+        );
+      case "other_coating":
+        return (
+          <OtherCoatingSection
+            menus={screenConfig.otherCoatingMenus}
+            draft={otherCoatingDraftOf(cfg)}
+            bindings={bindings.otherCoating}
+            onResult={noteMenuResult}
+          />
+        );
       case "other":
         return (
           <OtherWorkSelector
@@ -420,9 +858,9 @@ export function Step4Estimate({ api, shopRank, screenConfig, ppfPricingReadiness
         />
       }
     >
-      {rowIdError !== null && (
+      {actionError !== null && (
         <div role="alert" className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-          {rowIdError}
+          {actionError}
         </div>
       )}
       {sectionContent}

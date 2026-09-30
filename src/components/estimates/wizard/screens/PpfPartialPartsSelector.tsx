@@ -4,8 +4,10 @@
 //
 // Multiple part selection via visual buttons (no pull-down). Re-clicking a selected part
 // deselects it. Parts, quantity rules (quantityRequired/min/max) and disabled states all
-// arrive through PROPS (store-configurable master + order). Quantity-required parts show a
-// small stepper when selected. NO prices, NO calculation, NO estimate-item creation —
+// arrive through PROPS (store-configurable master + order). GDA-ESTIMATE-QUANTITY-POLICY-R1
+// (Stage B): EVERY selected, enabled part is a distinct priced line with its own quantity, so
+// every selected enabled part shows the small stepper (bounds from minQty/maxQty, default 1).
+// NO prices, NO calculation, NO estimate-item creation —
 // selection/quantity are reported via callbacks. Deselecting here does NOT delete any
 // existing estimate item (owner handles that).
 
@@ -57,7 +59,7 @@ export function PpfPartialPartsSelector({
           const sel = selectedIds.includes(p.id);
           const qty = quantitiesByPart[p.id] ?? p.minQty ?? 1;
           return (
-            <div key={p.id} className={cn(sel && p.quantityRequired && "sm:col-span-1")}>
+            <div key={p.id} className={cn(sel && "sm:col-span-1")}>
               <SelectButton
                 selected={sel}
                 disabled={p.disabled}
@@ -66,7 +68,7 @@ export function PpfPartialPartsSelector({
               >
                 {p.label}
               </SelectButton>
-              {sel && p.quantityRequired && !p.disabled && (
+              {sel && !p.disabled && (
                 <QtyStepper
                   value={qty}
                   min={p.minQty ?? 1}

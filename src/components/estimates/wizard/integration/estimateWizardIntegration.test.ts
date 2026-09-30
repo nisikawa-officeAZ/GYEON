@@ -639,15 +639,65 @@ test("Screen-4 configuration is never inferred from item_name, price, or quantit
   assert.deepEqual(cfg.roomCleaning.selectedMenuIds, []);
   assert.deepEqual(cfg.otherWork.selectedPresetIds, []);
   assert.deepEqual(cfg.storeGlobalOptions.selectedOptionIds, []);
+  assert.deepEqual(cfg.wheel?.selectedMenuIds, []);
+  assert.deepEqual(cfg.glass?.selectedMenuIds, []);
+  assert.deepEqual(cfg.otherCoating?.selectedMenuIds, []); // C1
 });
 
 test("Screen-3 categories are mapped, but persisted-only categories are reported not coerced", () => {
   const h = estimateToWizardDraft(
-    estimate({ estimate_items: [item("ITEM-1", "coating"), item("ITEM-2", "glass")] }),
+    estimate({ estimate_items: [item("ITEM-1", "coating"), item("ITEM-2", "interior")] }),
   );
-  assert.deepEqual(h.draft.serviceSelection.selectedCategories, ["coating"]); // 'glass' NOT coerced
+  assert.deepEqual(h.draft.serviceSelection.selectedCategories, ["coating"]); // 'interior' NOT coerced
   const codes = validateWizardDraftForEstimateEditorIntegration(h).issues.map((i) => i.code);
   assert.ok(codes.includes(INTEGRATION_ISSUE_CODES.UNMAPPED_ITEM_CATEGORY));
+});
+
+// ── 12b. GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c3) — saved wheel / glass revision identity ──────────
+// Plan §24.1: wheel and glass are dedicated Screen-3 categories. A saved row hydrates back to its
+// OWN identity (never 'other', never unmapped) — but ONLY the category. A flat `estimate_items` row
+// cannot say which dealer menu, quantity bounds or configured price produced it, so its Screen-4
+// provenance stays unresolved and still blocks an invented revision.
+test("B5c3: saved wheel/glass rows hydrate to their own Screen-3 identities — never other, never unmapped", () => {
+  const h = estimateToWizardDraft(estimate({
+    estimate_items: [item("ITEM-W", "wheel"), item("ITEM-G", "glass"), item("ITEM-W2", "wheel"), item("ITEM-C", "coating")],
+  }));
+  assert.deepEqual(h.draft.serviceSelection.selectedCategories, ["wheel", "glass", "coating"], "deduped, first-seen order");
+  assert.equal(h.draft.serviceSelection.selectedCategories.includes("other"), false);
+  const codes = validateWizardDraftForEstimateEditorIntegration(h).issues.map((i) => i.code);
+  assert.equal(codes.includes(INTEGRATION_ISSUE_CODES.UNMAPPED_ITEM_CATEGORY), false, "wheel/glass are no longer persisted-only");
+});
+
+test("B5c3: a saved wheel/glass row never reconstructs a menu id, quantity or price — provenance stays unresolved and blocks", () => {
+  const wheelRow: EstimateItemDB = {
+    ...item("ITEM-W", "wheel"), item_name: "wh-coat", quantity: 4, unit_price: 5000, line_total: 20000, sort_order: 0,
+  };
+  const glassRow: EstimateItemDB = {
+    ...item("ITEM-G", "glass"), item_name: "ガラス撥水", quantity: 2, unit_price: 8000, line_total: 16000, sort_order: 1,
+  };
+  const h = estimateToWizardDraft(estimate({ estimate_items: [wheelRow, glassRow] }));
+
+  // The label, price, quantity and sort order are all plausible menu hints — none is used.
+  assert.deepEqual(h.draft.serviceConfiguration.wheel, { selectedMenuIds: [], unitPricesByMenu: {}, quantitiesByMenu: {} });
+  assert.deepEqual(h.draft.serviceConfiguration.glass, { selectedMenuIds: [], unitPricesByMenu: {}, quantitiesByMenu: {} });
+  assert.deepEqual(h.draft.review.quantityInputsByLine, {});
+  assert.deepEqual(h.draft.review.unitPriceInputsByLine, {});
+  assert.deepEqual(h.draft.review.serviceLineOrder, []);
+  assert.equal(JSON.stringify(h.draft).includes("wh-coat"), false, "the source id text never enters the draft");
+
+  // Provenance: every row unresolved, reconstruction none, apply AND persist blocked.
+  assert.deepEqual(h.integration.unresolvedItemIds, ["ITEM-W", "ITEM-G"]);
+  assert.equal(h.integration.reconstructionStatus, "none");
+  assert.equal(isServiceConfigurationTrustworthy(h.integration), false);
+  const r = validateWizardDraftForEstimateEditorIntegration(h);
+  assert.equal(r.canApplyToEstimateEditor, false);
+  assert.equal(r.canPersist, false);
+  const codes = r.blockingIssues.map((i) => i.code);
+  assert.ok(codes.includes(INTEGRATION_ISSUE_CODES.UNRESOLVED_LEGACY_ITEMS));
+  assert.ok(codes.includes(INTEGRATION_ISSUE_CODES.SERVICE_CONFIGURATION_NOT_RECONSTRUCTED));
+  // Edit mode on such an estimate is refused with no items and no patch.
+  const plan = buildEstimateEditorApplyPlan(h, "edit", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
+  assert.equal(plan.status, "blocked");
 });
 
 // ── 13. Serialization boundary ───────────────────────────────────────────────────
@@ -1142,6 +1192,21 @@ function nestedRefs(d: HydratedWizardDraft["draft"]): [string, unknown][] {
     ["cfg.otherWork.customRows", cfg.otherWork.customRows],
     ["cfg.storeGlobalOptions", cfg.storeGlobalOptions],
     ["cfg.storeGlobalOptions.selectedOptionIds", cfg.storeGlobalOptions.selectedOptionIds],
+    // B5c3 — the optional dedicated sections are cloned too. `undefined` on BOTH sides fails the
+    // strict notEqual below, so a DROPPED section is caught as loudly as a SHARED one.
+    ["cfg.wheel", cfg.wheel],
+    ["cfg.wheel.selectedMenuIds", cfg.wheel?.selectedMenuIds],
+    ["cfg.wheel.unitPricesByMenu", cfg.wheel?.unitPricesByMenu],
+    ["cfg.wheel.quantitiesByMenu", cfg.wheel?.quantitiesByMenu],
+    ["cfg.glass", cfg.glass],
+    ["cfg.glass.selectedMenuIds", cfg.glass?.selectedMenuIds],
+    ["cfg.glass.unitPricesByMenu", cfg.glass?.unitPricesByMenu],
+    ["cfg.glass.quantitiesByMenu", cfg.glass?.quantitiesByMenu],
+    // GDA-OTHER-COATINGS-R1 (C1) — the optional other-coating section gets the same guarantee.
+    ["cfg.otherCoating", cfg.otherCoating],
+    ["cfg.otherCoating.selectedMenuIds", cfg.otherCoating?.selectedMenuIds],
+    ["cfg.otherCoating.unitPricesByMenu", cfg.otherCoating?.unitPricesByMenu],
+    ["cfg.otherCoating.quantitiesByMenu", cfg.otherCoating?.quantitiesByMenu],
     ["discountAndCoupon", d.discountAndCoupon],
     ["discountAndCoupon.selectedCouponIds", d.discountAndCoupon.selectedCouponIds],
     ["notes", d.notes],
@@ -1247,6 +1312,38 @@ test("the aliasing fix preserves frozen provenance and every blocking behaviour"
   assert.equal(cfg.coating.layerCount, null);
   assert.equal(cfg.ppf.installationMethod, null);
   assert.deepEqual(cfg.roomCleaning.selectedMenuIds, []);
+});
+
+// B5c3 — the optional wheel / glass sections get the SAME isolation guarantee as the eight required
+// ones. Before B5c3 `cloneWizardDraft` omitted them, so a blank draft was no longer value-identical
+// to the canonical initial draft (the deep-equality test above failed) and a hydrated draft had no
+// section for Step 4 to write into.
+test("B5c3: wheel/glass sections are cloned without aliases — mutation through one draft reaches no other draft and not the const", () => {
+  const pristine = JSON.stringify(initialEstimateWizardDraftV22);
+  const h1 = estimateToWizardDraft(estimate({ estimate_items: [] }));
+  const h2 = estimateToWizardDraft(estimate({ estimate_items: [] }));
+  const n  = newEstimateWizardDraft();
+
+  assert.ok(h1.draft.serviceConfiguration.wheel && h1.draft.serviceConfiguration.glass, "both sections present on a hydrated draft");
+  assert.ok(n.draft.serviceConfiguration.wheel && n.draft.serviceConfiguration.glass, "both sections present on a new draft");
+  assert.deepEqual(n.draft, initialEstimateWizardDraftV22, "value-identical: no `wheel: undefined` key is emitted");
+
+  h1.draft.serviceConfiguration.wheel?.selectedMenuIds.push("WHEEL-MENU-X");
+  if (h1.draft.serviceConfiguration.wheel) h1.draft.serviceConfiguration.wheel.quantitiesByMenu["WHEEL-MENU-X"] = 4;
+  if (h1.draft.serviceConfiguration.glass) h1.draft.serviceConfiguration.glass.unitPricesByMenu["GLASS-MENU-X"] = "8000";
+
+  for (const [label, other] of [["another hydrated draft", h2.draft], ["a new draft", n.draft]] as const) {
+    assert.deepEqual(other.serviceConfiguration.wheel, { selectedMenuIds: [], unitPricesByMenu: {}, quantitiesByMenu: {} }, label);
+    assert.deepEqual(other.serviceConfiguration.glass, { selectedMenuIds: [], unitPricesByMenu: {}, quantitiesByMenu: {} }, label);
+  }
+  assert.equal(JSON.stringify(initialEstimateWizardDraftV22), pristine, "the module const is untouched");
+  assert.deepEqual(newEstimateWizardDraft().draft.serviceConfiguration.wheel?.selectedMenuIds, [], "a later blank draft is still pristine");
+
+  // The typed reducer writes into the cloned section, not into a shared one.
+  const written = updateServiceConfiguration(h2.draft, "glass", { selectedMenuIds: ["GLASS-MENU-Y"], quantitiesByMenu: { "GLASS-MENU-Y": 1 } });
+  assert.deepEqual(written.serviceConfiguration.glass?.selectedMenuIds, ["GLASS-MENU-Y"]);
+  assert.deepEqual(h2.draft.serviceConfiguration.glass?.selectedMenuIds, [], "immutable update: the source draft is unchanged");
+  assert.deepEqual(n.draft.serviceConfiguration.glass?.selectedMenuIds, []);
 });
 
 // ── 19. Fixture-free production pricing labels (Phase 8-B2F-B) ───────────────────
@@ -1751,4 +1848,55 @@ test("EW-FC-1C: method changes never clear customer input fields", () => {
   const afterSearch = updateCustomerRegistrationMethod(afterOcr, "search");
   assert.equal(afterSearch.customer.newCustomer.name, "山田太郎");
   assert.equal(afterSearch.customer.newCustomer.email, "a@b.jp");
+});
+
+// ── GDA-OTHER-COATINGS-R1 (C1) — other_coating category / optional otherCoating section ──────────
+// Non-body coatings are a DISTINCT Screen-3 category. C1 pins: an always-present EMPTY section on new
+// and hydrated drafts, alias-free cloning, old-snapshot compatibility, and that no existing persisted
+// category is re-mapped. Persisted `other_coating` rows retain their own Screen-3 identity while
+// flat rows without versioned menu provenance remain unresolved.
+
+test("C1: existing persisted categories never re-map to other_coating; 'interior' stays reported, not coerced", () => {
+  const all: EstimateCategory[] = ["coating", "ppf", "window", "maintenance", "carwash", "roomclean", "wheel", "glass", "other", "interior"];
+  const h = estimateToWizardDraft(estimate({ estimate_items: all.map((c, i) => item(`ITEM-${i}`, c)) }));
+  assert.deepEqual(
+    h.draft.serviceSelection.selectedCategories,
+    ["coating", "ppf", "window", "maintenance", "carwash", "roomclean", "wheel", "glass", "other"],
+    "identity mapping unchanged; other_coating never implied",
+  );
+  const codes = validateWizardDraftForEstimateEditorIntegration(h).issues.map((i) => i.code);
+  assert.ok(codes.includes(INTEGRATION_ISSUE_CODES.UNMAPPED_ITEM_CATEGORY), "'interior' is still reported");
+});
+
+test("C1b: persisted other_coating retains its own Screen-3 identity", () => {
+  const h = estimateToWizardDraft(estimate({ estimate_items: [item("OC-1", "other_coating")] }));
+  assert.deepEqual(h.draft.serviceSelection.selectedCategories, ["other_coating"]);
+  assert.deepEqual(h.integration.unresolvedItemIds, ["OC-1"], "flat rows cannot invent menu provenance");
+});
+
+test("C1: new and hydrated drafts carry an EMPTY otherCoating section, value-identical to the canonical initial draft and alias-free", () => {
+  const n = newEstimateWizardDraft();
+  assert.deepEqual(n.draft.serviceConfiguration.otherCoating, { selectedMenuIds: [], unitPricesByMenu: {}, quantitiesByMenu: {} });
+  assert.deepEqual(n.draft, initialEstimateWizardDraftV22, "value-identical: no `otherCoating: undefined` key is emitted");
+  const h1 = estimateToWizardDraft(estimate({ estimate_items: [item("ITEM-1", "coating")] }));
+  const h2 = estimateToWizardDraft(estimate({ estimate_items: [item("ITEM-1", "coating")] }));
+  assert.ok(h1.draft.serviceConfiguration.otherCoating, "present on a hydrated draft");
+  h1.draft.serviceConfiguration.otherCoating?.selectedMenuIds.push("OC-ITEM-X");
+  if (h1.draft.serviceConfiguration.otherCoating) h1.draft.serviceConfiguration.otherCoating.unitPricesByMenu["OC-ITEM-X"] = "15000";
+  for (const [label, other] of [["fresh hydration", h2.draft], ["new draft", n.draft], ["initial const", initialEstimateWizardDraftV22], ["reset", resetWizardDraft()]] as const) {
+    assert.deepEqual(other.serviceConfiguration.otherCoating, { selectedMenuIds: [], unitPricesByMenu: {}, quantitiesByMenu: {} }, label);
+  }
+  assert.notEqual(h1.draft.serviceConfiguration.otherCoating, h1.draft.serviceConfiguration.wheel, "not aliased to wheel");
+  assert.notEqual(h1.draft.serviceConfiguration.otherCoating, h1.draft.serviceConfiguration.glass, "not aliased to glass");
+});
+
+test("C1: an OLD draft without otherCoating stays without it through updateServiceConfiguration on other sections (no fabrication)", () => {
+  const base = resetWizardDraft();
+  const { otherCoating: _oc, ...withoutOc } = base.serviceConfiguration;
+  const old = { ...base, serviceConfiguration: withoutOc };
+  const next = updateServiceSelection(updateServiceConfiguration(old, "wheel", { selectedMenuIds: ["wm-1"] }), { selectedCategories: ["other_coating"] });
+  assert.equal("otherCoating" in next.serviceConfiguration, false, "selecting the category never fabricates the section");
+  assert.deepEqual(next.serviceSelection.selectedCategories, ["other_coating"]);
+  const filled = updateServiceConfiguration(old, "otherCoating", { quantitiesByMenu: { "oc-trim": 1 } });
+  assert.deepEqual(filled.serviceConfiguration.otherCoating, { selectedMenuIds: [], unitPricesByMenu: {}, quantitiesByMenu: { "oc-trim": 1 } }, "patch merges onto a fresh complete section");
 });
