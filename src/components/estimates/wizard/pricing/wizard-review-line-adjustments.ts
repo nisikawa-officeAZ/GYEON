@@ -181,15 +181,19 @@ function manualSourceForLine(
 
 /**
  * GDA-OTHER-COATINGS-R1 (C5 F2) — TRUE only for a line whose VERIFIED source was built by the C4
- * other-coating path (`metadata.menuKind === "other_coating_menu"`). Such a line must keep a POSITIVE
- * unit price at final review — the same rule the B1 settings form and the C4 builder enforce — so a
- * ¥0 override is refused by preview AND save (same adjuster). Never inferred from label or category.
+ * other-coating path (`metadata.menuKind === "other_coating_menu"`) or (GDA-PR143-R2) by the B5c1
+ * dedicated wheel / glass path (`"wheel_menu"` / `"glass_menu"`). Such a line must keep a POSITIVE
+ * unit price at final review — the same rule the settings form and the builders enforce — so a ¥0
+ * override is refused by preview AND save (same adjuster). Never inferred from label or category.
+ * Store options, maintenance, wash, room cleaning, PPF, window and other keep their existing
+ * non-negative rule (0 still accepted).
  */
-function isOtherCoatingMenuLine(
+const POSITIVE_UNIT_PRICE_MENU_KINDS: ReadonlySet<unknown> = new Set(["other_coating_menu", "wheel_menu", "glass_menu"]);
+function isPositiveUnitPriceMenuLine(
   line: WizardPricingLineResult,
   bundle: Pick<ConfigPricingInputBundle, "manualLines">,
 ): boolean {
-  return manualSourceForLine(line, bundle)?.metadata.menuKind === "other_coating_menu";
+  return POSITIVE_UNIT_PRICE_MENU_KINDS.has(manualSourceForLine(line, bundle)?.metadata.menuKind);
 }
 
 /**
@@ -327,10 +331,10 @@ export function applyWizardReviewLineAdjustments(
     const unitPrice = unitPriceRaw === undefined ? line.unitPrice : parseYen(unitPriceRaw);
     if (quantity === null || unitPrice === null) { reject(INVALID_ADJUSTMENT_MESSAGE); return line; }
 
-    // C5 F2: a verified other-coating menu line never prices at ¥0 — the new-kind positive-price rule
-    // applies at review exactly as it does in settings and in the builder. Wheel / glass / store
-    // option / every other kind keep their existing non-negative rule (0 still accepted) unchanged.
-    if (unitPrice === 0 && isOtherCoatingMenuLine(line, bundle)) {
+    // C5 F2 / GDA-PR143-R2: a verified other-coating, wheel or glass menu line never prices at ¥0 —
+    // the positive-price rule applies at review exactly as it does in settings and in the builders.
+    // Store option / every other kind keep their existing non-negative rule (0 still accepted).
+    if (unitPrice === 0 && isPositiveUnitPriceMenuLine(line, bundle)) {
       reject(`「${line.label}」の単価は1以上の整数で入力してください。`);
       return line;
     }

@@ -840,12 +840,17 @@ test("B5a: with no wheel/glass rows both collections are EXPLICIT empty arrays f
   assert.equal("glassMenus" in r.screenConfig, true);
 });
 
-test("B5a: an EXPLICIT zero price is projected as authored; the row's quantity flag never lowers the by-kind requirement", async () => {
-  const r = await resolveWith([...globals(), ...menus(), wheelRow({ default_unit_price: 0, quantity_required: false })]);
-  assert.equal(r.ok, true);
+test("B5a / GDA-PR143-R2: a PERSISTED zero price is a valid row that projects as UNCONFIGURED (null, never 0); the row's quantity flag never lowers the by-kind requirement", async () => {
+  const r = await resolveWith([...globals(), ...menus(), wheelRow({ default_unit_price: 0, quantity_required: false }), glassRow({ default_unit_price: 0 })]);
+  assert.equal(r.ok, true, "an existing stored 0 is NOT a malformed row — nothing is rejected, rewritten or dropped");
   if (!r.ok) return;
-  assert.strictEqual(r.screenConfig.wheelMenus?.[0]?.defaultUnitPrice, 0);
+  assert.strictEqual(r.screenConfig.wheelMenus?.[0]?.defaultUnitPrice, null, "wheel: 0 projects as not configured");
+  assert.strictEqual(r.screenConfig.glassMenus?.[0]?.defaultUnitPrice, null, "glass: 0 projects as not configured");
+  assert.equal(r.screenConfig.wheelMenus?.length, 1, "the row itself is still projected (never deleted)");
   assert.equal(r.screenConfig.wheelMenus?.[0]?.quantityRequired, true, "quantity-bearing by kind, exactly like every partial PPF part");
+  // A negative / fractional stored price is still a defect (unchanged).
+  assert.deepEqual(await resolveWith([...globals(), ...menus(), wheelRow({ default_unit_price: -1 })]), { ok: false, reason: "malformed-catalog-row" });
+  assert.deepEqual(await resolveWith([...globals(), ...menus(), glassRow({ default_unit_price: 12.5 })]), { ok: false, reason: "malformed-catalog-row" });
 });
 
 test("B5a: wheel/glass sort by display_order then code, and a label change never moves identity", async () => {
@@ -916,7 +921,7 @@ test("B5c1: dealer wheel/glass rows project code, label, bounds and price PRESEN
   assert.deepEqual(r.pricingConfig.roomCleaningMenus, []);
 });
 
-test("B5c1: an EXPLICIT ¥0 configured price counts as configured; pricing and screen views come from the SAME rows", async () => {
+test("B5c1 / GDA-PR143-R2: a PERSISTED ¥0 configured price is UNPRICEABLE (unitPriceConfigured false); pricing and screen views come from the SAME rows", async () => {
   const r = await resolveWith([
     ...globals(), ...menus(),
     wheelRow({ default_unit_price: 0 }),
@@ -924,7 +929,8 @@ test("B5c1: an EXPLICIT ¥0 configured price counts as configured; pricing and s
   ]);
   assert.equal(r.ok, true);
   if (!r.ok) return;
-  assert.equal(r.pricingConfig.wheelMenus?.[0]?.unitPriceConfigured, true, "¥0 is an authored price, not 'unconfigured'");
+  assert.equal(r.pricingConfig.wheelMenus?.[0]?.unitPriceConfigured, false, "a stored ¥0 is not a price anyone decided — a settings prompt, never a ¥0 line");
+  assert.strictEqual(r.screenConfig.wheelMenus?.[0]?.defaultUnitPrice, null, "the screen view agrees: nothing is prefilled");
   assert.deepEqual(r.pricingConfig.glassMenus?.[0], { code: "glass-b", label: "ガラスB", minQuantity: 2, maxQuantity: 6, unitPriceConfigured: false });
   assert.deepEqual(r.pricingConfig.wheelMenus?.map((m) => m.code), r.screenConfig.wheelMenus?.map((m) => m.id));
   assert.deepEqual(r.pricingConfig.glassMenus?.map((m) => m.code), r.screenConfig.glassMenus?.map((m) => m.id));

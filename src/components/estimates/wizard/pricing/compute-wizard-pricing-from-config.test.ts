@@ -453,10 +453,40 @@ test("B5c1: an operator-edited quantity within bounds re-prices the line (2 whee
   assert.equal(r.completeness, "complete");
   assert.equal(lineOf(r, "wheel:wheel-coat")?.quantity, 2);
   assert.equal(r.subtotal! - base.subtotal!, 16_000 + 15_000);
-  // A ¥0 operator price is a valid non-negative integer (never confused with "missing").
-  const zero = computeWizardPricingFromConfig(dedicatedDraft((d) => { d.serviceConfiguration.glass!.unitPricesByMenu["glass-coat"] = "0"; }), DEDICATED_PC, makePricingCatalog(), RANK);
-  assert.deepEqual(zero.errors, []);
-  assert.equal(zero.subtotal! - base.subtotal!, 32_000);
+  // GDA-PR143-R2: a ¥0 operator price is INVALID for a dedicated menu (distinct from "missing"): no
+  // line, INVALID_MANUAL_PRICE with the positive-integer message, and the sibling category still prices.
+  for (const zero of ["0", "00", " 0 "]) {
+    const r0 = computeWizardPricingFromConfig(dedicatedDraft((d) => { d.serviceConfiguration.glass!.unitPricesByMenu["glass-coat"] = zero; }), DEDICATED_PC, makePricingCatalog(), RANK);
+    assert.notEqual(r0.completeness, "complete", JSON.stringify(zero));
+    assert.deepEqual(errorTriples(r0).filter((e) => e[1] === "glass"), [["INVALID_MANUAL_PRICE", "glass", "glass-coat"]], JSON.stringify(zero));
+    assert.ok(r0.errors.some((e) => e.message === "「ガラスコーティング」の金額が不正です。1以上の整数で入力してください。"), JSON.stringify(zero));
+    assert.equal(lineOf(r0, "glass:glass-coat"), undefined, "never a ¥0 glass line");
+    assert.ok(lineOf(r0, "wheel:wheel-coat"), "wheel is independent and still priced");
+  }
+  // ¥1 is the smallest priced amount; the wheel line is unchanged by it.
+  const one = computeWizardPricingFromConfig(dedicatedDraft((d) => { d.serviceConfiguration.glass!.unitPricesByMenu["glass-coat"] = "1"; }), DEDICATED_PC, makePricingCatalog(), RANK);
+  assert.deepEqual(one.errors, []);
+  assert.equal(one.subtotal! - base.subtotal!, 32_000 + 1);
+});
+
+test("GDA-PR143-R2: a menu whose configured price is UNCONFIGURED (null or persisted 0 ⇒ unitPriceConfigured false) cannot produce a line without a positive operator price; a positive one still prices", () => {
+  const unconfiguredWheel: ProductionPricingConfiguration = {
+    ...DEDICATED_PC,
+    wheelMenus: [{ code: "wheel-coat", label: "ホイールコーティング", minQuantity: 1, maxQuantity: 4, unitPriceConfigured: false }],
+  };
+  // Nothing prefilled (Step 4 prefills nothing for an unconfigured price) → settings-flavoured MANUAL_PRICE_REQUIRED, no line.
+  const empty = computeWizardPricingFromConfig(dedicatedDraft((d) => { d.serviceConfiguration.wheel!.unitPricesByMenu = {}; }), unconfiguredWheel, makePricingCatalog(), RANK);
+  assert.deepEqual(errorTriples(empty).filter((e) => e[1] === "wheel"), [["MANUAL_PRICE_REQUIRED", "wheel", "wheel-coat"]]);
+  assert.ok(empty.errors.some((e) => e.message === "「ホイールコーティング」の単価が店舗の設定にありません。金額を入力してください。"));
+  assert.equal(empty.lines.some((l) => l.category === "wheel"), false);
+  // An explicit "0" typed by the operator is still refused (never a saveable ¥0 line).
+  const zero = computeWizardPricingFromConfig(dedicatedDraft((d) => { d.serviceConfiguration.wheel!.unitPricesByMenu["wheel-coat"] = "0"; }), unconfiguredWheel, makePricingCatalog(), RANK);
+  assert.deepEqual(errorTriples(zero).filter((e) => e[1] === "wheel"), [["INVALID_MANUAL_PRICE", "wheel", "wheel-coat"]]);
+  assert.equal(zero.lines.some((l) => l.category === "wheel"), false);
+  // A positive operator price prices exactly as before (unit × 4) and records the configured-price fact.
+  const priced = computeWizardPricingFromConfig(dedicatedDraft((d) => { d.serviceConfiguration.wheel!.unitPricesByMenu["wheel-coat"] = "8000"; }), unconfiguredWheel, makePricingCatalog(), RANK);
+  assert.equal(priced.completeness, "complete");
+  assert.deepEqual([lineOf(priced, "wheel:wheel-coat")?.quantity, lineOf(priced, "wheel:wheel-coat")?.unitPrice, lineOf(priced, "wheel:wheel-coat")?.lineTotal], [4, 8000, 32_000]);
 });
 
 test("B5c1: multiple menus in one category are independent lines with distinct stable identities; a null-max menu accepts any quantity ≥ its min", () => {
@@ -487,8 +517,8 @@ test("B5c1: a MISSING operator price blocks that menu — it is never read back 
   }), DEDICATED_PC, makePricingCatalog(), RANK);
   assert.deepEqual(errorTriples(unconfigured).filter((e) => e[1] === "wheel"), [["MANUAL_PRICE_REQUIRED", "wheel", "wheel-repair"]]);
   assert.equal(unconfigured.lines.some((l) => l.category === "wheel"), false);
-  // Non-integer / negative / non-numeric yen → INVALID_MANUAL_PRICE, no line.
-  for (const bad of ["12.5", "-1", "abc", "1e3", "８０００"]) {
+  // Non-integer / negative / non-numeric / zero yen → INVALID_MANUAL_PRICE, no line.
+  for (const bad of ["12.5", "-1", "abc", "1e3", "８０００", "0"]) {
     const invalid = computeWizardPricingFromConfig(dedicatedDraft((d) => { d.serviceConfiguration.glass!.unitPricesByMenu["glass-coat"] = bad; }), DEDICATED_PC, makePricingCatalog(), RANK);
     assert.deepEqual(errorTriples(invalid).filter((e) => e[1] === "glass"), [["INVALID_MANUAL_PRICE", "glass", "glass-coat"]], bad);
     assert.equal(lineOf(invalid, "glass:glass-coat"), undefined, bad);

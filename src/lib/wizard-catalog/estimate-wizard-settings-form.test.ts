@@ -217,12 +217,36 @@ test("B5a: a glass menu without a price OMITS the price (server stores null — 
   assert.equal("priceable" in input, false);
 });
 
-test("B5a: wheel/glass edits keep the stable itemId; an EXPLICIT zero price is preserved as authored", () => {
-  const input = ok(validateWizardItemForm({ itemId: "wheel-item-1", kind: "wheel_menu", labelJa: "x", priceYen: 0, minQuantity: 2 }));
+test("B5a: wheel/glass edits keep the stable itemId and a POSITIVE authored price; (GDA-PR143-R2) a submitted zero is REJECTED, never preserved", () => {
+  const input = ok(validateWizardItemForm({ itemId: "wheel-item-1", kind: "wheel_menu", labelJa: "x", priceYen: 8000, minQuantity: 2 }));
   assert.equal(input.itemId, "wheel-item-1");
-  assert.equal(input.defaultUnitPrice, 0);
+  assert.equal(input.defaultUnitPrice, 8000);
   assert.equal(input.minQuantity, 2);
   assert.equal(input.quantityRequired, true);
+  const zero = err(validateWizardItemForm({ itemId: "wheel-item-1", kind: "wheel_menu", labelJa: "x", priceYen: 0, minQuantity: 2 }));
+  assert.match(zero.priceYen, /1以上/, "an edit submitting 0 is refused at the form, so a ¥0 unit price is never newly persisted");
+});
+
+test("GDA-PR143-R2: wheel/glass unit price must be POSITIVE when submitted; blank stays OMITTED (unconfigured, never 0 and never rewritten)", () => {
+  for (const kind of ["wheel_menu", "glass_menu"]) {
+    for (const zero of [0, "0", "00", " 0 "]) {
+      assert.match(err(validateWizardItemForm({ kind, labelJa: "x", priceYen: zero })).priceYen, /1以上/, `${kind} priceYen=${JSON.stringify(zero)}`);
+    }
+    assert.match(err(validateWizardItemForm({ kind, labelJa: "x", priceYen: -1 })).priceYen, /1以上/, kind);
+    assert.match(err(validateWizardItemForm({ kind, labelJa: "x", priceYen: "100.5" })).priceYen, /1以上/, kind);
+    assert.match(err(validateWizardItemForm({ kind, labelJa: "x", priceYen: "abc" })).priceYen, /1以上/, kind);
+    assert.equal(ok(validateWizardItemForm({ kind, labelJa: "x", priceYen: 1 })).defaultUnitPrice, 1, `${kind}: ¥1 is the smallest configured price`);
+    assert.equal(ok(validateWizardItemForm({ kind, labelJa: "x", priceYen: "8000" })).defaultUnitPrice, 8000, kind);
+    // Blank / absent keeps the B5a payload shape: the key is OMITTED (server stores null), not sent as 0.
+    for (const blank of [undefined, null, "", "   "]) {
+      const input = ok(validateWizardItemForm({ kind, labelJa: "x", ...(blank === undefined ? {} : { priceYen: blank }) }));
+      assert.equal("defaultUnitPrice" in input, false, `${kind}: blank ${JSON.stringify(blank)} is omitted`);
+    }
+  }
+  // Other priced kinds are untouched: 0 is still preserved for maintenance / wash / room / store option / film / PPF group.
+  for (const kind of ["maintenance_menu", "wash_menu", "room_cleaning_menu", "store_global_option", "film_type", "ppf_type_group"]) {
+    assert.equal(ok(validateWizardItemForm({ kind, labelJa: "x", priceYen: 0 })).defaultUnitPrice, 0, `${kind} keeps 0`);
+  }
 });
 
 test("B5a: wheel/glass reject minQuantity < 1, maxQuantity < minQuantity, negative price, and every non-writable key", () => {
@@ -231,7 +255,7 @@ test("B5a: wheel/glass reject minQuantity < 1, maxQuantity < minQuantity, negati
     assert.match(err(validateWizardItemForm({ kind, labelJa: "x", minQuantity: "1.5" })).minQuantity, /最小数量/, kind);
     assert.match(err(validateWizardItemForm({ kind, labelJa: "x", minQuantity: 4, maxQuantity: 2 })).maxQuantity, /最大数量/, kind);
     assert.match(err(validateWizardItemForm({ kind, labelJa: "x", maxQuantity: 0 })).maxQuantity, /最大数量/, `${kind}: max below the implicit minimum of 1`);
-    assert.match(err(validateWizardItemForm({ kind, labelJa: "x", priceYen: -1 })).priceYen, /価格/, kind);
+    assert.match(err(validateWizardItemForm({ kind, labelJa: "x", priceYen: -1 })).priceYen, /1以上/, `${kind}: negative price now reports the positive-price rule (GDA-PR143-R2)`);
     // Not client-writable: the kind itself decides these, so a client cannot switch quantity off,
     // make the menu unpriceable, or attach a duration nothing in the contract authorises.
     assert.match(err(validateWizardItemForm({ kind, labelJa: "x", quantityRequired: false }))._form, /許可されていない/, kind);
@@ -292,16 +316,16 @@ test("B1: a blank unit price is an EXPLICIT null (unconfigured) — never 0, nev
   }
 });
 
-test("B1: 0 is REJECTED as a unit price for other_coating_menu, while wheel/glass still preserve an explicit 0 (no compatibility change)", () => {
+test("B1: 0 is REJECTED as a unit price for other_coating_menu; (GDA-PR143-R2) wheel/glass now reject a submitted 0 too, with blank still omitted", () => {
   assert.match(err(validateWizardItemForm({ kind: "other_coating_menu", labelJa: "x", priceYen: 0, quantityRequired: false })).priceYen, /1以上/);
   assert.match(err(validateWizardItemForm({ kind: "other_coating_menu", labelJa: "x", priceYen: "0", quantityRequired: false })).priceYen, /1以上/);
   assert.match(err(validateWizardItemForm({ kind: "other_coating_menu", labelJa: "x", priceYen: -1, quantityRequired: false })).priceYen, /1以上/);
   assert.match(err(validateWizardItemForm({ kind: "other_coating_menu", labelJa: "x", priceYen: "100.5", quantityRequired: false })).priceYen, /1以上/);
   assert.match(err(validateWizardItemForm({ kind: "other_coating_menu", labelJa: "x", priceYen: "abc", quantityRequired: false })).priceYen, /1以上/);
   assert.equal(ok(validateWizardItemForm({ kind: "other_coating_menu", labelJa: "x", priceYen: 1, quantityRequired: false })).defaultUnitPrice, 1);
-  // Wheel/glass compatibility is untouched: 0 preserved, blank omitted (not null).
-  assert.equal(ok(validateWizardItemForm({ kind: "wheel_menu", labelJa: "x", priceYen: 0 })).defaultUnitPrice, 0);
-  assert.equal(ok(validateWizardItemForm({ kind: "glass_menu", labelJa: "x", priceYen: 0 })).defaultUnitPrice, 0);
+  // Wheel/glass: a submitted 0 is rejected exactly like other_coating; blank stays omitted (not null).
+  assert.match(err(validateWizardItemForm({ kind: "wheel_menu", labelJa: "x", priceYen: 0 })).priceYen, /1以上/);
+  assert.match(err(validateWizardItemForm({ kind: "glass_menu", labelJa: "x", priceYen: 0 })).priceYen, /1以上/);
   assert.equal("defaultUnitPrice" in ok(validateWizardItemForm({ kind: "glass_menu", labelJa: "x" })), false);
   // …and the legacy store option still preserves 0 as well.
   assert.equal(ok(validateWizardItemForm({ kind: "store_global_option", labelJa: "x", priceYen: 0 })).defaultUnitPrice, 0);

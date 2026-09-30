@@ -157,6 +157,7 @@ export interface ProductionPricingConfiguration {
 export interface ProductionDedicatedUnitMenuOption extends ProductionLabelOption {
   readonly minQuantity: number;
   readonly maxQuantity: number | null;
+  /** True only for a POSITIVE configured price (GDA-PR143-R2: null and a persisted 0 are both false). */
   readonly unitPriceConfigured: boolean;
 }
 
@@ -200,6 +201,7 @@ function parseAmount(raw: string | undefined): { ok: boolean; empty: boolean; va
  * B5c1 — STRICT yen parser for the dedicated per-unit menus: the operator's text must be a finite,
  * SAFE, non-negative INTEGER (yen carries no fraction). Empty and invalid stay distinct so the
  * caller can raise MANUAL_PRICE_REQUIRED vs INVALID_MANUAL_PRICE exactly as the other categories do.
+ * Positivity (≥ 1) is enforced by each dedicated-menu caller, not here.
  */
 function parseIntegerYen(raw: string | undefined): { ok: boolean; empty: boolean; value: number } {
   const t = (raw ?? "").trim();
@@ -386,13 +388,14 @@ export function buildManualPricingLinesFromConfig(
 
   // ── Wheel / Glass — DEDICATED per-unit menus (B5c1, plan §24.1) ────────────────
   // Two INDEPENDENT Screen-3 categories, each selecting MULTIPLE dealer-authored menu rows. One
-  // manual line per selected menu: authoritative label, operator-edited integer unit price, and a
+  // manual line per selected menu: authoritative label, operator-edited POSITIVE integer unit price
+  // (GDA-PR143-R2: ¥0 is never a wheel / glass line — the same rule as other-coating menus), and a
   // positive-integer quantity within the menu's configured bounds. The extension (unit × qty),
   // subtotal, discount and tax stay with the production engine — nothing is totalled here.
   //
   // Fail closed on everything else: an absent OR empty authoritative collection, an absent draft
-  // section, an unknown (stale / disabled / foreign) id, a duplicate id, an empty or non-integer
-  // price, and a missing or out-of-bounds quantity. The nominal initial quantities (wheel 4 /
+  // section, an unknown (stale / disabled / foreign) id, a duplicate id, an empty, zero or
+  // non-integer price, and a missing or out-of-bounds quantity. The nominal initial quantities (wheel 4 /
   // glass 1) are Step-4 behaviour (B5b2): a quantity that never reached the draft is NOT defaulted
   // here — not to the nominal, not to the minimum, and never to zero. An empty price input is NOT
   // read back from the configured price: the operator's text is the ONLY priced amount.
@@ -448,8 +451,8 @@ export function buildManualPricingLinesFromConfig(
           : `「${opt.label}」の単価が店舗の設定にありません。金額を入力してください。`);
         continue;
       }
-      if (!amt.ok || !Number.isSafeInteger(amt.value * qty)) {
-        invalidAmount(category, id, `「${opt.label}」の金額が不正です。0以上の整数で入力してください。`);
+      if (!amt.ok || amt.value < 1 || !Number.isSafeInteger(amt.value * qty)) {
+        invalidAmount(category, id, `「${opt.label}」の金額が不正です。1以上の整数で入力してください。`);
         continue;
       }
       lines.push({

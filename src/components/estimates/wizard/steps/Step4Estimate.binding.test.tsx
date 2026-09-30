@@ -21,7 +21,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 (globalThis as unknown as { React: typeof React }).React = React;
 
 import EstimateWizard from "../EstimateWizard";
-import { Step4Estimate, attachedPartialPpfPatch, type PpfPricingReadiness } from "./Step4Estimate";
+import { Step4Estimate, attachedPartialPpfPatch, repairedDedicatedMenuQuantity, type PpfPricingReadiness } from "./Step4Estimate";
 
 // GDA-ESTIMATE-SAVE-PRICING-GUARD-R1 — the host-derived PPF pricing readiness is a REQUIRED Step-4
 // input. Every pre-existing render passes "ready" so it keeps exercising the surface it always did.
@@ -1498,4 +1498,87 @@ test("C5 F1: a fixed-one row holding 1, an UNSELECTED fixed-one row, and a quant
   assert.ok(qb.includes("数量が未設定です"), "quantity-bearing out-of-bounds still flagged as unset");
   assert.equal(qb.includes("数量を1に戻す"), false, "no fixed-one reset on a quantity-bearing row");
   assert.ok(qb.includes("ZZOCQTY 数量を増やす"), "stepper still present");
+});
+
+// ── GDA-PR143-R2 — stale wheel / glass quantity outside CHANGED catalogue bounds ─────────────────
+
+test("PR143-R2: a selected glass row with a stale out-of-bounds draft quantity shows the ACTUAL stale value and an explicit repair to the nearest bound; nothing is clamped or cleared on mount", () => {
+  const services = fresh();
+  // Restored draft: gm1 held 9 when its maximum was higher; the dealer has since set max 6.
+  services.glass = { selectedMenuIds: ["gm1"], unitPricesByMenu: { gm1: "12000" }, quantitiesByMenu: { gm1: 9 } };
+  const { api, patches } = makeApi(["glass"], services);
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={api} shopRank="detailer" screenConfig={SC} />);
+  assert.ok(html.includes("下書きに残った数量「9」は現在の数量範囲（最小1・最大6）外のため使用できません。"), "the stale 9 is exposed, not hidden behind 'unset'");
+  assert.match(html, /data-testid="dedicated-menu-stale-quantity-notice"/);
+  assert.match(html, /<button[^>]*data-testid="dedicated-menu-stale-quantity-repair"[^>]*aria-label="ZZGLASSMENU 数量を6に修正"/, "labelled one-click repair to the nearest bound (max 6)");
+  assert.equal(html.includes("数量が未設定です"), false, "a stale quantity is not described as unset");
+  assert.equal(/tabular-nums">9</.test(html), false, "the stale 9 is never displayed as the effective quantity");
+  assert.match(html, /value="12000"/, "the price text is untouched");
+  assert.ok(html.includes("ZZGLASSMENU 数量を増やす") && html.includes("ZZGLASSMENU 数量を減らす"), "the stepper is still present");
+  assert.equal(patches.length, 0, "rendering emits NO patch — the draft is never silently normalised on mount");
+  // Below the minimum: a wheel row (min 1, no max) holding a stale 0 offers a repair to the minimum.
+  services.wheel = { selectedMenuIds: ["wm1"], unitPricesByMenu: { wm1: "8000" }, quantitiesByMenu: { wm1: 0 } };
+  const wheel = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["wheel"], services).api} shopRank="detailer" screenConfig={SC} />);
+  assert.ok(wheel.includes("下書きに残った数量「0」は現在の数量範囲（最小1）外のため使用できません。"));
+  assert.match(wheel, /aria-label="ZZWHEELMENU 数量を1に修正"/);
+});
+
+test("PR143-R2: the repair writes the nearest bound through the EXISTING glass binding (one section-scoped patch), and the repaired draft renders in-bounds with no notice", () => {
+  const services = fresh();
+  services.glass = { selectedMenuIds: ["gm1"], unitPricesByMenu: { gm1: "12000" }, quantitiesByMenu: { gm1: 9 } };
+  const { updateStore, patches } = cap();
+  const b = createStep4Bindings(services, updateStore);
+  assert.deepEqual(b.glass.onQuantityChange(GLASS_MENU, 6), { ok: true });
+  assert.deepEqual(patches, [{ services: { glass: { quantitiesByMenu: { gm1: 6 } } } }], "exactly one glass-scoped patch, quantity 6, nothing else touched");
+  // The stale value itself is still refused by the binding — only the explicit repair value passes.
+  assert.deepEqual(b.glass.onQuantityChange(GLASS_MENU, 9), { ok: false, reason: "quantity-out-of-bounds" });
+  assert.equal(patches.length, 1);
+  // Repaired path: the SAME draft after the repair renders 6 as the effective quantity, no notice, no repair.
+  services.glass = { selectedMenuIds: ["gm1"], unitPricesByMenu: { gm1: "12000" }, quantitiesByMenu: { gm1: 6 } };
+  const repaired = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["glass"], services).api} shopRank="detailer" screenConfig={SC} />);
+  assert.match(repaired, /tabular-nums">6</, "repaired quantity is the effective quantity");
+  assert.equal(repaired.includes("dedicated-menu-stale-quantity"), false, "no notice / repair once in bounds");
+  assert.match(repaired, /aria-label="ZZGLASSMENU 数量を増やす" disabled=""/, "at the maximum the increment is disabled (existing rule)");
+  // The host wires the repair to that SAME binding with the computed target — no new route, no local normalisation.
+  const raw = readFileSync(STEP_SRC, "utf8");
+  assert.match(raw, /data-testid="dedicated-menu-stale-quantity-repair"[\s\S]{0,200}onClick=\{\(\) => onResult\(bindings\.onQuantityChange\(menu, repairTarget\)\)\}/, "repair → bindings.onQuantityChange(menu, repairTarget)");
+  assert.equal(/useEffect/.test(codeOf(STEP_SRC)), false, "no mount-time effect normalises the draft");
+});
+
+test("PR143-R2: known-in-bounds and never-set quantities keep their existing behaviour; an UNSELECTED stale row offers nothing", () => {
+  const services = fresh();
+  services.glass = { selectedMenuIds: ["gm1"], unitPricesByMenu: { gm1: "12000" }, quantitiesByMenu: { gm1: 3 } };
+  const inBounds = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["glass"], services).api} shopRank="detailer" screenConfig={SC} />);
+  assert.match(inBounds, /tabular-nums">3</);
+  assert.equal(inBounds.includes("dedicated-menu-stale-quantity"), false, "in-bounds: no notice / repair");
+  assert.equal(inBounds.includes("数量が未設定です"), false);
+  services.glass = { selectedMenuIds: ["gm1"], unitPricesByMenu: {}, quantitiesByMenu: {} };
+  const unset = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["glass"], services).api} shopRank="detailer" screenConfig={SC} />);
+  assert.ok(unset.includes("数量が未設定です"), "never-set quantity keeps the existing 'unset' hint");
+  assert.equal(unset.includes("dedicated-menu-stale-quantity"), false, "never-set is not stale");
+  services.glass = { selectedMenuIds: [], unitPricesByMenu: { gm1: "12000" }, quantitiesByMenu: { gm1: 9 } };
+  const unselected = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["glass"], services).api} shopRank="detailer" screenConfig={SC} />);
+  assert.equal(unselected.includes("dedicated-menu-stale-quantity"), false, "unselected: no line can follow, nothing to repair");
+});
+
+test("PR143-R2: repairedDedicatedMenuQuantity is pure and total — nearest bound for a stale value, null when valid or when the bounds are malformed", () => {
+  assert.equal(repairedDedicatedMenuQuantity(9, { minQty: 1, maxQty: 6 }), 6);
+  assert.equal(repairedDedicatedMenuQuantity(0, { minQty: 1, maxQty: null }), 1);
+  assert.equal(repairedDedicatedMenuQuantity(1, { minQty: 2, maxQty: 4 }), 2);
+  assert.equal(repairedDedicatedMenuQuantity(2.5, { minQty: 1, maxQty: 6 }), 3, "non-integer inside the range is rounded");
+  assert.equal(repairedDedicatedMenuQuantity(Number.NaN, { minQty: 2, maxQty: 4 }), 2);
+  assert.equal(repairedDedicatedMenuQuantity(3, { minQty: 1, maxQty: 6 }), null, "valid: nothing to repair");
+  assert.equal(repairedDedicatedMenuQuantity(9, { minQty: 0, maxQty: 6 }), null, "malformed min: nothing can be offered");
+  assert.equal(repairedDedicatedMenuQuantity(9, { minQty: 3, maxQty: 2 }), null, "malformed max");
+});
+
+test("PR143-R2: a wheel / glass menu handed over with a ¥0 configured price reads as 単価未設定 — never a ¥0 label", () => {
+  const sc: WizardScreenConfiguration = {
+    ...SC,
+    wheelMenus: [{ kind: "wheel_menu", id: "wm0", name: "ZZWHEELZERO", defaultUnitPrice: 0, quantityRequired: true, minQty: 1, maxQty: null }],
+  };
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["wheel"]).api} shopRank="detailer" screenConfig={sc} />);
+  assert.ok(html.includes("ZZWHEELZERO"));
+  assert.ok(html.includes("単価未設定"), "a persisted 0 is not a configured price");
+  assert.equal(html.includes("¥0"), false, "never a ¥0");
 });

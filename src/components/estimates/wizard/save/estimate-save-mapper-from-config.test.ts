@@ -914,11 +914,13 @@ test("B5c3: dedicated-menu review quantity edits honour configured bounds; out-o
 
 // ── GDA-OTHER-COATINGS-R1 (C1) — other_coating category / persisted-category parity ──────────────
 //
-// C1 establishes the CATEGORY contract only: no pricing path builds an other_coating line yet. What
-// must already hold is exact identity parity across the layers a future line will cross — the
-// category id is canonical, its policy maps are total, and the RPC payload persists `other_coating`
-// ITSELF (never `other`, never body `coating`). The line below is hand-assembled from an existing
-// manual line precisely because no engine produces one; the payload builder is pure and total.
+// C1 established the CATEGORY contract; C4 then added the real pricing path (dealer-authored
+// `otherCoatingMenus`). What must hold is exact identity parity across the layers a line crosses —
+// the category id is canonical, its policy maps are total, and the RPC payload persists
+// `other_coating` ITSELF (never `other`, never body `coating`). The hand-assembled line below pins
+// the payload builder (pure and total) independently of the engine; the last two tests pin the
+// CURRENT engine behaviour: missing configuration fails closed and blocks save, a positive
+// configured path prices and persists, and a ¥0 price never becomes a saveable line.
 
 test("C1: other_coating is canonical and its pricing/manual policy parity is explicit (manual_only / required)", () => {
   assert.equal(isServiceCategoryId("other_coating"), true);
@@ -963,12 +965,54 @@ test("C1: the RPC payload persists other_coating as its OWN category — never o
   assert.deepEqual(payload.services.filter((s) => s.wizardCategory === "maintenance"), alone.services);
 });
 
-test("C1: no pricing path exists for other_coating yet — selecting it produces no other_coating line and does not throw", () => {
-  const draft = draftWith(["maintenance", "other_coating"], {
-    ...maintCfg,
-    otherCoating: { selectedMenuIds: ["oc-trim"], unitPricesByMenu: { "oc-trim": "15000" }, quantitiesByMenu: { "oc-trim": 1 } },
-  });
-  const pr = computeWizardPricingFromConfig(draft, PC, CATALOG, RANK);
-  assert.equal(pr.lines.some((l) => l.category === "other_coating"), false, "C1 computes nothing for other_coating");
-  assert.equal(pr.lines.some((l) => l.category === "maintenance"), true, "the existing category still prices");
+const OC_TRIM_DRAFT = () => draftWith(["maintenance", "other_coating"], {
+  ...maintCfg,
+  otherCoating: { selectedMenuIds: ["oc-trim"], unitPricesByMenu: { "oc-trim": "15000" }, quantitiesByMenu: { "oc-trim": 1 } },
+});
+const OC_TRIM_PC: ConfiguredPricingConfiguration = {
+  ...PC,
+  otherCoatingMenus: [{ code: "oc-trim", label: "樹脂トリムコーティング", quantityRequired: false, minQuantity: null, maxQuantity: null, unitPriceConfigured: true }],
+};
+
+test("C1→C4: selecting other_coating with NO other-coating configuration fails CLOSED — DEDICATED_MENU_CONFIG_REQUIRED, no other_coating line, save blocked; the existing category still prices", () => {
+  const draft = OC_TRIM_DRAFT();
+  // `PC` carries no `otherCoatingMenus` (absent) — and an EMPTY authored collection behaves the same.
+  for (const [name, pc] of [["absent", PC], ["empty", { ...PC, otherCoatingMenus: [] }]] as const) {
+    const pr = computeWizardPricingFromConfig(draft, pc, CATALOG, RANK);
+    assert.notEqual(pr.completeness, "complete", name);
+    assert.equal(pr.lines.some((l) => l.category === "other_coating"), false, `${name}: no other_coating line is invented`);
+    assert.ok(pr.errors.some((e) => e.code === "DEDICATED_MENU_CONFIG_REQUIRED" && e.category === "other_coating"), `${name}: fail-closed config error`);
+    assert.equal(pr.lines.some((l) => l.category === "maintenance"), true, `${name}: the existing category still prices`);
+    expectFail(run(draft, { pricingConfig: pc }), "pricing-error");
+  }
+});
+
+test("C4: a POSITIVE configured other_coating path prices one fixed-one line and persists it as other_coating; a ¥0 price is never a saveable line", () => {
+  const pr = computeWizardPricingFromConfig(OC_TRIM_DRAFT(), OC_TRIM_PC, CATALOG, RANK);
+  assert.equal(pr.completeness, "complete");
+  const line = pr.lines.find((l) => l.category === "other_coating");
+  assert.ok(line, "the configured path produces an other_coating line");
+  if (!line) return;
+  assert.deepEqual([line.kind, line.label, line.quantity, line.unitPrice, line.lineTotal], ["manual", "樹脂トリムコーティング", 1, 15_000, 15_000]);
+  const req = okReq(run(OC_TRIM_DRAFT(), { pricingConfig: OC_TRIM_PC, pricingResult: pr }));
+  const saved = req.services.find((s) => s.lineId === "manual:other_coating:oc-trim");
+  assert.ok(saved, "mapped with the stable other_coating identity");
+  if (!saved) return;
+  assert.equal(saved.category, "other_coating");
+  const payload = buildEstimateSaveRpcPayload(req, { idempotencyKey: "c4-other-coating-positive" });
+  const oc = payload.services.find((s) => s.lineId === "manual:other_coating:oc-trim");
+  assert.ok(oc);
+  if (!oc) return;
+  assert.deepEqual([oc.category, oc.wizardCategory, oc.pricingPolicy, oc.manualPricePolicy], ["other_coating", "other_coating", "manual_only", "required"]);
+  assert.deepEqual([oc.quantity, oc.unitPrice, oc.lineTotal], [1, 15_000, 15_000]);
+  // The save blocker is not weakened: ¥0 (and a blank) never reaches a line, and the mapper refuses.
+  for (const price of ["0", ""]) {
+    const zero = draftWith(["maintenance", "other_coating"], {
+      ...maintCfg,
+      otherCoating: { selectedMenuIds: ["oc-trim"], unitPricesByMenu: { "oc-trim": price }, quantitiesByMenu: { "oc-trim": 1 } },
+    });
+    const zpr = computeWizardPricingFromConfig(zero, OC_TRIM_PC, CATALOG, RANK);
+    assert.equal(zpr.lines.some((l) => l.category === "other_coating"), false, `price ${JSON.stringify(price)}: no line`);
+    expectFail(run(zero, { pricingConfig: OC_TRIM_PC }), "pricing-error");
+  }
 });

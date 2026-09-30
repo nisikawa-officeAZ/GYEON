@@ -192,6 +192,41 @@ const DEDICATED_MENU_ACTION_MESSAGE: Readonly<Record<"menu-invalid" | "quantity-
   "quantity-out-of-bounds": "数量は設定された範囲内で入力してください。",
 };
 
+/**
+ * GDA-PR143-R2 — a SELECTED wheel / glass row can hold a draft quantity that the CURRENT catalogue
+ * bounds reject (the dealer tightened min/max after the draft was written). The builder refuses to
+ * price that line (fail closed), so this host must SHOW the actual stale value instead of a bare
+ * "unset" and offer an explicit one-click repair through the SAME existing binding
+ * (`onQuantityChange(menu, target)` → one section-scoped patch). Nothing is clamped or cleared on
+ * mount, and the draft is never rewritten without the operator's activation.
+ */
+const dedicatedMenuBoundsText = (menu: { readonly minQty: number; readonly maxQty: number | null }): string =>
+  menu.maxQty !== null ? `最小${menu.minQty}・最大${menu.maxQty}` : `最小${menu.minQty}`;
+const dedicatedMenuStaleQuantityNotice = (stale: number, menu: { readonly minQty: number; readonly maxQty: number | null }): string =>
+  `下書きに残った数量「${stale}」は現在の数量範囲（${dedicatedMenuBoundsText(menu)}）外のため使用できません。`;
+const dedicatedMenuStaleQuantityRepairLabel = (target: number): string => `数量を${target}に修正`;
+
+/**
+ * PURE: the explicit repair target for a stale dedicated-menu quantity — the NEAREST configured
+ * bound (below min → min; above max → max; a non-integer inside the range → rounded and clamped).
+ * `null` when the bounds themselves are malformed (nothing can be offered) or the value is already
+ * valid (nothing to repair). Display-only: the write still goes through the validating binding.
+ */
+export function repairedDedicatedMenuQuantity(
+  stale: number,
+  menu: { readonly minQty: number; readonly maxQty: number | null },
+): number | null {
+  const { minQty, maxQty } = menu;
+  if (!Number.isSafeInteger(minQty) || minQty < 1) return null;
+  if (maxQty !== null && (!Number.isSafeInteger(maxQty) || maxQty < minQty)) return null;
+  if (Number.isSafeInteger(stale) && stale >= minQty && (maxQty === null || stale <= maxQty)) return null;
+  if (!Number.isFinite(stale)) return minQty;
+  const rounded = Math.round(stale);
+  if (rounded < minQty) return minQty;
+  if (maxQty !== null && rounded > maxQty) return maxQty;
+  return rounded;
+}
+
 /** A menu section is usable only when the runtime collection is present AND non-empty. */
 const dedicatedMenusLocked = (menus: readonly (WheelMenu | GlassMenu | OtherCoatingMenu)[] | undefined): boolean =>
   menus === undefined || menus.length === 0;
@@ -229,12 +264,18 @@ function DedicatedMenuSection({ kind, menus, draft, bindings, onResult }: {
           const usable = isDedicatedMenuUsable(menu);
           const selected = draft.selectedMenuIds.includes(menu.id);
           const draftQty: number | undefined = draft.quantitiesByMenu[menu.id];
-          // Only a draft quantity that is valid for THESE bounds is shown as the quantity; anything
-          // else is "unset" — never a displayed number the draft does not actually hold.
+          // Only a draft quantity that is valid for THESE bounds is the effective quantity; anything
+          // else is NOT displayed as the quantity. GDA-PR143-R2: a PRESENT draft value the current
+          // bounds reject is a STALE quantity — surfaced verbatim below with an explicit repair, never
+          // silently clamped, cleared or shown as the effective number.
           const qty = draftQty !== undefined && isQuantityWithinMenuBounds(draftQty, menu) ? draftQty : null;
+          const staleQty = draftQty !== undefined && qty === null ? draftQty : null;
+          const repairTarget = staleQty !== null ? repairedDedicatedMenuQuantity(staleQty, menu) : null;
           const priceText: string = draft.unitPricesByMenu[menu.id] ?? "";
           const initial = initialDedicatedMenuQuantity(kind, menu);
-          const configuredPriceLabel = menu.defaultUnitPrice !== null
+          // GDA-PR143-R2: only a POSITIVE configured price is a price; null (and a persisted 0 that a
+          // non-resolver caller might still hand over) reads as not configured — never "¥0".
+          const configuredPriceLabel = menu.defaultUnitPrice !== null && menu.defaultUnitPrice > 0
             ? `税抜 ¥${menu.defaultUnitPrice.toLocaleString("ja-JP")} / ${copy.unit}`
             : "単価未設定";
           const boundsLabel = menu.maxQty !== null
@@ -296,7 +337,28 @@ function DedicatedMenuSection({ kind, menus, draft, bindings, onResult }: {
                         ＋
                       </button>
                     </div>
-                    {qty === null && <span className="text-amber-300/90">{DEDICATED_MENU_QUANTITY_REQUIRED}</span>}
+                    {qty === null && staleQty === null && <span className="text-amber-300/90">{DEDICATED_MENU_QUANTITY_REQUIRED}</span>}
+                    {staleQty !== null && (
+                      // GDA-PR143-R2: the stale draft value is shown, not hidden behind "unset"; the
+                      // ONLY way it changes is the operator's activation of this repair, which writes
+                      // the nearest configured bound through the existing validating binding.
+                      <>
+                        <span data-testid="dedicated-menu-stale-quantity-notice" className="text-amber-300/90">
+                          {dedicatedMenuStaleQuantityNotice(staleQty, menu)}
+                        </span>
+                        {repairTarget !== null && (
+                          <button
+                            type="button"
+                            data-testid="dedicated-menu-stale-quantity-repair"
+                            aria-label={`${menu.name} ${dedicatedMenuStaleQuantityRepairLabel(repairTarget)}`}
+                            onClick={() => onResult(bindings.onQuantityChange(menu, repairTarget))}
+                            className="min-h-[44px] rounded-lg border border-amber-500/60 bg-[#0f172a] px-3 text-sm text-amber-200"
+                          >
+                            {dedicatedMenuStaleQuantityRepairLabel(repairTarget)}
+                          </button>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               )}

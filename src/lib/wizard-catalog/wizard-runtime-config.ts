@@ -514,8 +514,12 @@ function buildConfigs(
   // quantity. The KIND is quantity-bearing — exactly as every partial PPF part is — so
   // `quantityRequired` is projected true by kind, not read from a row flag. The configured unit
   // price stays NULLABLE: null means "not configured" and reaches the screen as null, never as ¥0,
-  // which would price a line at nothing that nobody decided. Bounds and price are validated like
-  // ppf_part bounds and fail closed. There is no offering family and no rank gate beyond the row's
+  // which would price a line at nothing that nobody decided. GDA-PR143-R2: only a POSITIVE integer
+  // price counts as configured — exactly as for other-coating menus. An already-persisted 0 is NOT
+  // a defect (the row stays valid and is never rewritten here), but it projects as null with
+  // `unitPriceConfigured: false`: a settings prompt in Step 4, never a prefilled or saveable ¥0
+  // line. A negative, fractional or non-numeric price is a defect and fails closed. Bounds are
+  // validated like ppf_part bounds and fail closed. There is no offering family and no rank gate beyond the row's
   // own ranks: the dealer-authored row is the availability authority. Both collections are always
   // EXPLICIT arrays here (empty ⇒ the dealer has authored none); `undefined` can only mean a caller
   // that never ran this resolver. Initial quantities (wheel 4 / glass 1) are Step-4 behaviour (B5b),
@@ -529,7 +533,8 @@ function buildConfigs(
     if (!Number.isInteger(min) || min < 1) return { ok: false };
     if (max != null && (!Number.isInteger(max) || max < min)) return { ok: false };
     if (price != null && (!Number.isInteger(price) || price < 0)) return { ok: false };
-    return { ok: true, defaultUnitPrice: price ?? null, minQty: min, maxQty: max ?? null };
+    // null / 0 ⇒ not configured (never ¥0); the stored row is left exactly as it is.
+    return { ok: true, defaultUnitPrice: price != null && price > 0 ? price : null, minQty: min, maxQty: max ?? null };
   };
   const wheelMenus: WheelMenu[] = [];
   for (const r of of("wheel_menu", "dealer")) {
@@ -667,8 +672,9 @@ function buildConfigs(
     // ── GDA-ESTIMATE-QUANTITY-POLICY-R1 (B5c1): dedicated wheel / glass menu FACTS for pricing ──
     // Projected from EXACTLY the dealer-owned, active, validated rows that built the screen
     // collections above (same `wheelMenus` / `glassMenus`, so the two views cannot drift): stable
-    // code, authoritative label, configured quantity bounds, and whether a configured unit price
-    // EXISTS. Deliberately NOT the price itself — the line is priced from the operator's edited
+    // code, authoritative label, configured quantity bounds, and whether a POSITIVE configured unit
+    // price EXISTS (null and a persisted 0 are both "unconfigured", GDA-PR143-R2). Deliberately NOT
+    // the price itself — the line is priced from the operator's edited
     // unit-price text, and an empty input blocks rather than falling back to the configured value.
     // Always EXPLICIT arrays here; empty ⇒ the dealer authored none, which blocks that category when
     // selected (never a fabricated line).

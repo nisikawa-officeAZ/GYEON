@@ -823,31 +823,60 @@ test("C5 F2: a POSITIVE override (¥1 included) on other-coating lines is accept
   assert.deepEqual(totalsOf(identity), totalsOf(canonical));
 });
 
-test("C5 F2: wheel / glass / maintenance ¥0 overrides keep their EXISTING behaviour (0 accepted, line priced at ¥0) — the rule is scoped to the verified other_coating_menu source only", () => {
+test("C5 F2 / GDA-PR143-R2: a ¥0 override on a wheel / glass menu line fails the WHOLE result closed (adjuster AND compute route); maintenance ¥0 keeps its existing behaviour", () => {
   const canonical = computeWizardPricingFromConfig(ocDraft(), OC_PC, CATALOG, "detailer");
   const bundle = buildWizardPricingInputFromConfig(ocDraft(), OC_PC, CATALOG, "detailer");
   const MM1 = "manual:maintenance:mm1";
-  const zeros = { [WM1]: "0", [GM1]: "0", [MM1]: "0" };
-  const others = applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: zeros }, CATALOG, OC_PC);
-  assert.equal(others.status, "success", "wheel / glass / maintenance ¥0 still accepted");
-  assert.deepEqual(others.errors, []);
-  const byId = (id: string) => others.lines.find((l) => wizardPricingLineId(l) === id)!;
-  assert.deepEqual([byId(WM1).quantity, byId(WM1).unitPrice, byId(WM1).lineTotal], [4, 0, 0], "wheel ¥0 × 4");
-  assert.deepEqual([byId(GM1).quantity, byId(GM1).unitPrice, byId(GM1).lineTotal], [1, 0, 0], "glass ¥0 × 1");
+  // PRECONDITION: the rule keys on the VERIFIED source metadata the B5c1 builder wrote, not on a label.
+  assert.equal(bundle.manualLines.find((m) => m.sourceCategory === "wheel" && m.manualPricingIdentity === "wm1")?.metadata.menuKind, "wheel_menu");
+  assert.equal(bundle.manualLines.find((m) => m.sourceCategory === "glass" && m.manualPricingIdentity === "gm1")?.metadata.menuKind, "glass_menu");
+  for (const id of [WM1, WM2, GM1]) {
+    for (const zero of ["0", "00"]) {
+      expectRejected(applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [id]: zero } }, CATALOG, OC_PC), `${id} "${zero}" via the shared adjuster`);
+      expectRejected(computeWizardPricingFromConfig(ocDraft((d) => { d.review.unitPriceInputsByLine[id] = zero; }), OC_PC, CATALOG, "detailer"), `${id} "${zero}" via the compute route`);
+    }
+  }
+  const wheelZero = applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [WM1]: "0" } }, CATALOG, OC_PC);
+  assert.ok(wheelZero.errors.some((e) => e.message === "「ホイールコート」の単価は1以上の整数で入力してください。"), "positive-price message on the wheel line");
+  assert.ok(wheelZero.errors.some((e) => e.code === "INVALID_REVIEW_ADJUSTMENT"));
+  const glassZero = applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [GM1]: "0" } }, CATALOG, OC_PC);
+  assert.ok(glassZero.errors.some((e) => e.message === "「ガラス撥水」の単価は1以上の整数で入力してください。"), "positive-price message on the glass line");
+  // A ¥0 combined with an otherwise valid quantity edit is still refused as a whole (no partial apply).
+  expectRejected(applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: { [WM2]: "4" }, unitPriceInputsByLine: { [WM2]: "0" } }, CATALOG, OC_PC), "qty 4 + ¥0");
+  // Maintenance (and every non-menu kind) keeps the existing non-negative rule: ¥0 still accepted.
+  const maint = applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [MM1]: "0" } }, CATALOG, OC_PC);
+  assert.equal(maint.status, "success", "maintenance ¥0 still accepted");
+  assert.deepEqual(maint.errors, []);
+  const byId = (id: string) => maint.lines.find((l) => wizardPricingLineId(l) === id)!;
   assert.deepEqual([byId(MM1).unitPrice, byId(MM1).lineTotal], [0, 0], "maintenance ¥0");
-  assert.equal(others.subtotal, (canonical.subtotal as number) - 32_000 - 12_000 - 5_000);
-  // the other-coating lines in the same result are untouched
-  for (const [id, total] of [[OC1, 6_000], [OC2, 8_000], [OC3, 7_500]] as const) assert.equal(byId(id).lineTotal, total, id);
-  const viaCompute = computeWizardPricingFromConfig(ocDraft((d) => { Object.assign(d.review.unitPriceInputsByLine, zeros); }), OC_PC, CATALOG, "detailer");
-  assert.deepEqual(totalsOf(viaCompute), totalsOf(others), "preview and save agree on the unchanged kinds");
-  // B5 / store-option baseline without any other-coating rows: byte-identical acceptance of ¥0.
+  assert.equal(maint.subtotal, (canonical.subtotal as number) - 5_000);
+  // the wheel / glass / other-coating lines in the same result are untouched
+  for (const [id, total] of [[WM1, 32_000], [GM1, 12_000], [OC1, 6_000], [OC2, 8_000], [OC3, 7_500]] as const) assert.equal(byId(id).lineTotal, total, id);
+  const viaCompute = computeWizardPricingFromConfig(ocDraft((d) => { d.review.unitPriceInputsByLine[MM1] = "0"; }), OC_PC, CATALOG, "detailer");
+  assert.deepEqual(totalsOf(viaCompute), totalsOf(maint), "preview and save agree on the unchanged kind");
+  // B5 baseline without any other-coating rows: the SAME positive rule applies to wheel / glass.
   const dedicated = computeWizardPricingFromConfig(dedicatedDraft(), DEDICATED_PC, CATALOG, "detailer");
   const dedicatedBundle = buildWizardPricingInputFromConfig(dedicatedDraft(), DEDICATED_PC, CATALOG, "detailer");
-  const dedicatedZero = applyWizardReviewLineAdjustments(dedicated, dedicatedBundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [WM1]: "0", [GM1]: "0" } }, CATALOG, DEDICATED_PC);
-  assert.equal(dedicatedZero.status, "success");
-  assert.equal(dedicatedZero.subtotal, (dedicated.subtotal as number) - 32_000 - 12_000);
+  expectRejected(applyWizardReviewLineAdjustments(dedicated, dedicatedBundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [WM1]: "0" } }, CATALOG, DEDICATED_PC), "dedicated wheel ¥0");
+  expectRejected(applyWizardReviewLineAdjustments(dedicated, dedicatedBundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [GM1]: "0" } }, CATALOG, DEDICATED_PC), "dedicated glass ¥0");
+  // A POSITIVE override (¥1 included) on wheel / glass is accepted and recomputed; identity text reproduces canonical.
+  const positive = applyWizardReviewLineAdjustments(dedicated, dedicatedBundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [WM1]: "1", [GM1]: "13000" } }, CATALOG, DEDICATED_PC);
+  assert.equal(positive.status, "success");
+  assert.deepEqual(positive.errors, []);
+  const pos = (id: string) => positive.lines.find((l) => wizardPricingLineId(l) === id)!;
+  assert.deepEqual([pos(WM1).quantity, pos(WM1).unitPrice, pos(WM1).lineTotal], [4, 1, 4], "wheel ¥1 × 4");
+  assert.deepEqual([pos(GM1).quantity, pos(GM1).unitPrice, pos(GM1).lineTotal], [1, 13_000, 13_000], "glass ¥13,000 × 1");
+  assert.equal(positive.subtotal, (dedicated.subtotal as number) - 32_000 + 4 - 12_000 + 13_000);
+  const identity = applyWizardReviewLineAdjustments(dedicated, dedicatedBundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { [WM1]: "8000", [WM2]: "3000", [GM1]: "12000" } }, CATALOG, DEDICATED_PC);
+  assert.deepEqual(totalsOf(identity), totalsOf(dedicated));
   // The rule keys on correlated source metadata: a corrupted wheel source tagged as an
-  // other-coating menu is rejected more strictly (fail closed), never silently repriced at ¥0.
+  // other-coating menu is still rejected (fail closed), never silently repriced at ¥0.
   const wheelTampered: ConfigPricingInputBundle = { ...bundle, manualLines: bundle.manualLines.map((m) => (m.sourceCategory === "wheel" && m.manualPricingIdentity === "wm1" ? { ...m, metadata: { ...m.metadata, menuKind: "other_coating_menu" } } : m)) };
   expectRejected(applyWizardReviewLineAdjustments(canonical, wheelTampered, { quantityInputsByLine: {}, unitPriceInputsByLine: { [WM1]: "0" } }, CATALOG, OC_PC), "the rule follows the source metadata, never the category label");
+  // A store-option line (no menuKind) keeps accepting ¥0 — the rule never widens to it.
+  const withOption = draft((sd) => { selectOption(sd, "go-1", "3000"); });
+  const optResult = computeWizardPricingFromConfig(withOption, PC, CATALOG, "detailer");
+  const optBundle = buildWizardPricingInputFromConfig(withOption, PC, CATALOG, "detailer");
+  const optZero = applyWizardReviewLineAdjustments(optResult, optBundle, { quantityInputsByLine: {}, unitPriceInputsByLine: { "manual:store_global_options:go-1": "0" } }, CATALOG, PC);
+  assert.equal(optZero.status, "success", "store option ¥0 unchanged");
 });

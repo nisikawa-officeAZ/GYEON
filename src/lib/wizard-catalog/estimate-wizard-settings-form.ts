@@ -178,13 +178,17 @@ export function validateWizardItemForm(raw: Record<string, unknown>): WizardItem
   //    GDA-OTHER-COATINGS-R1 (B1) — `other_coating_menu` is stricter than every other priced kind:
   //    its unit price must be POSITIVE (0 is refused, not preserved), and a blank price is sent as
   //    an EXPLICIT null ("not configured") so an edit can clear a price and the server never sees a
-  //    0 stand in for "unset". Wheel/glass keep their B5a behaviour untouched (0 preserved, blank
-  //    omitted).
+  //    0 stand in for "unset".
+  //    GDA-PR143-R2 — `wheel_menu` / `glass_menu` now share the POSITIVE rule for a SUBMITTED price:
+  //    a newly authored 0 is refused (never persisted as a ¥0 unit price), while a blank price keeps
+  //    the B5a shape (OMITTED ⇒ the server stores null, "not configured"). An already-persisted 0 is
+  //    not touched by this form — the runtime resolver projects it as unconfigured.
   const isOtherCoatingMenu = kind === "other_coating_menu";
+  const requiresPositivePrice = isOtherCoatingMenu || kind === "wheel_menu" || kind === "glass_menu";
   let defaultUnitPrice: number | null | undefined;
   if (supportsPrice && !isBlankOptional(raw.priceYen)) {
     const p = parseIntStrict(raw.priceYen);
-    if (isOtherCoatingMenu) {
+    if (requiresPositivePrice) {
       if (!p.ok || p.value < 1) errors.priceYen = MSG.priceYenPositive; // rejects 0/negative/fractional/NaN/Infinity
       else defaultUnitPrice = p.value;
     } else if (!p.ok || p.value < 0) {
@@ -209,7 +213,8 @@ export function validateWizardItemForm(raw: Record<string, unknown>): WizardItem
   //    wheel/glass menu (B5a) is quantity-bearing BY KIND: `quantityRequired` is fixed to true here
   //    and never read from the client (the key is not even allowlisted above); only the bounds are
   //    authored. The unit price stays optional — an unauthored price is OMITTED from the payload so
-  //    the server stores null ("not configured"); it is never turned into 0.
+  //    the server stores null ("not configured"); it is never turned into 0, and (GDA-PR143-R2) an
+  //    authored 0 is rejected above rather than stored.
   const isDedicatedUnitMenu = kind === "wheel_menu" || kind === "glass_menu";
   let priceable: boolean | undefined;
   let quantityRequired: boolean | undefined;

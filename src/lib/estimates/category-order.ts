@@ -11,8 +11,11 @@
 // options categorised as "coating" stay grouped with coating; "other"-category
 // options fall into the final slot (8). GDA-OTHER-COATINGS-R1 (C1): "other_coating"
 // (non-body coatings — resin trim / seat / engine room) ranks at the options
-// slot (7) too: after every body-work category, before "other". Existing ranks
-// are unchanged. Within a category, the original
+// slot (7) too: after every body-work category, before "other". GDA-PR143-R2:
+// "wheel" (dedicated per-unit wheel menus, plan §24.1) ranks at the SAME options
+// slot (7) as its sibling "glass" — adjacent to it, before "other" — so a wheel
+// line never falls to the unknown-category rank (99) behind "other". Existing
+// ranks are unchanged. Within a category, the original
 // sort_order is preserved. Reordering never changes amounts (sums are
 // order-independent; totals are read from stored values).
 
@@ -24,7 +27,8 @@ export const CATEGORY_ORDER: Record<string, number> = {
   carwash:     5,
   roomclean:   6,
   interior:    7, // options (room/leather add-ons, and legacy roomclean pre-093)
-  glass:       7, // options (glass coat add-on)
+  glass:       7, // options (glass coat add-on / dedicated glass menu)
+  wheel:       7, // dedicated wheel menu — adjacent to glass, before other (GDA-PR143-R2)
   other_coating: 7, // non-body coatings (GDA-OTHER-COATINGS-R1 C1)
   other:       8,
 };
