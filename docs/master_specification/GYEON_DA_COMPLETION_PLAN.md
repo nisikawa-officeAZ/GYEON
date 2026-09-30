@@ -2457,3 +2457,64 @@ not_authorized:
   - ANDROID_SOURCE
   - DEPLOY
 ```
+
+## 24. GDA-ESTIMATE-QUANTITY-POLICY-R1 — estimate line quantity and price consistency
+
+**Status:** Owner-authorized local repair phase on a dedicated branch. This does not expand OCR Draft PR #141 or transfer Office AZ inventory work from Studio.
+
+**Owner decision (2026-09-30):** Body coating and full/front-full PPF do not require quantity entry. Partial PPF uses one line per selected part, with editable quantity in Step 4 and final review; quantity 2 means two identical units at the selected tax-exclusive unit price. Wheel and glass work must be independent quantity-bearing service menus. The Owner approved starting this separate price-repair phase after the read-only Claude diagnosis `GDA_ESTIMATE_QUANTITY_POLICY_COMPLETE_PATH_AUDIT_RESULT_V1`.
+
+**Execution base:** `origin/main` commit `0b6a1fdb9c97d6254d4482aa5c3dddc67560676f`, tree `3e5837f9c20e48f640c94ef226cc77a95c57a8b5`, branch `work/estimate-quantity-policy-20260930`. The worktree contains nine unrelated Git LFS checkout image differences under `docs/estimate-wizard/archive/ver2.1/genspark-ui/package/`; they are excluded and must not be changed, restored, staged, or committed by this phase. `ScreensPreview.tsx` remains metadata-only.
+
+**Stage A — authorized implementation and local verification only:** Make the final-review quantity control match the existing server policy. Fixed-quantity lines must not expose an editable number input; quantity-required store options retain bounded editing. No price formula, DTO, SQL, PDF, catalogue, dependency, or customer-data change. Claude's literal edit allowlist is:
+
+- `src/components/estimates/wizard/pricing/wizard-pricing-types.ts`
+- `src/components/estimates/wizard/pricing/compute-wizard-pricing-from-config.ts`
+- `src/components/estimates/wizard/pricing/wizard-review-line-adjustments.ts`
+- `src/components/estimates/wizard/steps/Step7Review.tsx`
+- `src/components/estimates/wizard/steps/Step7Review.test.tsx`
+- `src/components/estimates/wizard/pricing/compute-wizard-pricing-from-config.test.ts`
+- `src/components/estimates/wizard/pricing/wizard-review-line-adjustments.test.ts`
+
+**Stage B — diagnosis/contract preparation only until its literal edit allowlist is recorded:** Trace the new per-part PPF line model, wheel/glass menu authority, coefficients and rounding, one-time PPF-coating reduction, discount/tax, draft restoration, create/revision persistence, and PDF. Preserve fail-closed invalid quantity behavior while making correction actionable. No silent business default, SQL/schema change, migration apply, or live data access. Book Codex records Stage B's exact path list and contract before Claude edits those paths; the Owner's product decision above is already ratified, but material new scope still requires Owner direction.
+
+**Stage B source contract (read-only discovery accepted; implementation still gated):** Each selected partial-PPF part becomes its own stable manual line. Its tax-exclusive unit price is the part base price multiplied by installation and vehicle coefficients and rounded once; line total is that unit price multiplied by a bounded positive integer quantity. One part at quantity 1 must retain the current yen amount. Full/front-full PPF and body coating remain fixed at quantity 1. Multiple part lines must receive the PPF/coating reduction exactly once, retain post-tax discount behavior, and save/revise/PDF must use the same quantity, unit price and total. Old aggregate line IDs in restored review order/overrides are ignored rather than applied to a new part. Step 4 and final review must not present contradictory quantities: a later valid edit in either control becomes the effective value in both; invalid in-progress review text remains visible for correction but blocks save. Exact source/test path and state-update contract for this synchronization are pending a narrow follow-up diagnosis. No Stage B source edits until that path list is recorded.
+
+**Wheel/glass decision is separate from B1–B4:** Existing store-global options already support independent bounded quantities and pricing, but save/PDF classify them as “Other.” The Owner subsequently chose dedicated wheel/glass service menus for B5; that choice does not retroactively expand the B1–B4 allowlist or authorize live catalogue/settings changes.
+
+**Stage B1–B4 literal implementation gate (2026-09-30):** Claude's read-only `GDA_ESTIMATE_QUANTITY_POLICY_STAGE_B_CONTRACT_DISCOVERY_RESULT_V1` and narrow sync result `GDA_ESTIMATE_QUANTITY_POLICY_STAGE_B_SYNC_DISCOVERY_RESULT_V1` establish the source path and state contract. This gate authorizes local implementation/testing only, not wheel/glass B5 or any Git/external release action. Review quantity on a selected partial-PPF part writes through to the canonical Step-4 part quantity only when it is a plain positive safe integer within the authoritative bounds and its line ID, type and part are selected; invalid text stays in the review buffer and blocks save. A later Step-4 quantity change clears that part's review buffer; a PPF type or installation-method change clears partial-PPF review quantity buffers. No Step-4 binding/component may read review state. Old aggregate review IDs are ignored. Do not silently rewrite a restored draft; valid saved post-contract revisions must already satisfy this invariant, and a mismatch in a restored invalid draft is corrected by the next explicit operator edit.
+
+Literal source/test edit allowlist for B1–B4 only:
+
+- `src/lib/pricing/ppf-r1-price-resolution.ts`
+- `src/lib/pricing/ppf-r1-price-resolution.test.ts`
+- `src/lib/wizard-catalog/wizard-runtime-config.ts`
+- `src/lib/wizard-catalog/wizard-runtime-config.test.ts`
+- `src/components/estimates/wizard/pricing/wizard-pricing-input-adapter-config.ts`
+- `src/components/estimates/wizard/pricing/ppf-r1-wizard-pricing.test.ts`
+- `src/components/estimates/wizard/pricing/compute-wizard-pricing-from-config.test.ts`
+- `src/components/estimates/wizard/pricing/wizard-review-line-adjustments.ts`
+- `src/components/estimates/wizard/pricing/wizard-review-line-adjustments.test.ts`
+- `src/components/estimates/wizard/pricing/wizard-pricing-types.ts`
+- `src/components/estimates/wizard/screens/PpfPartialPartsSelector.tsx`
+- `src/components/estimates/wizard/steps/Step7Review.tsx`
+- `src/components/estimates/wizard/steps/Step7Review.test.tsx`
+- `src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx`
+- `src/components/estimates/wizard/useEstimateWizard.ts`
+- `src/components/estimates/wizard/save/estimate-save-mapper-from-config.test.ts`
+
+`Step4Estimate.tsx`, `step4-bindings.ts`, draft/bridge/controller/SQL/DTO/PDF paths and all paths outside this list are read-only or excluded. If implementation genuinely requires another edit path, stop with exact `BLOCKED_SCOPE`; Book must record a revised gate before continuation. Synthetic tests must cover quantity 1 parity, quantity 2 exact unit multiplication, coefficient/rounding edge, bounds/fail-closed error, client/server parity, one-time coating reduction, save/revision/PDF payload parity, stale aggregate ID, and two-way Step-4/review synchronization. Run focused tests, canonical estimate suite, typecheck, build and literal diff check.
+
+**Acceptance gates:** E2 requires focused synthetic tests, typecheck, build, literal diff review, protected-path check, and `git diff --check` on the exact candidate. E3 requires separately authorized authenticated Preview verification. E4 requires field testing by a detailer. Local edits/tests do not authorize commit, push, PR creation/state change, Ready, merge, deployment, or production database mutation.
+
+**Current acceptance (2026-09-30):** Stage A and Stage B1–B4 are local E2 candidates only. Stage B final candidate passed eight focused files (258/258), canonical-estimate (28/28), typecheck, build, and `git diff --check`; Book confirmed the 16-file B allowlist, unchanged protected `ScreensPreview.tsx` metadata, and the nine unrelated LFS checkout images remain outside scope. No authenticated Preview or field proof has occurred. B5 source and database work has not started; the Owner's subsequent wheel/glass choice is recorded below, not treated as Git publication or production authority.
+
+### 24.1 B5 dedicated wheel/glass menu decision and coordination gate
+
+**Owner decision (2026-09-30):** Use dedicated wheel and glass service menus, not store-global options classified as “Other.” Wheel pricing is tax-exclusive per wheel with initial quantity 4; glass pricing is tax-exclusive per pane with initial quantity 1. The line subtotal is configured unit price multiplied by the operator's bounded positive-integer quantity. This does not set an arbitrary maximum quantity, price amount, catalogue row, or live setting. Body coating and full/front-full PPF remain fixed at quantity 1; B1–B4 partial-PPF rules remain unchanged.
+
+**Read-only evidence:** Claude Fable high returned `GDA_ESTIMATE_QUANTITY_POLICY_B5_DEDICATED_READ_ONLY_CONTRACT_RESULT_V1` from run `2026-09-30T01-36-17-000Z-6d66f803`, exit 0 and model/marker accepted by the runner. Only directly related application source was authorized for external transfer. Book inspected relevant SQL locally, without sending migration/schema source to Anthropic: `glass` already exists as an estimate/invoice item category but `wheel` does not; existing catalogue quantity constraints are limited to `store_global_option`, and the dealer catalogue authoring RPC rejects unknown kinds. The app-source diagnosis proposed dedicated menu kinds instead of enlarging Screen-3 service categories, but exact persisted category mapping and draft/revision round-trip must be verified before implementation. The diagnosis used a broad `src` search, so Book does not treat protected-file non-inspection as fully proven; the next instruction must use literal paths only.
+
+**B5 status:** Product economics are decided; implementation contract is not yet approved. Before source edits, Book must publish a Claude-targeted read-only B5 instruction on this phase's dedicated coordination Draft PR, resolve the category/revision/SQL contract without broad protected-path scanning or external SQL transfer, and record an exact source/test/SQL edit allowlist. Candidate validation must cover configured default prices, quantity 4/1 initial values, quantity edits in Step 4 and final review, subtotal/discount/tax, create/revision save and PDF parity, stale/invalid input, and tenant-safe catalogue ownership. No production DB access, migration application, deployment, Ready conversion, or merge is authorized. Studio inventory work remains untouched.
+
+**Coordination publication authority:** The Owner authorized a limited commit of the two quantity-phase governance documents, a normal push, and creation of a dedicated Draft PR in that order. This authority excludes the 17 dirty Stage A/B source/test paths, nine unrelated LFS images, all SQL, and every other file. It does not authorize B5 source implementation or production use by itself.

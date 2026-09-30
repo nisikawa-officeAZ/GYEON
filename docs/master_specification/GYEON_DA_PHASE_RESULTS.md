@@ -5765,3 +5765,159 @@ git_actions:
 decision: ACCEPT_PR128_AS_D5A_R2_PUBLICATION_AND_RECORD_SEQUENCING_DEVIATION_WITHOUT_DUPLICATE_COMMIT
 next: "INDEPENDENT_BOOK_REVIEW_OF_THIS_TWO_PATH_LEDGER_APPEND; PUSH_PR_READY_MERGE_AND_D5B_REMAIN_SEPARATE_OWNER_GATES."
 ```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — Owner decision and local Stage A activation
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_OWNER_DECISION_V1
+date: 2026-09-30
+status: STAGE_A_LOCAL_IMPLEMENTATION_AUTHORIZED_STAGE_B_CONTRACT_PENDING
+owner_authorization: "The Owner answered yes to a separate estimate price-repair phase: partial PPF per-part lines with quantity editing in Step 4 and final review, and independent quantity-bearing wheel and glass menus. Body coating and full/front-full PPF have no quantity entry."
+diagnosis_marker: GDA_ESTIMATE_QUANTITY_POLICY_COMPLETE_PATH_AUDIT_RESULT_V1
+diagnosis_verdict: COMPLETE_DIAGNOSIS_SOURCE_ONLY_RUNTIME_NOT_VERIFIED
+base_commit: 0b6a1fdb9c97d6254d4482aa5c3dddc67560676f
+base_tree: 3e5837f9c20e48f640c94ef226cc77a95c57a8b5
+branch: work/estimate-quantity-policy-20260930
+responsibility: MACBOOK_BOOK_SPEC_AND_ACCEPTANCE_MACBOOK_CLAUDE_BOUNDED_IMPLEMENTATION_STUDIO_OFFICE_AZ_INVENTORY_ONLY
+stage_a_edit_allowlist:
+  - src/components/estimates/wizard/pricing/wizard-pricing-types.ts
+  - src/components/estimates/wizard/pricing/compute-wizard-pricing-from-config.ts
+  - src/components/estimates/wizard/pricing/wizard-review-line-adjustments.ts
+  - src/components/estimates/wizard/steps/Step7Review.tsx
+  - src/components/estimates/wizard/steps/Step7Review.test.tsx
+  - src/components/estimates/wizard/pricing/compute-wizard-pricing-from-config.test.ts
+  - src/components/estimates/wizard/pricing/wizard-review-line-adjustments.test.ts
+stage_b: DIAGNOSIS_AND_LITERAL_CONTRACT_ONLY_NO_SOURCE_EDIT_YET
+known_unrelated_dirty: NINE_GIT_LFS_CHECKOUT_IMAGES_UNDER_docs/estimate-wizard/archive/ver2.1/genspark-ui/package/
+protected: ScreensPreview.tsx_METADATA_ONLY_OTHER_ROOT_AGENTS_PROTECTIONS_UNCHANGED
+not_authorized:
+  - commit_push_pr_ready_merge_deploy
+  - database_or_migration_apply
+  - production_or_customer_data_access
+next: "CLAUDE_STAGE_A_IMPLEMENTATION_AND_FOCUSED_TESTS_THEN_BOOK_LITERAL_DIFF_ACCEPTANCE; PREPARE_STAGE_B_EXACT_CONTRACT_AND_ALLOWLIST."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — Stage A local source acceptance
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_STAGE_A_LOCAL_ACCEPTANCE_V1
+date: 2026-09-30
+status: STAGE_A_E2_LOCAL_CANDIDATE_ACCEPTED_UNCOMMITTED_STAGE_B_PENDING
+base_commit: 0b6a1fdb9c97d6254d4482aa5c3dddc67560676f
+branch: work/estimate-quantity-policy-20260930
+claude_initial_attempt: BLOCKED_ENV_NO_CHANGES_PERMISSION_DENIED
+claude_implementation_marker: GDA_ESTIMATE_QUANTITY_POLICY_PHASE_A_IMPLEMENTATION_RESULT_V1
+claude_correction_marker: GDA_ESTIMATE_QUANTITY_POLICY_PHASE_A_STALE_REPAIR_RESULT_V1
+book_acceptance: "Seven exact Stage A paths only; fixed lines have no editable quantity, quantity-required options retain configured bounds, and stale fixed-line draft values have an explicit operator-triggered reset. Formula, DTO, SQL and PDF unchanged."
+verification:
+  npm_ci_temp_cache: PASS_EXIT_0
+  focused_quantity_tests_initial: PASS_53_OF_53
+  related_pricing_tests_initial: PASS_113_OF_113
+  step7_after_stale_repair: PASS_30_OF_30
+  pricing_after_stale_repair: PASS_28_OF_28
+  typecheck: PASS_EXIT_0
+  build_including_canonical_estimate: PASS_EXIT_0_CANONICAL_28_OF_28
+  diff_check_exact_candidate: PASS_EXIT_0
+protected_and_unrelated: SCREENS_PREVIEW_METADATA_UNCHANGED_NINE_LFS_IMAGES_PRESERVED
+book_scope_deviation: "A pre-dispatch broad rg search used the wizard directory without excluding protected ScreensPreview.tsx. No match/content from that file was returned and no file changed, but the command may have scanned its contents. Subsequent searches used filenames or exact paths; do not repeat."
+git_actions: UNSTAGED_UNCOMMITTED_UNPUSHED
+not_authorized: COMMIT_PUSH_PR_READY_MERGE_DEPLOY_DB_OR_MIGRATION_APPLY
+remaining: PARTIAL_PPF_PER_PART_PRICING_WHEEL_GLASS_QUANTITY_MENUS_STAGE_B_CONTRACT_AND_TESTS
+evidence_level: E2_LOCAL_SOURCE_ONLY_NO_PREVIEW_OR_FIELD_PROOF
+next: "CLAUDE_STAGE_B_READ_ONLY_PATH_AND_CONTRACT_DISCOVERY_THEN_BOOK_LITERAL_ALLOWLIST_AND_IMPLEMENTATION_GATE."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — Stage B contract discovery and external-transfer gate
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_STAGE_B_CONTRACT_DISCOVERY_V1
+date: 2026-09-30
+status: STAGE_B_READ_ONLY_CONTRACT_FOUND_IMPLEMENTATION_NOT_STARTED
+claude_discovery_marker: GDA_ESTIMATE_QUANTITY_POLICY_STAGE_B_CONTRACT_DISCOVERY_RESULT_V1
+claude_discovery_run: 2026-09-30T00-16-31-837Z-1ee59f09
+discovery_verdict: READY_FOR_LITERAL_IMPLEMENTATION_B1_TO_B4_WITH_SYNC_CONTRACT_PENDING
+book_acceptance: "Per-part tax-exclusive unit price is coefficient-adjusted and rounded once; quantity multiplies that price. One part at quantity 1 retains current yen parity, multiple part lines get one PPF/coating reduction, and stale aggregate line IDs must not leak into new lines. Step 4 and final-review quantities require last-valid-write consistency."
+wheel_glass: OWNER_CHOICE_PENDING_EXISTING_STORE_GLOBAL_OPTION_OTHER_VS_DEDICATED_SERVICE_CATEGORY
+additional_claude_diagnosis_attempt: REJECTED_BY_AUTO_REVIEW_NO_TRANSFER
+additional_claude_diagnosis_reason: "The requested pricing/wizard source transfer to Anthropic was not covered by the earlier OCR-only transfer consent. Explicit approval was requested; no workaround was used."
+source_edits: NONE_FOR_STAGE_B
+git_actions: UNSTAGED_UNCOMMITTED_UNPUSHED
+not_authorized: COMMIT_PUSH_PR_READY_MERGE_DEPLOY_DB_OR_MIGRATION_APPLY
+next: "WAIT_FOR_EXPLICIT_PRICING_SOURCE_TRANSFER_CONSENT_FOR_CLAUDE_FOLLOW_UP; FINALIZE_SYNC_LITERAL_ALLOWLIST; IMPLEMENT_AND_VERIFY_B1_TO_B4_WITHOUT_TOUCHING_STUDIO_OR_OCR."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — Stage B literal local implementation gate
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_STAGE_B_LITERAL_GATE_V1
+date: 2026-09-30
+status: STAGE_B_B1_TO_B4_LOCAL_IMPLEMENTATION_AUTHORIZED_UNCOMMITTED
+owner_transfer_consent: "Owner explicitly approved sending only estimate pricing/wizard related source code to Claude; no customer records, vehicle certificates, screenshots, PDFs or secrets."
+claude_sync_discovery_run: 2026-09-30T00-31-39-227Z-89cb8b40
+claude_sync_discovery_marker: GDA_ESTIMATE_QUANTITY_POLICY_STAGE_B_SYNC_DISCOVERY_RESULT_V1
+claude_sync_discovery: BOOK_ACCEPTED_READ_ONLY_EXIT_0_FABLE_MODEL_MARKER_SCOPE
+contract: "Per-part partial PPF quantity in Step 4 and final review is reconciled by valid write-through and later Step-4 buffer clearing. Invalid review text stays visible and blocks save; no silent restored-draft rewrite."
+edit_allowlist: "Exact 16 Stage B source/test paths recorded in plan §24; governance docs Book-only."
+wheel_glass: OWNER_CHOICE_PENDING_NO_B5_EDIT
+not_authorized: COMMIT_PUSH_PR_READY_MERGE_DEPLOY_DB_OR_MIGRATION_APPLY
+next: CLAUDE_B1_TO_B4_BOUNDED_IMPLEMENTATION_TEST_TYPECHECK_BUILD_THEN_BOOK_LITERAL_ACCEPTANCE
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — Stage B1–B4 local source acceptance
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_STAGE_B_E2_LOCAL_ACCEPTANCE_V1
+date: 2026-09-30
+status: STAGE_B_B1_TO_B4_E2_LOCAL_CANDIDATE_ACCEPTED_UNCOMMITTED_B5_PENDING
+base_commit: 0b6a1fdb9c97d6254d4482aa5c3dddc67560676f
+branch: work/estimate-quantity-policy-20260930
+claude_implementation_run: 2026-09-30T01-03-32-610Z-71e3b178
+claude_implementation_initial_verdict: FAILED_TEST_TYPECHECK_AND_MISSING_COUNTS
+claude_test_repair_run: 2026-09-30T01-17-14-282Z-c1551e54
+claude_test_repair_verdict: BLOCKED_SCOPE_ONE_ORIGINAL_ALLOWLIST_TEST_FILE
+claude_final_typecheck_run: 2026-09-30T01-23-44-906Z-f9922f14
+claude_final_marker: GDA_ESTIMATE_QUANTITY_POLICY_STAGE_B_FINAL_TYPECHECK_RESULT_V1
+book_acceptance: "The exact Stage B 16-file source/test allowlist is met. Partial PPF has one priced line per selected part; quantity multiplies a coefficient-adjusted tax-exclusive unit price. Review and Step-4 valid edits reconcile, invalid review input blocks save, the PPF/coating reduction persists once, and the save mapping has quantity/unit/total parity."
+verification:
+  focused_eight_files: PASS_258_OF_258
+  canonical_estimate: PASS_28_OF_28
+  typecheck: PASS_EXIT_0
+  build: PASS_EXIT_0
+  diff_check: PASS_EXIT_0
+  protected_screens_preview: MODE_100644_HASH_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f_STATUS_CLEAN
+  changed_paths: 28_MODIFIED_9_UNRELATED_LFS_2_BOOK_GOVERNANCE_7_STAGE_A_16_STAGE_B_WITH_OVERLAP
+process_deviation: "The initial Stage B Claude run used a temporary Node rewriting helper for some test edits despite the packet requesting Edit/apply_patch. Later repairs used Edit. Book accepted only the final literal diff and executable evidence; future packets must retain the edit-tool restriction."
+unverified: AUTHENTICATED_PREVIEW_E3_DETAILER_FIELD_E4_LIVE_CATALOG_ROWS_PRODUCTION
+wheel_glass: B5_OWNER_CLASSIFICATION_DECISION_PENDING_NO_CHANGES
+git_actions: UNSTAGED_UNCOMMITTED_UNPUSHED
+not_authorized: COMMIT_PUSH_PR_READY_MERGE_DEPLOY_DB_OR_MIGRATION_APPLY
+next: "OWNER_DECIDES_WHEEL_GLASS_EXISTING_GLOBAL_OPTIONS_OTHER_VS_DEDICATED_SERVICE_CATEGORIES; SEPARATE_E3_PREVIEW_AND_GIT_PUBLICATION_GATES."
+```
+
+## GDA-ESTIMATE-QUANTITY-POLICY-R1 — B5 owner economics and coordination candidate
+
+```yaml
+phase: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5
+marker: GDA_ESTIMATE_QUANTITY_POLICY_R1_B5_OWNER_RULE_AND_COORDINATION_V1
+date: 2026-09-30
+status: OWNER_WHEEL_GLASS_RULE_ACCEPTED_COORDINATION_DOCS_ONLY_CANDIDATE
+base_commit: 0b6a1fdb9c97d6254d4482aa5c3dddc67560676f
+branch: work/estimate-quantity-policy-20260930
+owner_decision: "Dedicated wheel/glass service menus rather than store-global Other; tax-exclusive unit price per wheel with initial quantity 4, per glass pane with initial quantity 1."
+quantity_contract: "Configured unit price times bounded positive-integer quantity; maximum bounds and catalogue rows are not silently invented. Body coating and full/front-full PPF remain quantity 1; partial PPF B1-B4 remains unchanged."
+claude_app_source_diagnosis_run: 2026-09-30T01-36-17-000Z-6d66f803
+claude_marker: GDA_ESTIMATE_QUANTITY_POLICY_B5_DEDICATED_READ_ONLY_CONTRACT_RESULT_V1
+claude_execution: EXIT_0_FABLE_MODEL_AND_MARKER_PRESENT_APP_SOURCE_ONLY_NO_EDITS
+book_sql_local_only: "Existing glass item category; no wheel item category; catalogue quantity scope only store_global_option; authoring RPC rejects unknown kinds. SQL/schema was not sent to Anthropic."
+diagnosis_scope_caveat: "A broad src search appeared in the Claude tool log. No protected-file result was returned, but non-scanning is not proven. Use literal paths and exclude ScreensPreview.tsx in the next instruction."
+source_implementation: NOT_STARTED_NO_B5_EDIT_ALLOWLIST_YET
+owner_git_authorization: TWO_GOVERNANCE_DOCS_ONLY_LIMITED_COMMIT_THEN_NORMAL_PUSH_THEN_DEDICATED_DRAFT_PR
+excluded: STAGE_A_B_SOURCE_TEST_FILES_UNRELATED_LFS_IMAGES_SQL_PROTECTED_PATHS_STUDIO_INVENTORY
+not_authorized: B5_SOURCE_EDITS_DB_OR_MIGRATION_APPLY_READY_MERGE_DEPLOY_PRODUCTION_USE
+next: "PUBLISH_DOCS_ONLY_COORDINATION_DRAFT_PR_THEN_POST_LITERAL_READ_ONLY_B5_CLAUDE_INSTRUCTION; RESOLVE_CATEGORY_AND_SQL_CONTRACT_BEFORE_ANY_IMPLEMENTATION."
+```
