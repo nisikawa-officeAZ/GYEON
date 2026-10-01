@@ -55,9 +55,35 @@ export function validateEstimateSaveRequest(req: EstimateSaveRequest): EstimateS
     add(ESTIMATE_SAVE_ERRORS.VEHICLE_REQUIRED, "vehicle.model", "車名が未入力です。");
   }
 
-  // At least one priced service line
+  // GDA-ESTIMATE-WIZARD-10-STEP-R1 zero-line policy: an EMPTY line set is a valid estimate (¥0/¥0/¥0)
+  // — whether no family was selected or a family was selected without any item. It is DISTINCT from a
+  // selected item whose price is missing/malformed/unresolved: that case is still rejected by the
+  // completeness / unresolved-item / pricing-error rules below and is never reinterpreted as zero
+  // lines. With zero lines, an authored discount or coupon has nothing to apply to and is rejected
+  // (the UI disables both), and every aggregate must be exactly 0 — never null, never non-zero.
+  // Only equality is inspected here; no amount is computed, zeroed, or substituted.
   if (req.services.length === 0) {
-    add(ESTIMATE_SAVE_ERRORS.SERVICE_REQUIRED, "services", "サービスが1件も選択されていません。");
+    const discountAuthored =
+      req.discount.intent.mode !== "none" ||
+      (req.discount.appliedAmount !== null && req.discount.appliedAmount !== 0);
+    if (discountAuthored) {
+      add(ESTIMATE_SAVE_ERRORS.VALIDATION_ERROR, "discount", "作業明細がないため値引きは適用できません。");
+    }
+    const couponAuthored =
+      req.coupon.selectedCouponIds.length > 0 ||
+      req.coupon.status !== "none" ||
+      (req.coupon.appliedAmount !== null && req.coupon.appliedAmount !== 0) ||
+      (req.coupon.applications?.length ?? 0) > 0;
+    if (couponAuthored) {
+      add(ESTIMATE_SAVE_ERRORS.VALIDATION_ERROR, "coupon", "作業明細がないためクーポンは適用できません。");
+    }
+    const zeroLineTotals = [
+      req.pricing.subtotal, req.pricing.discountTotal, req.pricing.couponTotal,
+      req.pricing.taxableSubtotal, req.pricing.taxTotal, req.pricing.grandTotal,
+    ];
+    if (zeroLineTotals.some((v) => v !== 0)) {
+      add(ESTIMATE_SAVE_ERRORS.VALIDATION_ERROR, "pricing", "作業明細がない見積の金額は0円である必要があります。");
+    }
   }
 
   // Pricing completeness must be complete; unresolved pricing is not allowed

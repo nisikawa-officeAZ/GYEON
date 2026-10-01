@@ -164,24 +164,59 @@ test("4. display lines + totals match buildEstimateEditorApplyPlan for the same 
   assert.equal(display.grandTotal, engine.total, "grand total parity");
 });
 
-// ── 4b. No selection at all → unavailable with null aggregate totals ──────────────
+// ── 4b. No selection at all → ZERO LINES (GDA-ESTIMATE-WIZARD-10-STEP-R1) ─────────
+// Owner-approved zero-line policy (completion plan §25; ledger marker
+// GDA_ESTIMATE_WIZARD_10_STEP_R1_ZERO_LINE_POLICY_DECISION_V1): an empty line set is a VALID,
+// complete ¥0/¥0/¥0 estimate. The totals are the engine's own figures for zero services — numeric,
+// never null — and nothing is manufactured. Supersedes the earlier "unavailable / null totals" rule.
 
-test("4b. a draft with no selected service is unavailable with null aggregate totals", () => {
+test("4b. a draft with no selected service is ZERO LINES: complete/success with ¥0/¥0/¥0, never null", () => {
   const r = computeWizardPricingFromConfig(draftWith([]), CONFIG, DEFAULT_PRICING_CATALOG, RANK);
-  assert.equal(r.completeness, "unavailable");
-  assertAllAggregatesNull(r);
-  assert.equal(r.couponTotal, 0, "couponTotal stays 0 (deferred), not disguising a total");
+  assert.equal(r.lines.length, 0, "no line is fabricated");
+  assert.equal(r.completeness, "complete");
+  assert.equal(r.status, "success");
+  assert.deepEqual(
+    [r.subtotal, r.discountTotal, r.couponTotal, r.taxableSubtotal, r.taxTotal, r.grandTotal],
+    [0, 0, 0, 0, 0, 0],
+  );
+  assert.deepEqual(r.errors, []);
+  assert.deepEqual(r.unresolvedItems, []);
 });
 
-// ── 4c. Selected category, no priceable service, no specific error → NO_SERVICE_SELECTED ──
+// ── 4c. Step-3 family selected, NO item → ZERO LINES, not NO_SERVICE_SELECTED ─────
 
-test("4c. a selected category resolving to no service surfaces NO_SERVICE_SELECTED with null totals", () => {
-  // Coating selected but no layer chosen: no coating service, and no more-specific error is raised.
+test("4c. a Step-3 family selected without any item is ZERO LINES — NO_SERVICE_SELECTED is not raised", () => {
+  // Coating selected but no layer chosen: a family choice alone is neither an unpriced line nor an error.
   const draft = draftWith(["coating"], { coating: { layerCount: null, layer1Id: null, layer2Id: null, layer3Id: null } });
   const r = computeWizardPricingFromConfig(draft, CONFIG, DEFAULT_PRICING_CATALOG, RANK);
-  assert.ok(r.errors.some((e) => e.code === "NO_SERVICE_SELECTED"), "NO_SERVICE_SELECTED surfaced");
-  assert.equal(r.completeness, "unavailable");
-  assertAllAggregatesNull(r);
+  assert.equal(r.errors.some((e) => e.code === "NO_SERVICE_SELECTED"), false, "no NO_SERVICE_SELECTED for a family-only selection");
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.lines.length, 0, "no line is fabricated");
+  assert.equal(r.completeness, "complete");
+  assert.equal(r.status, "success");
+  assert.deepEqual([r.subtotal, r.taxTotal, r.grandTotal], [0, 0, 0]);
+});
+
+// ── 4d. A selected ITEM that cannot be priced is never reinterpreted as zero lines ──
+
+test("4d. a selected item with a missing price, or an amount without an item, stays fail-closed with null totals", () => {
+  // Chosen menu, no amount: MANUAL_PRICE_REQUIRED, unavailable, null aggregates — unchanged.
+  const missing = computeWizardPricingFromConfig(
+    draftWith(["maintenance"], { bodyMaintenance: { menuId: "mm1", unitPriceInput: "" } }),
+    CONFIG, DEFAULT_PRICING_CATALOG, RANK,
+  );
+  assert.ok(missing.errors.some((e) => e.code === "MANUAL_PRICE_REQUIRED"), "missing price surfaced");
+  assert.equal(missing.completeness, "unavailable");
+  assert.notEqual(missing.status, "success");
+  assertAllAggregatesNull(missing);
+  // Amount typed with NO menu chosen: an incoherent, unpriceable entry — still rejected, never ¥0.
+  const stray = computeWizardPricingFromConfig(
+    draftWith(["maintenance"], { bodyMaintenance: { menuId: null, unitPriceInput: "5000" } }),
+    CONFIG, DEFAULT_PRICING_CATALOG, RANK,
+  );
+  assert.ok(stray.errors.length > 0, "amount without an item is rejected");
+  assert.notEqual(stray.completeness, "complete");
+  assertAllAggregatesNull(stray);
 });
 
 // ── 5. Unknown coating reference surfaced, never silently priced ──────────────────

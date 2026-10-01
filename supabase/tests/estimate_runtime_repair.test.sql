@@ -44,7 +44,7 @@
 
 BEGIN;
 
-SELECT plan(74);
+SELECT plan(77);
 
 -- ============================================================
 -- A. Canonical save_estimate_from_wizard
@@ -998,6 +998,29 @@ SELECT ok(
        AND a.grantee = 'anon'::regrole
        AND a.privilege_type = 'EXECUTE'),
   '74: ACL detector surfaces a hostile non-owner EXECUTE grant (anon on the probe function)'
+);
+
+-- ============================================================
+-- P. GDA-ESTIMATE-WIZARD-10-STEP-R1 (20261001145844): zero-line save
+--    boundary present in the 3-argument BASE the v2 wrapper calls.
+-- ============================================================
+SELECT ok(
+  position('VALIDATION_ERROR: discount requires service lines' IN (
+    SELECT p.prosrc FROM pg_proc p
+     WHERE p.oid = 'public.save_estimate_from_wizard(uuid,uuid,jsonb)'::regprocedure)) > 0,
+  '75: save_estimate_from_wizard rejects an authored discount on zero lines'
+);
+SELECT ok(
+  position('VALIDATION_ERROR: coupon requires service lines' IN (
+    SELECT p.prosrc FROM pg_proc p
+     WHERE p.oid = 'public.save_estimate_from_wizard(uuid,uuid,jsonb)'::regprocedure)) > 0,
+  '76: save_estimate_from_wizard rejects a coupon on zero lines'
+);
+SELECT ok(
+  position('public.save_estimate_from_wizard(p_dealer_id, p_actor_user_id, p_payload)' IN (
+    SELECT p.prosrc FROM pg_proc p
+     WHERE p.oid = 'public.save_estimate_from_wizard_v2(uuid,uuid,jsonb,jsonb)'::regprocedure)) > 0,
+  '77: the 4-argument v2 wrapper still delegates to the 3-argument base (zero-line policy inherited)'
 );
 
 SELECT * FROM finish();

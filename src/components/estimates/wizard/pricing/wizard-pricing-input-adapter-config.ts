@@ -399,7 +399,19 @@ export function buildWizardPricingInputFromConfig(
     const filmCode = windowFilm.filmTypeId;
     const film = filmCode ? config.filmTypes.find((entry) => entry.code === filmCode) : undefined;
     const coefficientBp = filmCode ? config.installCoefficientBpByCode?.[filmCode] : undefined;
-    if (settings === null) {
+    // GDA-ESTIMATE-WIZARD-10-STEP-R1 zero-line policy: the window family selected in Step 3 with NO
+    // film type, area, package, option, or override amount is not an item — no line, no error. Any
+    // partially configured window selection (an area, package, option, or override without a film
+    // type; a film type without a price) is still an unpriceable selected item and fails closed below.
+    const windowFamilyOnly =
+      !filmCode
+      && windowFilm.selectedAreaIds.length === 0
+      && (windowFilm.selectedPackageCode ?? null) === null
+      && (windowFilm.selectedOptionIds ?? []).length === 0
+      && windowFilm.unitPriceInput.trim() === "";
+    if (windowFamilyOnly) {
+      // zero lines for this family: nothing to resolve, nothing to reject
+    } else if (settings === null) {
       errors.push(issue(WIZARD_PRICING_CONFIG_ERRORS.UNKNOWN_CONFIGURED_ITEM, "ウインドウフィルムの正式な価格・時間設定が未登録です。", "window"));
     } else if (!filmCode || !film) {
       errors.push(issue(WIZARD_PRICING_CONFIG_ERRORS.UNKNOWN_CONFIGURED_ITEM, "施工するフィルム種類を選択してください。", "window", filmCode));
@@ -625,6 +637,16 @@ export function buildWizardPricingInputFromConfig(
       warningCode: "COUPON_PRICING_NOT_IMPLEMENTED",
     };
     errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, couponResolution.message, "coupon"));
+  }
+
+  // ── Zero-line policy (GDA-ESTIMATE-WIZARD-10-STEP-R1) ────────────────────────
+  // With no work line there is nothing an AUTHORED discount or coupon could apply to, so neither is
+  // allowed to ride along a zero-line estimate: the UI disables both, and this authoritative bundle
+  // refuses them so a stale or hostile selection can never reach the save boundary as "applied".
+  // Dealer pricing attributes (isDealer/dealerRate) are customer attributes, not authored discounts,
+  // and are left exactly as they are. No amount is manufactured or zeroed here.
+  if (services.length === 0 && (discountIntent.mode !== "none" || dc.selectedCouponIds.length > 0)) {
+    errors.push(issue(WIZARD_PRICING_ERRORS.DISCOUNT_REQUIRES_LINES, "作業明細がないため値引き・クーポンは適用できません。", "discount"));
   }
 
   const discounts: DiscountInput = {

@@ -14,19 +14,49 @@ import { DiscountModeSelector } from "./DiscountModeSelector";
 import { CouponSelector } from "./CouponSelector";
 import type { Step5DiscountProps } from "./step-types";
 
-export function Step5Discount(props: Step5DiscountProps) {
+/**
+ * GDA-ESTIMATE-WIZARD-10-STEP-R1 zero-line lock (presentation only). Supplied by the canonical host
+ * adapter when the authoritative pricing result carries no work line: the discount inputs are
+ * rendered inside a disabled fieldset, every coupon arrives already disabled with a reason, and the
+ * only enabled control is an explicit clear action for any stale authored value. No total is
+ * computed or changed here.
+ */
+export type Step5ZeroLineLock = {
+  message: string;
+  hasAuthoredValues: boolean;
+  onClear: () => void;
+};
+
+export function Step5Discount(props: Step5DiscountProps & { zeroLineLock?: Step5ZeroLineLock | null }) {
   const {
     subtotal, activeDiscountMode, discountAmountValue, discountPercentValue, convertedDiscountAmount,
     maximumDiscountAmount, minimumDiscountPercent, maximumDiscountPercent,
     availableCoupons, selectedCouponIds, disabledCouponIds, disabledReasonByCoupon,
     informationalMessages, discountValidationMessage,
     onDiscountModeChange, onDiscountAmountChange, onDiscountPercentChange, onDiscountClear,
-    onCouponToggle, onContinue,
+    onCouponToggle, onContinue, zeroLineLock,
   } = props;
   const couponSectionRef = useRef<HTMLDivElement>(null);
+  const locked = zeroLineLock != null;
 
   return (
     <div className="flex flex-col gap-4">
+      {locked && (
+        <div data-testid="discount-zero-line-lock" className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-3 flex flex-col gap-2">
+          <p className="text-[11px] text-amber-300">{zeroLineLock.message}</p>
+          {zeroLineLock.hasAuthoredValues && (
+            <button
+              type="button"
+              data-testid="discount-zero-line-clear"
+              onClick={zeroLineLock.onClear}
+              className="self-start text-[11px] text-slate-200 border border-amber-500/40 hover:border-amber-400 px-3 min-h-[36px] rounded-lg transition-colors"
+            >
+              値引き・クーポンをクリア
+            </button>
+          )}
+        </div>
+      )}
+      <fieldset disabled={locked} aria-disabled={locked} className={locked ? "opacity-60 min-w-0 border-0 p-0 m-0" : "min-w-0 border-0 p-0 m-0"}>
       <DiscountModeSelector
         subtotal={subtotal}
         activeDiscountMode={activeDiscountMode}
@@ -44,6 +74,7 @@ export function Step5Discount(props: Step5DiscountProps) {
         onDiscountClear={onDiscountClear}
         onCouponSelectionRequest={() => couponSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
       />
+      </fieldset>
 
       <div ref={couponSectionRef} className="scroll-mt-4">
         <CouponSelector
