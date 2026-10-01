@@ -5967,3 +5967,37 @@ not_authorized:
   - PUSH_PR_COMMENT_READY_MERGE_OR_DEPLOYMENT
 next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF; STAGE_AND_COMMIT_THOSE_TWO_PATHS_LOCALLY; VERIFY_COMMIT_AND_CLEAN_WORKTREE; STOP_BEFORE_PUSH."
 ```
+
+## GDA-ESTIMATE-WIZARD-10-STEP-R1 — empty-family and discount policy decision
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_10_STEP_R1
+marker: GDA_ESTIMATE_WIZARD_10_STEP_R1_ZERO_LINE_POLICY_DECISION_V1
+date: 2026-10-01
+status: LOCAL_GOVERNANCE_POLICY_EXACT_TWO_DOCUMENT_COMMIT_OWNER_AUTHORIZED_IMPLEMENTATION_NOT_STARTED
+owner_decision: "はい — a Step-3 family selection without any Step-4-to-7 item may save as a zero-line estimate; discounts and coupons are unavailable when there are zero lines."
+owner_commit_authorization: "はい — local commit of the exact two canonical design documents only."
+supersedes: GDA_ESTIMATE_WIZARD_10_STEP_R1_ZERO_LINE_AMENDMENT_V1_DISCOUNT_AND_FAMILY_SELECTION_POLICY_ONLY
+design_contract:
+  category_only_selection: ZERO_LINES_ARE_VALID;_DO_NOT_RAISE_NO_SERVICE_SELECTED_FOR_FAMILY_ONLY
+  selected_item_with_missing_or_malformed_price: REJECT;_NEVER_TREAT_AS_ZERO_LINES
+  zero_line_discount_coupon: DISABLE_IN_UI_AND_REJECT_AT_SERVER_SAVE_BOUNDARY
+  zero_line_totals: SUBTOTAL_JPY_0_TAX_JPY_0_TOTAL_JPY_0
+  existing_discount_coupon_rules: PRESERVE_FOR_ESTIMATES_WITH_LINES
+read_only_review:
+  claude_model: claude-fable-5-1
+  zero_line_delta_run: 2026-10-01T14-24-27-803Z-d0f9f9db
+  app_followup_run: 2026-10-01T14-30-07-811Z-9d87fac2
+  engine_review_run: 2026-10-01T14-35-59-439Z-f50f90b0
+  book_sql_correction: THREE_ARG_SAVE_RPC_REJECTS_EMPTY_LINES;_FOUR_ARG_V2_WRAPPER_CALLS_THREE_ARG_BASE
+  tests_or_db_actions: NONE
+literal_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+studio_inventory_scope: UNCHANGED
+not_authorized:
+  - SOURCE_TEST_SQL_MIGRATION_DEPENDENCY_OR_CONFIG_EDIT
+  - DB_SUPABASE_AUTH_BROWSER_ENVIRONMENT_OR_PRODUCTION_ACTION
+  - PUSH_PR_COMMENT_READY_MERGE_OR_DEPLOYMENT
+next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF; STAGE_AND_COMMIT_THOSE_TWO_PATHS_LOCALLY; VERIFY_COMMIT_AND_CLEAN_WORKTREE; STOP_BEFORE_PUSH."
+```
