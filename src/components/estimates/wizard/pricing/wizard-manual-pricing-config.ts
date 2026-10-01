@@ -31,6 +31,11 @@
 //   1. Labels come only from the required configuration; there is no `?? id` fallback.
 //   2. A selected NOT-PRICEABLE option BLOCKS instead of being dropped with a warning
 //      (Phase 8-B2F-BH). A selected option is billed, or the apply stops. Never silently discarded.
+//   3. GDA-ESTIMATE-WIZARD-10-STEP-R1 zero-line policy: a service FAMILY selected in Step 3 with NO
+//      item chosen (no method / menu / film type) and nothing typed is not an item. It produces no
+//      line and no error — it is a valid zero-line estimate. A chosen item whose amount is missing,
+//      malformed or negative, and an amount typed WITHOUT an item identity, still fail closed exactly
+//      as before; they are never reinterpreted as zero lines and never silently become ¥0.
 
 import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
 import type { WizardManualPricingLineInput } from "./wizard-pricing-identity";
@@ -178,7 +183,12 @@ export function buildManualPricingLinesFromConfig(
     const p = cfg.ppf;
     const method = p.installationMethod;
     if (!method) {
-      requireAmount("ppf", null, "PPFの施工方法と金額を入力してください。");
+      // Zero-line policy: a PPF family choice with NO installation method is not an item — no line,
+      // no error. An amount or interior row typed WITHOUT a method is still an unpriceable entry and
+      // keeps failing closed exactly as before.
+      const strayInput = p.unitPriceInput.trim() !== ""
+        || p.interiorRows.some((r) => r.location.trim() !== "" || r.amount.trim() !== "");
+      if (strayInput) requireAmount("ppf", null, "PPFの施工方法と金額を入力してください。");
     } else if (method === "interior") {
       // Operator-authored free rows: the label is what they typed. No configuration governs it.
       const rows = p.interiorRows.filter((r) => r.location.trim() !== "" || r.amount.trim() !== "");
@@ -216,8 +226,9 @@ export function buildManualPricingLinesFromConfig(
     const w = cfg.windowFilm;
     const amt = parseAmount(w.unitPriceInput);
     if (!w.filmTypeId) {
+      // Zero-line policy: no film type and no amount is a family-only choice — no line, no error.
+      // An amount WITHOUT a film type remains MANUAL_PRICING_IDENTITY_MISSING, unchanged.
       if (!amt.empty) errors.push(issue(WIZARD_PRICING_ERRORS.MANUAL_PRICING_IDENTITY_MISSING, "フィルム種別が未選択のため金額を計算に含められません。", "window", null));
-      else requireAmount("window", null, "ウィンドウフィルムの種別と金額を入力してください。");
     } else {
       const opt = lookup(config.filmTypes, w.filmTypeId);
       if (!opt) {
@@ -236,7 +247,9 @@ export function buildManualPricingLinesFromConfig(
   if (selected.includes("maintenance")) {
     const bm = cfg.bodyMaintenance;
     if (!bm.menuId) {
-      requireAmount("maintenance", null, "ボディメンテナンスのメニューと金額を選択してください。");
+      // Zero-line policy: family selected, no menu, nothing typed — no item, no line, no error.
+      // A typed amount without a menu is still unpriceable and fails closed as before.
+      if (bm.unitPriceInput.trim() !== "") requireAmount("maintenance", null, "ボディメンテナンスのメニューと金額を選択してください。");
     } else {
       const opt = lookup(config.maintenanceMenus, bm.menuId);
       if (!opt) {
@@ -254,7 +267,9 @@ export function buildManualPricingLinesFromConfig(
   if (selected.includes("carwash")) {
     const cw = cfg.carWash;
     if (!cw.menuId) {
-      requireAmount("carwash", null, "洗車メニューと金額を選択してください。");
+      // Zero-line policy: family selected, no menu, nothing typed — no item, no line, no error.
+      // A typed amount without a menu is still unpriceable and fails closed as before.
+      if (cw.unitPriceInput.trim() !== "") requireAmount("carwash", null, "洗車メニューと金額を選択してください。");
     } else {
       const opt = lookup(config.washMenus, cw.menuId);
       if (!opt) {
@@ -271,9 +286,8 @@ export function buildManualPricingLinesFromConfig(
   // ── Room Cleaning — MULTIPLE menus, one amount each ────────────────────────────
   if (selected.includes("roomclean")) {
     const rc = cfg.roomCleaning;
-    if (rc.selectedMenuIds.length === 0) {
-      requireAmount("roomclean", null, "ルームクリーニングのメニューを選択してください。");
-    }
+    // Zero-line policy: the family selected with NO menu is not an item — no line, no error. Amounts
+    // are keyed by menu id and only SELECTED menus were ever read here; that is unchanged.
     for (const id of rc.selectedMenuIds) {
       const opt = lookup(config.roomCleaningMenus, id);
       if (!opt) {

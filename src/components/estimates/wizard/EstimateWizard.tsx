@@ -169,7 +169,9 @@ export default function EstimateWizard({
         <Step4Estimate api={api} shopRank={shopRank} screenConfig={screenConfig} ppfPricingReadiness={ppfPricingReadiness} />
       )}
       {api.step === 5 && (
-        <Step5Discount api={api} coupons={screenConfig.coupons} subtotal={pricing.subtotal} />
+        // GDA-ESTIMATE-WIZARD-10-STEP-R1: with zero priced lines, authored discounts and coupons are
+        // unavailable. Only a boolean derived from the authoritative result crosses into Step 5.
+        <Step5Discount api={api} coupons={screenConfig.coupons} subtotal={pricing.subtotal} hasLines={pricing.lines.length > 0} />
       )}
       {api.step === 6 && <Step6Notes api={api} />}
       {api.step === 7 && (

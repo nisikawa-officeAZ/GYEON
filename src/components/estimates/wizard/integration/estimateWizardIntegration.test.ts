@@ -47,6 +47,7 @@ import {
   type ProductionLabelOption,
   type ProductionStoreGlobalOption,
 } from "../pricing/wizard-manual-pricing-config";
+import { WIZARD_PRICING_ERRORS } from "../pricing/wizard-pricing-types";
 import { buildLineItems } from "@/lib/pricing/pricing-engine";
 import { DEFAULT_PRICING_CATALOG, makePricingCatalog } from "@/lib/pricing/pricing-catalog";
 import type { EstimateItemDB, EstimateCategory } from "@/lib/estimates/estimate-types";
@@ -725,12 +726,14 @@ function existingDraftWithOneManualLine(name: string, unitPrice: string): Hydrat
 }
 
 test("a ready plan maps exactly the seven scalar patch fields — and nothing else", () => {
-  const h = newDraftWith((d) => {
-    d.customer = { ...d.customer, sourceMode: "existing", customerId: "CUST-TEST" };
-    d.vehicle  = { ...d.vehicle, sourceMode: "existing", vehicleId: "VEH-TEST", bodySizeKey: "M" };
-    d.notes    = { customerNotes: "CUSTOMER-NOTE-TOKEN", internalMemo: "INTERNAL-MEMO-TOKEN" };
-    d.discountAndCoupon = { ...d.discountAndCoupon, mode: "amount", amountInput: "5000" };
-  });
+  // GDA-ESTIMATE-WIZARD-10-STEP-R1 zero-line policy: an authored discount is only valid on an estimate
+  // WITH lines, so this draft carries one explicitly priced manual line. The patch-shape guard below
+  // is unchanged — the key set is still exactly seven, and the discount still maps as yen text.
+  const h = newDraftWithOneManualLine("TEST-SERVICE-LINE", "12000");
+  h.draft.customer = { ...h.draft.customer, sourceMode: "existing", customerId: "CUST-TEST" };
+  h.draft.vehicle  = { ...h.draft.vehicle, sourceMode: "existing", vehicleId: "VEH-TEST", bodySizeKey: "M" };
+  h.draft.notes    = { customerNotes: "CUSTOMER-NOTE-TOKEN", internalMemo: "INTERNAL-MEMO-TOKEN" };
+  h.draft.discountAndCoupon = { ...h.draft.discountAndCoupon, mode: "amount", amountInput: "5000" };
 
   const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(plan.status, "ready");
@@ -777,15 +780,71 @@ test("customerNotes and internalMemo stay separate in the patch", () => {
 });
 
 test("the supported fixed yen discount maps to patch.discountAmount", () => {
-  const h = newDraftWith((d) => {
-    d.discountAndCoupon = { ...d.discountAndCoupon, mode: "amount", amountInput: "5000" };
-  });
+  // Zero-line policy: the fixed yen discount stays the one supported adjustment, but only for an
+  // estimate WITH lines — so the draft carries one explicitly priced manual line.
+  const h = newDraftWithOneManualLine("TEST-SERVICE-LINE", "12000");
+  h.draft.discountAndCoupon = { ...h.draft.discountAndCoupon, mode: "amount", amountInput: "5000" };
   const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(plan.status, "ready");
   if (plan.status !== "ready") return;
 
   assert.equal(plan.patch.discountAmount, "5000");
   assert.equal(typeof plan.patch.discountAmount, "string"); // yen text, exactly as Screen 5 holds it
+  assert.ok(plan.items.some((i) => i.item_name === "TEST-SERVICE-LINE"), "the discount rides on a real line");
+});
+
+// ── Zero-line policy (GDA-ESTIMATE-WIZARD-10-STEP-R1, plan §25 / ZERO_LINE_POLICY_DECISION_V1) ────
+// A draft with NO work line — no family selected, or a Step-3 family selected without any item — is a
+// valid ¥0 estimate. An AUTHORED fixed yen discount on such a draft has nothing to apply to and must be
+// refused by the authoritative pricing path (DISCOUNT_REQUIRES_LINES), so the planner blocks as
+// pricing-invalid rather than producing a ready plan that would carry the discount to the save boundary.
+test("zero-line policy: an authored fixed yen discount on a draft with no lines is blocked, not applied", () => {
+  const cases: Array<[string, HydratedWizardDraft]> = [
+    ["no family selected", newDraftWith((d) => {
+      d.discountAndCoupon = { ...d.discountAndCoupon, mode: "amount", amountInput: "5000" };
+    })],
+    ["family selected, no item", newDraftWith((d) => {
+      d.serviceSelection = { selectedCategories: ["other"] }; // Step-3 family only — zero lines, not an unpriced line
+      d.discountAndCoupon = { ...d.discountAndCoupon, mode: "amount", amountInput: "5000" };
+    })],
+  ];
+  for (const [label, h] of cases) {
+    const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
+    assert.equal(plan.status, "blocked", `${label}: an authored discount on zero lines must not be ready`);
+    if (plan.status !== "blocked") continue;
+    assert.equal(plan.reason, "pricing-invalid", label);
+    assert.ok(
+      plan.pricingErrors.some((e) => e.code === WIZARD_PRICING_ERRORS.DISCOUNT_REQUIRES_LINES),
+      `${label}: expected DISCOUNT_REQUIRES_LINES, got ${JSON.stringify(plan.pricingErrors.map((e) => e.code))}`,
+    );
+    assert.ok(!("items" in plan), `${label}: a blocked plan never carries items`);
+    assert.ok(!("patch" in plan), `${label}: a blocked plan never carries a patch (no discount reaches the editor)`);
+  }
+});
+
+test("zero-line policy: a Step-3 family selection with no item and no authored discount is ready with zero lines", () => {
+  // Family-only selection is NOT "no service selected": it is a valid zero-line estimate.
+  const h = newDraftWith((d) => {
+    d.serviceSelection = { selectedCategories: ["other"] };
+  });
+  assert.equal(h.draft.discountAndCoupon.mode, "none"); // nothing authored
+  assert.deepEqual(h.draft.discountAndCoupon.selectedCouponIds, []);
+
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
+  assert.equal(plan.status, "ready");
+  if (plan.status !== "ready") return;
+  assert.deepEqual([...plan.items], []);
+  assert.equal(Object.keys(plan.patch).length, 7);
+
+  // The authoritative configured bundle agrees: zero services, nothing unresolved, no error — the
+  // engine's own ¥0/¥0/¥0 figures for this case are pinned in compute-wizard-pricing-from-config.test.ts.
+  const bundle = buildWizardPricingInputFromConfig(h.draft, TEST_CONFIG, DEFAULT_PRICING_CATALOG);
+  assert.equal(bundle.services.length, 0);
+  assert.deepEqual([...bundle.errors], []);
+  assert.ok(
+    !bundle.errors.some((e) => e.code === "NO_SERVICE_SELECTED"),
+    "a family-only selection must never raise NO_SERVICE_SELECTED",
+  );
 });
 
 test("items are produced ONLY through buildWizardPricingInput → buildLineItems", () => {

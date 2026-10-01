@@ -5892,3 +5892,112 @@ pr_ready_merge: NOT_AUTHORIZED
 deployment_or_production: NOT_AUTHORIZED
 next: "VERIFY_UNCHANGED_HEAD_AND_EXACT_PATH_SET; STAGE_LITERAL_NINE_PATHS; COMMIT_LOCALLY; VERIFY_COMMIT_AND_CLEAN_WORKTREE; STOP_BEFORE_PUSH."
 ```
+
+## GDA-ESTIMATE-WIZARD-10-STEP-R1 — owner-authorized phase switch and local governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_10_STEP_R1
+marker: GDA_ESTIMATE_WIZARD_10_STEP_R1_GOVERNANCE_ACTIVATION_V1
+date: 2026-10-01
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_IMPLEMENTATION_NOT_STARTED
+owner_authorization: "はい — pause the OCR work and record the ten-step estimate design as the next canonical phase."
+previous_phase:
+  id: GDA_OCR_PDF_TEXT_LAYER_R2
+  status: PAUSED_BY_OWNER_NOT_CLOSED_OR_PRODUCTION_ACCEPTED
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/141
+  observed_pr_state: OPEN_DRAFT
+  observed_head: e46bc5f0e9cb3eeff5d8609d922640dee655a70c
+  preserve_branch_commit_and_e2_evidence: true
+repository: nisikawa-officeAZ/GYEON
+local_candidate:
+  worktree: work/dealeros-estimate-wizard-10-step-prep
+  base_commit: e46bc5f0e9cb3eeff5d8609d922640dee655a70c
+  base_tree: 206937b6568573482828b355e94d789d352dff4d
+  pre_edit_index_and_worktree: CLEAN
+literal_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+design_contract:
+  steps: "1 顧客登録; 2 車両登録; 3 作業内容選択; 4 ボディコーティング; 5 追加作業; 6 追加コーティング; 7 PPF施工; 8 値引き／クーポン; 9 備考; 10 確認"
+  optional_steps: 4_THROUGH_9_SKIPPABLE_WITHOUT_SELECTION
+  save_gate: STEP_10_REJECT_ZERO_LINES_AND_UNSET_PRICE;_EXPLICIT_ZERO_YEN_DISTINCT
+  line_updates: AUTOMATIC_DRAFT_AND_TOTAL_REFRESH_NO_DEAD_ADD_UPDATE_BUTTON
+  fixed_quantity: BODY_COATING_FRONT_FULL_PPF_FULL_BODY_PPF_AND_PER_VEHICLE_ITEMS
+  editable_quantity: PARTIAL_PPF_AND_PER_PANE_WHEEL_SEAT_ITEMS
+  ppf_visibility: FULL_CHOICES_ONLY_WITH_STEP_3_PPF;PARTIAL_LOWER_SECTION_INDEPENDENT
+  default_price_reference: COMPLETION_PLAN_SECTION_25_TAX_EXCLUSIVE_STORE_EDITABLE
+  new_categories: ADDITIONAL_WORK_AND_ADDITIONAL_COATING_REQUIRE_SEPARATELY_APPROVED_PERSISTENCE_MIGRATION
+  hard_polish: JPY_30000_NO_VEHICLE_SIZE_MULTIPLIER
+  resin_label: 樹脂コーティング
+  light_and_middle_polish_defaults: NONE
+claude_design_result: TECHNICAL_INPUT_ONLY_NOT_GOVERNANCE_ACCEPTANCE
+sql_source_to_anthropic: NOT_AUTHORIZED_PENDING_SEPARATE_OWNER_ANSWER
+protected_paths: PRESERVED_METADATA_ONLY
+studio_inventory_scope: UNCHANGED
+not_authorized:
+  - SOURCE_TEST_SQL_MIGRATION_DEPENDENCY_OR_CONFIG_EDIT
+  - DB_SUPABASE_AUTH_BROWSER_ENVIRONMENT_OR_PRODUCTION_ACTION
+  - STAGE_COMMIT_PUSH_PR_COMMENT_READY_MERGE_OR_DEPLOYMENT
+next: "INDEPENDENTLY_VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_GIT_DIFF_CHECK; REQUEST_SEPARATE_OWNER_LOCAL_COMMIT_GATE; THEN_GOVERNANCE_DELIVERY_AND_DEDICATED_DRAFT_PR_BEFORE_FRESH_CLAUDE_READ_ONLY_DIAGNOSIS."
+```
+
+## GDA-ESTIMATE-WIZARD-10-STEP-R1 — zero-line estimate design amendment
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_10_STEP_R1
+marker: GDA_ESTIMATE_WIZARD_10_STEP_R1_ZERO_LINE_AMENDMENT_V1
+date: 2026-10-01
+status: LOCAL_GOVERNANCE_AMENDMENT_EXACT_TWO_DOCUMENT_COMMIT_OWNER_AUTHORIZED_IMPLEMENTATION_NOT_STARTED
+owner_decision: "はい — allow saving an estimate with zero work lines and update the two canonical design documents."
+owner_commit_authorization: "はい — local commit of the exact two canonical design documents only."
+supersedes: GDA_ESTIMATE_WIZARD_10_STEP_R1_GOVERNANCE_ACTIVATION_V1_DESIGN_CONTRACT_SAVE_GATE_ONLY
+design_contract:
+  save_gate: STEP_10_ALLOW_ZERO_LINES;_REJECT_SELECTED_LINE_WITH_UNSET_OR_MALFORMED_PRICE
+  zero_line_without_discount_or_coupon: SUBTOTAL_JPY_0_TAX_JPY_0_TOTAL_JPY_0
+  explicit_zero_yen_line: DISTINCT_FROM_EMPTY_LINES_AND_UNSET_PRICE
+  discount_and_coupon: PRESERVE_EXISTING_AUTHORITY_AND_CALCULATION;_NO_INVALID_OR_NEGATIVE_TOTAL
+  acceptance_cases: ZERO_LINES;_EXPLICIT_ZERO_YEN_LINE;_SELECTED_LINE_WITH_UNSET_OR_MALFORMED_PRICE
+literal_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+studio_inventory_scope: UNCHANGED
+not_authorized:
+  - SOURCE_TEST_SQL_MIGRATION_DEPENDENCY_OR_CONFIG_EDIT
+  - DB_SUPABASE_AUTH_BROWSER_ENVIRONMENT_OR_PRODUCTION_ACTION
+  - PUSH_PR_COMMENT_READY_MERGE_OR_DEPLOYMENT
+next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF; STAGE_AND_COMMIT_THOSE_TWO_PATHS_LOCALLY; VERIFY_COMMIT_AND_CLEAN_WORKTREE; STOP_BEFORE_PUSH."
+```
+
+## GDA-ESTIMATE-WIZARD-10-STEP-R1 — empty-family and discount policy decision
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_10_STEP_R1
+marker: GDA_ESTIMATE_WIZARD_10_STEP_R1_ZERO_LINE_POLICY_DECISION_V1
+date: 2026-10-01
+status: LOCAL_GOVERNANCE_POLICY_EXACT_TWO_DOCUMENT_COMMIT_OWNER_AUTHORIZED_IMPLEMENTATION_NOT_STARTED
+owner_decision: "はい — a Step-3 family selection without any Step-4-to-7 item may save as a zero-line estimate; discounts and coupons are unavailable when there are zero lines."
+owner_commit_authorization: "はい — local commit of the exact two canonical design documents only."
+supersedes: GDA_ESTIMATE_WIZARD_10_STEP_R1_ZERO_LINE_AMENDMENT_V1_DISCOUNT_AND_FAMILY_SELECTION_POLICY_ONLY
+design_contract:
+  category_only_selection: ZERO_LINES_ARE_VALID;_DO_NOT_RAISE_NO_SERVICE_SELECTED_FOR_FAMILY_ONLY
+  selected_item_with_missing_or_malformed_price: REJECT;_NEVER_TREAT_AS_ZERO_LINES
+  zero_line_discount_coupon: DISABLE_IN_UI_AND_REJECT_AT_SERVER_SAVE_BOUNDARY
+  zero_line_totals: SUBTOTAL_JPY_0_TAX_JPY_0_TOTAL_JPY_0
+  existing_discount_coupon_rules: PRESERVE_FOR_ESTIMATES_WITH_LINES
+read_only_review:
+  claude_model: claude-fable-5-1
+  zero_line_delta_run: 2026-10-01T14-24-27-803Z-d0f9f9db
+  app_followup_run: 2026-10-01T14-30-07-811Z-9d87fac2
+  engine_review_run: 2026-10-01T14-35-59-439Z-f50f90b0
+  book_sql_correction: THREE_ARG_SAVE_RPC_REJECTS_EMPTY_LINES;_FOUR_ARG_V2_WRAPPER_CALLS_THREE_ARG_BASE
+  tests_or_db_actions: NONE
+literal_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+studio_inventory_scope: UNCHANGED
+not_authorized:
+  - SOURCE_TEST_SQL_MIGRATION_DEPENDENCY_OR_CONFIG_EDIT
+  - DB_SUPABASE_AUTH_BROWSER_ENVIRONMENT_OR_PRODUCTION_ACTION
+  - PUSH_PR_COMMENT_READY_MERGE_OR_DEPLOYMENT
+next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF; STAGE_AND_COMMIT_THOSE_TWO_PATHS_LOCALLY; VERIFY_COMMIT_AND_CLEAN_WORKTREE; STOP_BEFORE_PUSH."
+```

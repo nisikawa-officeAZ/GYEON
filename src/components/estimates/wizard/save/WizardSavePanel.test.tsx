@@ -742,3 +742,20 @@ test("21. both ready controls exist, share one attempt, and appear ONLY when rea
   // Still exactly one guard and one core.
   assert.equal((code.match(/useRef\(false\)/g) ?? []).length, 1, "exactly one in-flight guard");
 });
+
+// ── GDA-ESTIMATE-WIZARD-10-STEP-R1 zero-line policy ──────────────────────────────
+
+test("zero-line: a complete ¥0/¥0/¥0 result with no lines is save-ready; a zero-line discount refusal is not", () => {
+  const zeroLine: WizardPricingResult = {
+    ...EMPTY_WIZARD_PRICING_RESULT, status: "success", completeness: "complete",
+    subtotal: 0, discountTotal: 0, couponTotal: 0, taxableSubtotal: 0, taxTotal: 0, grandTotal: 0,
+  };
+  assert.equal(zeroLine.lines.length, 0);
+  assert.equal(isWizardPricingSaveReady(zeroLine), true);
+  const refused: WizardPricingResult = {
+    ...EMPTY_WIZARD_PRICING_RESULT, status: "incomplete", completeness: "unavailable",
+    errors: [{ code: "DISCOUNT_REQUIRES_LINES", category: "discount", sourceId: null, message: "作業明細がないため値引き・クーポンは適用できません。" }],
+  };
+  assert.equal(isWizardPricingSaveReady(refused), false);
+  assert.deepEqual(wizardPricingBlockMessages(refused), ["作業明細がないため値引き・クーポンは適用できません。"]);
+});

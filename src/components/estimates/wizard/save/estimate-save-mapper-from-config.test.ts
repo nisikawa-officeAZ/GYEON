@@ -309,7 +309,8 @@ const baseResult = () => computeWizardPricingFromConfig(draftWith(["maintenance"
 const withResult = (pr: WizardPricingResult) => run(draftWith(["maintenance"], maintCfg), { pricingResult: pr });
 
 test("pricing-incomplete / pricing-error / unresolved-items", () => {
-  expectFail(run(draftWith([])), "pricing-incomplete");                                  // no selection → unavailable
+  // GDA-ESTIMATE-WIZARD-10-STEP-R1: no selection is now a valid ZERO-LINE estimate (see zero-line tests below).
+  expectFail(withResult({ ...baseResult(), completeness: "unavailable", status: "incomplete" }), "pricing-incomplete");
   expectFail(withResult({ ...baseResult(), errors: [{ code: "E", category: null, sourceId: null, message: "e" }] }), "pricing-error");
   expectFail(withResult({ ...baseResult(), unresolvedItems: [{ category: "maintenance", sourceId: null, code: "U", message: "u" }] }), "unresolved-items");
 });
@@ -577,4 +578,43 @@ test("F2-R1: sourceMode existing with an EMPTY-STRING vehicleId maps to NEW — 
   const emptyId = { ...d, vehicle: { ...d.vehicle, sourceMode: "existing" as const, vehicleId: "" } };
   const req = okReq(run(emptyId));
   assert.equal(req.vehicle.mode, "new", "an empty-string id must never save as existing");
+});
+
+// ── GDA-ESTIMATE-WIZARD-10-STEP-R1 zero-line policy ────────────────────────────────
+
+test("zero-line: a true-empty draft and a family-only draft both map to ZERO lines with ¥0/¥0/¥0 and pass validation", () => {
+  for (const draft of [draftWith([]), draftWith(["maintenance"])]) {
+    const req = okReq(run(draft));
+    assert.deepEqual(req.services, [], "no line is fabricated");
+    assert.equal(req.pricing.completeness, "complete");
+    assert.deepEqual(
+      [req.pricing.subtotal, req.pricing.discountTotal, req.pricing.couponTotal, req.pricing.taxableSubtotal, req.pricing.taxTotal, req.pricing.grandTotal],
+      [0, 0, 0, 0, 0, 0],
+    );
+    assert.equal(req.discount.intent.mode, "none");
+    assert.equal(req.discount.appliedAmount, 0);
+    assert.equal(req.coupon.status, "none");
+    assert.deepEqual(req.coupon.selectedCouponIds, []);
+    assert.equal(validateEstimateSaveRequest(req).ok, true);
+  }
+});
+
+test("zero-line: a confirmed ¥0 manual line maps as ONE line; a missing price still fails closed", () => {
+  const zero = okReq(run(draftWith(["maintenance"], { bodyMaintenance: { menuId: "mm1", unitPriceInput: "0" } })));
+  assert.equal(zero.services.length, 1);
+  assert.equal(zero.services[0].unitPrice, 0);
+  assert.equal(validateEstimateSaveRequest(zero).ok, true);
+  expectFail(run(draftWith(["maintenance"], { bodyMaintenance: { menuId: "mm1", unitPriceInput: "" } })), "pricing-error");
+});
+
+test("zero-line: an authored discount or coupon on zero lines fails closed as pricing-error", () => {
+  expectFail(run(draftWith([], {}, { mode: "amount", amountInput: "1000" })), "pricing-error");
+  expectFail(run(draftWith([], {}, { mode: "percent", percentInput: "10" })), "pricing-error");
+  expectFail(run(draftWith([], {}, { selectedCouponIds: [COUPON_ID] }), { pricingConfig: COUPON_PC }), "pricing-error");
+  // A forged "complete" zero-line result carrying a discount intent is caught by the bundle error first.
+  const forged: WizardPricingResult = {
+    ...computeWizardPricingFromConfig(draftWith([]), PC, CATALOG, RANK),
+    discountIntent: { mode: "fixed_amount", amount: 1000 },
+  };
+  expectFail(run(draftWith([], {}, { mode: "amount", amountInput: "1000" }), { pricingResult: forged }), "pricing-error");
 });

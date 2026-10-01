@@ -126,18 +126,24 @@ export function mapProductionResultToWizard(
   // no amount is manufactured — and the error stays visible in `errors`.
   const hasBundleError = bundle.errors.length > 0;
 
-  const completeness: WizardPricingCompleteness = !bundle.hasSelection
-    ? "unavailable"
-    : hasInvalid
-      ? "error"
-      : pricedCount > 0 && (unresolvedItems.length > 0 || hasBundleError)
-        ? "partial"
-        : pricedCount > 0
-          ? "complete"
-          : "unavailable";
+  // GDA-ESTIMATE-WIZARD-10-STEP-R1 zero-line policy: an EMPTY line set with nothing unresolved and no
+  // bundle error is a COMPLETE ¥0/¥0/¥0 estimate (every aggregate below is the engine's own figure for
+  // zero services — nothing is manufactured here). This holds whether no family was selected or a
+  // family was selected in Step 3 without any item. It is deliberately DISTINCT from a selected item
+  // that could not be priced (unresolved/bundle error with zero priced lines), which stays
+  // "unavailable" and is never reinterpreted as an empty estimate.
+  const completeness: WizardPricingCompleteness = hasInvalid
+    ? "error"
+    : pricedCount > 0 && (unresolvedItems.length > 0 || hasBundleError)
+      ? "partial"
+      : pricedCount > 0
+        ? "complete"
+        : unresolvedItems.length > 0 || hasBundleError
+          ? "unavailable"
+          : "complete";
 
   const status: WizardPricingStatus =
-    completeness === "error" ? "error" : pricedCount > 0 ? "success" : "incomplete";
+    completeness === "error" ? "error" : pricedCount > 0 || completeness === "complete" ? "success" : "incomplete";
 
   // GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1: the applied (clamped) document discount is the
   // engine's explicit documentDiscount field — copied, never recomputed, and never

@@ -207,11 +207,106 @@ test("totals and fail-closed behavior are unchanged after extraction", () => {
   );
   assert.equal(priced.completeness, "complete");
   assert.ok(typeof priced.grandTotal === "number" && priced.grandTotal > 0, "priced total numeric");
-  // no selection → unavailable with null aggregates (fail-closed, never ¥0)
+  // GDA-ESTIMATE-WIZARD-10-STEP-R1: no selection → ZERO LINES → complete ¥0/¥0/¥0 (engine figures).
   const empty = computeWizardPricingFromConfig(draftWith([]), PC, makePricingCatalog(), RANK);
-  assert.equal(empty.completeness, "unavailable");
-  assert.equal(empty.subtotal, null);
-  assert.equal(empty.grandTotal, null);
+  assert.equal(empty.completeness, "complete");
+  assert.equal(empty.status, "success");
+  assert.deepEqual([empty.subtotal, empty.taxTotal, empty.grandTotal], [0, 0, 0]);
+});
+
+// ── GDA-ESTIMATE-WIZARD-10-STEP-R1 zero-line policy ───────────────────────────────
+
+const ZERO_TOTALS = (r: ReturnType<typeof computeWizardPricingFromConfig>) =>
+  [r.subtotal, r.discountTotal, r.couponTotal, r.taxableSubtotal, r.taxTotal, r.grandTotal];
+
+test("zero-line: true empty (no family, no item) is complete/success with ¥0/¥0/¥0 and no error", () => {
+  const r = computeWizardPricingFromConfig(draftWith([]), PC, makePricingCatalog(), RANK);
+  assert.equal(r.lines.length, 0);
+  assert.equal(r.completeness, "complete");
+  assert.equal(r.status, "success");
+  assert.deepEqual(ZERO_TOTALS(r), [0, 0, 0, 0, 0, 0]);
+  assert.deepEqual(r.errors, []);
+  assert.deepEqual(r.unresolvedItems, []);
+});
+
+test("zero-line: a Step-3 family selected with NO item is zero lines — no NO_SERVICE_SELECTED, no fabricated line", () => {
+  // Every service family, each selected alone with its default (empty) configuration.
+  const families: ServiceCategoryId[] = ["coating", "ppf", "window", "maintenance", "carwash", "roomclean", "other"];
+  for (const family of families) {
+    const r = computeWizardPricingFromConfig(draftWith([family]), PC, makePricingCatalog(), RANK);
+    assert.equal(r.lines.length, 0, `${family}: a family choice alone is not a line`);
+    assert.equal(r.errors.some((e) => e.code === "NO_SERVICE_SELECTED"), false, `${family}: no NO_SERVICE_SELECTED`);
+    assert.deepEqual(r.errors, [], `${family}: a family choice alone raises no manual-pricing error`);
+    assert.deepEqual(r.unresolvedItems, [], `${family}: nothing unresolved`);
+    assert.equal(r.completeness, "complete", `${family}: complete`);
+    assert.equal(r.status, "success", `${family}: success`);
+    assert.deepEqual(ZERO_TOTALS(r), [0, 0, 0, 0, 0, 0], `${family}: ¥0/¥0/¥0`);
+  }
+  // Several families selected together, none configured: still zero lines.
+  const multi = computeWizardPricingFromConfig(draftWith(families), PC, makePricingCatalog(), RANK);
+  assert.equal(multi.lines.length, 0);
+  assert.equal(multi.completeness, "complete");
+  assert.deepEqual(ZERO_TOTALS(multi), [0, 0, 0, 0, 0, 0]);
+});
+
+test("zero-line: an amount typed WITHOUT an item identity is still rejected — never reinterpreted as zero lines", () => {
+  const base = resetWizardDraft().serviceConfiguration;
+  const cases: Array<[string, EstimateWizardDraftV22]> = [
+    ["maintenance amount, no menu", draftWith(["maintenance"], { bodyMaintenance: { menuId: null, unitPriceInput: "5000" } })],
+    ["carwash amount, no menu",     draftWith(["carwash"],     { carWash: { menuId: null, unitPriceInput: "3000" } })],
+    ["ppf amount, no method",       draftWith(["ppf"],         { ppf: { ...base.ppf, installationMethod: null, unitPriceInput: "1000" } })],
+    ["window override, no film",    draftWith(["window"],      { windowFilm: { ...base.windowFilm, filmTypeId: null, unitPriceInput: "1000" } })],
+  ];
+  for (const [label, draft] of cases) {
+    const r = computeWizardPricingFromConfig(draft, PC, makePricingCatalog(), RANK);
+    assert.equal(r.lines.length, 0, `${label}: no line is invented`);
+    assert.ok(r.errors.length > 0, `${label}: rejected with a visible reason`);
+    assert.notEqual(r.completeness, "complete", `${label}: not complete`);
+    assert.notEqual(r.status, "success", `${label}: not success`);
+    assert.equal(r.grandTotal, null, `${label}: no ¥0 manufactured`);
+  }
+});
+
+test("zero-line: a deliberately confirmed ¥0 manual line REMAINS a line (distinct from empty)", () => {
+  const draft = draftWith(["maintenance"], { bodyMaintenance: { menuId: "mm1", unitPriceInput: "0" } });
+  const r = computeWizardPricingFromConfig(draft, PC, makePricingCatalog(), RANK);
+  assert.equal(r.lines.length, 1, "the ¥0 line is kept");
+  assert.equal(r.lines[0].unitPrice, 0);
+  assert.equal(r.completeness, "complete");
+  assert.deepEqual([r.subtotal, r.grandTotal], [0, 0]);
+});
+
+test("zero-line: a selected item with a MISSING or MALFORMED price is rejected — never treated as zero lines", () => {
+  for (const unitPriceInput of ["", "abc", "-100"]) {
+    const draft = draftWith(["maintenance"], { bodyMaintenance: { menuId: "mm1", unitPriceInput } });
+    const r = computeWizardPricingFromConfig(draft, PC, makePricingCatalog(), RANK);
+    assert.notEqual(r.completeness, "complete", `${JSON.stringify(unitPriceInput)}: not complete`);
+    assert.notEqual(r.status, "success", `${JSON.stringify(unitPriceInput)}: not success`);
+    assert.equal(r.grandTotal, null, `${JSON.stringify(unitPriceInput)}: no ¥0 manufactured`);
+    assert.ok(r.errors.length > 0 || r.unresolvedItems.length > 0, `${JSON.stringify(unitPriceInput)}: reason surfaced`);
+  }
+});
+
+test("zero-line: an authored discount or coupon on zero lines is refused (DISCOUNT_REQUIRES_LINES), totals null", () => {
+  const base = draftWith([]);
+  const cases = [
+    { ...base, discountAndCoupon: { ...base.discountAndCoupon, mode: "amount" as const, amountInput: "1000" } },
+    { ...base, discountAndCoupon: { ...base.discountAndCoupon, mode: "percent" as const, percentInput: "10" } },
+    { ...base, discountAndCoupon: { ...base.discountAndCoupon, selectedCouponIds: ["00000000-0000-4000-8000-000000000100"] } },
+  ];
+  for (const draft of cases) {
+    const r = computeWizardPricingFromConfig(draft, PC, makePricingCatalog(), RANK);
+    assert.ok(r.errors.some((e) => e.code === "DISCOUNT_REQUIRES_LINES"), "refusal surfaced");
+    assert.notEqual(r.completeness, "complete");
+    assert.notEqual(r.status, "success");
+    assert.equal(r.grandTotal, null);
+    assert.equal(r.discountTotal, null, "no requested amount surfaces as applied");
+  }
+  // Dealer (trade-rate) pricing attributes are NOT an authored discount: zero lines stay complete.
+  const dealer = { ...base, customer: { ...base.customer, newCustomer: { ...base.customer.newCustomer, isBusiness: true, tradeRate: "80" } } };
+  const d = computeWizardPricingFromConfig(dealer, PC, makePricingCatalog(), RANK);
+  assert.equal(d.completeness, "complete");
+  assert.deepEqual([d.subtotal, d.discountTotal, d.grandTotal], [0, 0, 0]);
 });
 
 // ── core is server-safe; hook delegates to it ─────────────────────────────────────

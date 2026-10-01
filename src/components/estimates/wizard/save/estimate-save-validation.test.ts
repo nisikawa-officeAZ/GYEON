@@ -121,3 +121,54 @@ test("new customer requires both name and furigana", () => {
     assert.equal(issues[0].message, "フリガナが未入力です。");
   }
 });
+
+// ── GDA-ESTIMATE-WIZARD-10-STEP-R1 zero-line policy ─────────────────────────
+
+const ZERO_PRICING: EstimateSaveRequest["pricing"] = {
+  currency: "JPY", completeness: "complete",
+  subtotal: 0, discountTotal: 0, couponTotal: 0, taxableSubtotal: 0,
+  taxRatePercent: 10, taxTotal: 0, grandTotal: 0,
+  warnings: [], errors: [], unresolvedItems: [],
+};
+const zeroLineRequest = (over: Partial<EstimateSaveRequest> = {}) =>
+  baseRequest({ services: [], pricing: ZERO_PRICING, discount: { intent: { mode: "none", fixedAmount: null, percentage: null, percentageSupported: true }, appliedAmount: 0 }, coupon: { selectedCouponIds: [], status: "none", appliedAmount: 0, applications: [] }, ...over });
+
+test("zero-line: an empty line set with ¥0/¥0/¥0 and no discount/coupon is save-ready", () => {
+  const result = validateEstimateSaveRequest(zeroLineRequest());
+  assert.deepEqual(result.issues, []);
+  assert.equal(evaluateEstimateSaveReadiness(zeroLineRequest()).status, "ready");
+});
+
+test("zero-line: a deliberately confirmed ¥0 line remains a line and is save-ready", () => {
+  const line = { ...baseRequest().services[0], unitPrice: 0, subtotal: 0 };
+  const req = baseRequest({ services: [line], pricing: ZERO_PRICING });
+  assert.equal(validateEstimateSaveRequest(req).ok, true);
+});
+
+test("zero-line: null or incomplete totals are still rejected (never silently zero)", () => {
+  const nullTotals = zeroLineRequest({ pricing: { ...ZERO_PRICING, grandTotal: null, subtotal: null } });
+  assert.ok(validateEstimateSaveRequest(nullTotals).issues.some((i) => i.code === ESTIMATE_SAVE_ERRORS.PRICING_INCOMPLETE));
+  const unresolved = zeroLineRequest({ pricing: { ...ZERO_PRICING, completeness: "unavailable", unresolvedItems: [{ code: "MANUAL_PRICE_REQUIRED", message: "x" }] } });
+  const codes = validateEstimateSaveRequest(unresolved).issues.map((i) => i.code);
+  assert.ok(codes.includes(ESTIMATE_SAVE_ERRORS.PRICING_INCOMPLETE) && codes.includes(ESTIMATE_SAVE_ERRORS.UNRESOLVED_PRICING));
+});
+
+test("zero-line: hostile discount / coupon / non-zero totals are rejected at the app save boundary", () => {
+  const cases: Array<[string, EstimateSaveRequest, string]> = [
+    ["fixed discount intent", zeroLineRequest({ discount: { intent: { mode: "fixed_amount", fixedAmount: 500, percentage: null, percentageSupported: true }, appliedAmount: 0 } }), "discount"],
+    ["percentage discount intent", zeroLineRequest({ discount: { intent: { mode: "percentage", fixedAmount: null, percentage: 10, percentageSupported: true }, appliedAmount: 0 } }), "discount"],
+    ["applied discount amount", zeroLineRequest({ discount: { intent: { mode: "none", fixedAmount: null, percentage: null, percentageSupported: true }, appliedAmount: 500 } }), "discount"],
+    ["selected coupon id", zeroLineRequest({ coupon: { selectedCouponIds: ["c-1"], status: "none", appliedAmount: 0 } }), "coupon"],
+    ["applied coupon status", zeroLineRequest({ coupon: { selectedCouponIds: [], status: "applied", appliedAmount: 0 } }), "coupon"],
+    ["applied coupon amount", zeroLineRequest({ coupon: { selectedCouponIds: [], status: "none", appliedAmount: 100 } }), "coupon"],
+    ["coupon application snapshot", zeroLineRequest({ coupon: { selectedCouponIds: [], status: "none", appliedAmount: 0, applications: [{ couponId: "c", code: "c", label: "c", discountType: "amount", discountValue: 1, appliedAmount: 0 }] } }), "coupon"],
+    ["non-zero subtotal", zeroLineRequest({ pricing: { ...ZERO_PRICING, subtotal: 100, taxableSubtotal: 100, taxTotal: 10, grandTotal: 110 } }), "pricing"],
+  ];
+  for (const [label, req, field] of cases) {
+    const issues = validateEstimateSaveRequest(req).issues;
+    assert.ok(issues.some((i) => i.code === ESTIMATE_SAVE_ERRORS.VALIDATION_ERROR && i.field === field), `${label}: rejected on ${field}`);
+    assert.equal(evaluateEstimateSaveReadiness(req).status, "invalid", `${label}: not ready`);
+  }
+  // Rules for estimates WITH lines are unchanged: the priced base request still passes.
+  assert.equal(validateEstimateSaveRequest(baseRequest()).ok, true);
+});

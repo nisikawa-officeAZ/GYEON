@@ -24,7 +24,7 @@ GRANT USAGE ON SCHEMA r56c_pgtap TO authenticated, service_role;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA r56c_pgtap TO authenticated, service_role;
 SET LOCAL search_path = r56c_pgtap, pg_temp, public, auth, extensions;
 
-SELECT plan(217);
+SELECT plan(261);
 
 -- ─── Fixtures ───────────────────────────────────────────────────────────────
 CREATE TEMP TABLE t_ids (k text PRIMARY KEY, v uuid);
@@ -1252,6 +1252,181 @@ SELECT throws_matching(
        jsonb_set(pg_temp.category_payload('replayoffkey0001', 'maintenance'), '{customer,name}', '"別人二号"')) $$,
   'DUPLICATE_SUBMISSION',
   'same key + different payload remains DUPLICATE_SUBMISSION precedence even though maintenance is now OFF');
+RESET ROLE;
+
+-- ═══ 14. GDA-ESTIMATE-WIZARD-10-STEP-R1: zero-line save boundary (C.4c) ═══
+-- Zero service lines are a VALID estimate at JPY 0/0/0 with no authored
+-- discount/coupon. Everything else about the boundary is unchanged.
+CREATE OR REPLACE FUNCTION pg_temp.zero_line_payload(p_key text)
+RETURNS jsonb LANGUAGE sql STABLE AS $$
+  SELECT jsonb_set(
+           jsonb_set(pg_temp.payload(p_key), '{services}', '[]'::jsonb),
+           '{pricingSnapshot}',
+           jsonb_build_object(
+             'currency','JPY','completeness','complete',
+             'subtotal',0,'discountTotal',0,'couponTotal',0,'taxableSubtotal',0,
+             'taxRatePercent',10,'taxTotal',0,'grandTotal',0,
+             'warnings','[]'::jsonb,'errors','[]'::jsonb));
+$$;
+SET LOCAL ROLE service_role;
+
+-- 14a. true empty saves, persists JPY 0/0/0 and zero items.
+SELECT lives_ok($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'), pg_temp.zero_line_payload('zerolinekey00001')) $$,
+  '14a: zero-line estimate saves');
+SELECT is((SELECT (e.subtotal, e.tax_amount, e.discount_amount, e.total)::text FROM public.estimates e
+            WHERE e.dealer_id = pg_temp.uid('dealer_a') AND e.idempotency_key = 'zerolinekey00001'),
+  '(0,0,0,0)', '14a: zero-line totals persisted verbatim as 0/0/0/0');
+SELECT is((SELECT count(*) FROM public.estimate_items i JOIN public.estimates e ON e.id = i.estimate_id
+            WHERE e.dealer_id = pg_temp.uid('dealer_a') AND e.idempotency_key = 'zerolinekey00001'),
+  0::bigint, '14a: no line is fabricated for a zero-line estimate');
+
+-- 14b. exact replay of a zero-line save returns idempotent_replay with ZERO writes.
+CREATE TEMP TABLE t_zero_counts AS SELECT 'before' AS k,
+  (SELECT count(*) FROM public.customers) c, (SELECT count(*) FROM public.estimates) e,
+  (SELECT count(*) FROM public.vehicles) v, (SELECT count(*) FROM public.estimate_items) i;
+SELECT is((pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'), pg_temp.zero_line_payload('zerolinekey00001')) ->> 'idempotent_replay'),
+  'true', '14b: zero-line exact replay is reported as idempotent_replay');
+INSERT INTO t_zero_counts SELECT 'after',
+  (SELECT count(*) FROM public.customers), (SELECT count(*) FROM public.estimates),
+  (SELECT count(*) FROM public.vehicles), (SELECT count(*) FROM public.estimate_items);
+SELECT is((SELECT e FROM t_zero_counts WHERE k='after'), (SELECT e FROM t_zero_counts WHERE k='before'), '14b: replay wrote no estimate');
+SELECT is((SELECT c FROM t_zero_counts WHERE k='after'), (SELECT c FROM t_zero_counts WHERE k='before'), '14b: replay wrote no customer');
+SELECT is((SELECT i FROM t_zero_counts WHERE k='after'), (SELECT i FROM t_zero_counts WHERE k='before'), '14b: replay wrote no items');
+
+-- 14c. hostile authored discount / coupon on zero lines -> VALIDATION_ERROR, nothing persisted.
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00002'), '{discountIntent,mode}', '"fixed_amount"')) $$,
+  'VALIDATION_ERROR: discount requires service lines', '14c: fixed-amount discount intent on zero lines rejected');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00002'), '{discountAppliedAmount}', '500')) $$,
+  'VALIDATION_ERROR: discount requires service lines', '14c: requested discount amount is never persisted as applied on zero lines');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00002'), '{couponIntent,selectedCouponIds}', '["c-1"]')) $$,
+  'VALIDATION_ERROR: coupon requires service lines', '14c: selected coupon on zero lines rejected');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00002'), '{couponIntent,status}', '"applied"')) $$,
+  'VALIDATION_ERROR: coupon requires service lines', '14c: applied coupon status on zero lines rejected');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00002'), '{couponAppliedAmount}', '100')) $$,
+  'VALIDATION_ERROR: coupon requires service lines', '14c: coupon applied amount on zero lines rejected');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00002'), '{pricingSnapshot,grandTotal}', '110')) $$,
+  'VALIDATION_ERROR: zero-line pricing.grandTotal must be zero', '14c: non-zero total on zero lines rejected');
+SELECT is((SELECT count(*) FROM public.estimates WHERE idempotency_key = 'zerolinekey00002'), 0::bigint,
+  '14c: no rejected zero-line payload was persisted');
+
+-- 14d. a deliberately confirmed JPY 0 line is still a LINE and saves; a malformed/negative amount is still rejected.
+SELECT lives_ok($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(jsonb_set(jsonb_set(pg_temp.zero_line_payload('zerolinekey00003'),
+      '{services}', pg_temp.payload('zerolinekey00003') -> 'services'),
+      '{services,0,unitPrice}', '0'), '{services,0,lineTotal}', '0')) $$,
+  '14d: explicit zero-yen line saves');
+SELECT is((SELECT count(*) FROM public.estimate_items i JOIN public.estimates e ON e.id = i.estimate_id
+            WHERE e.idempotency_key = 'zerolinekey00003'), 1::bigint, '14d: the zero-yen line persists as one item');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.payload('zerolinekey00004'), '{services,0,unitPrice}', '"abc"')) $$,
+  'VALIDATION_ERROR', '14d: malformed line price still rejected (never read as zero lines)');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.payload('zerolinekey00004'), '{services,0,unitPrice}', '-1')) $$,
+  'VALIDATION_ERROR: service amounts must not be negative', '14d: negative line price still rejected');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.payload('zerolinekey00004'), '{services}', '"not-an-array"')) $$,
+  'VALIDATION_ERROR: no service lines', '14d: non-array services still rejected');
+
+-- 14e. MALFORMED zero-line coupon/discount shapes fail CLOSED with the
+-- controlled VALIDATION_ERROR -- never a raw jsonb_array_length (22023) or
+-- numeric-cast (22P02) error, and never a silent bypass or drop-to-zero.
+-- Every rejection uses the one key zerolinekey00009 so persistence can be
+-- proven absent afterwards.
+INSERT INTO t_zero_counts SELECT 'rej_before',
+  (SELECT count(*) FROM public.customers), (SELECT count(*) FROM public.estimates),
+  (SELECT count(*) FROM public.vehicles), (SELECT count(*) FROM public.estimate_items);
+-- selectedCouponIds: string / object / JSON null / absent key
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00009'), '{couponIntent,selectedCouponIds}', '"c-1"')) $$,
+  'VALIDATION_ERROR: coupon requires service lines', '14e: string selectedCouponIds on zero lines -> controlled rejection, no raw 22023');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00009'), '{couponIntent,selectedCouponIds}', '{"id":"c-1"}')) $$,
+  'VALIDATION_ERROR: coupon requires service lines', '14e: object selectedCouponIds on zero lines -> controlled rejection, no raw 22023');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00009'), '{couponIntent,selectedCouponIds}', 'null')) $$,
+  'VALIDATION_ERROR: coupon requires service lines', '14e: JSON-null selectedCouponIds on zero lines -> controlled rejection, no raw 22023');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00009'), '{couponIntent}', '{"status":"none"}')) $$,
+  'VALIDATION_ERROR: coupon requires service lines', '14e: absent selectedCouponIds on zero lines -> controlled rejection');
+-- applications: non-empty array / string / object (string and object previously BYPASSED the check)
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00009'), '{couponIntent,applications}', '[{"couponId":"c-1"}]')) $$,
+  'VALIDATION_ERROR: coupon requires service lines', '14e: non-empty applications on zero lines rejected');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00009'), '{couponIntent,applications}', '"c-1"')) $$,
+  'VALIDATION_ERROR: coupon requires service lines', '14e: string applications on zero lines rejected (no bypass)');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00009'), '{couponIntent,applications}', '{"couponId":"c-1"}')) $$,
+  'VALIDATION_ERROR: coupon requires service lines', '14e: object applications on zero lines rejected (no bypass)');
+-- applied amounts: non-number shapes and a negative number are rejected, never dropped to zero (no raw 22P02)
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00009'), '{discountAppliedAmount}', '"500"')) $$,
+  'VALIDATION_ERROR: discount requires service lines', '14e: string discountAppliedAmount on zero lines -> controlled rejection, no raw 22P02');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00009'), '{discountAppliedAmount}', '{"amount":500}')) $$,
+  'VALIDATION_ERROR: discount requires service lines', '14e: object discountAppliedAmount on zero lines -> controlled rejection');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00009'), '{discountAppliedAmount}', 'true')) $$,
+  'VALIDATION_ERROR: discount requires service lines', '14e: boolean discountAppliedAmount on zero lines -> controlled rejection');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00009'), '{discountAppliedAmount}', '-1')) $$,
+  'VALIDATION_ERROR: discount requires service lines', '14e: negative discountAppliedAmount on zero lines rejected, not zeroed');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00009'), '{couponAppliedAmount}', '"100"')) $$,
+  'VALIDATION_ERROR: coupon requires service lines', '14e: string couponAppliedAmount on zero lines -> controlled rejection, no raw 22P02');
+SELECT throws_matching($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00009'), '{couponAppliedAmount}', '[100]')) $$,
+  'VALIDATION_ERROR: coupon requires service lines', '14e: array couponAppliedAmount on zero lines -> controlled rejection');
+INSERT INTO t_zero_counts SELECT 'rej_after',
+  (SELECT count(*) FROM public.customers), (SELECT count(*) FROM public.estimates),
+  (SELECT count(*) FROM public.vehicles), (SELECT count(*) FROM public.estimate_items);
+SELECT is((SELECT e FROM t_zero_counts WHERE k='rej_after'), (SELECT e FROM t_zero_counts WHERE k='rej_before'), '14e: rejected malformed payloads wrote no estimate');
+SELECT is((SELECT c FROM t_zero_counts WHERE k='rej_after'), (SELECT c FROM t_zero_counts WHERE k='rej_before'), '14e: rejected malformed payloads wrote no customer');
+SELECT is((SELECT i FROM t_zero_counts WHERE k='rej_after'), (SELECT i FROM t_zero_counts WHERE k='rej_before'), '14e: rejected malformed payloads wrote no items');
+SELECT is((SELECT count(*) FROM public.estimates WHERE idempotency_key = 'zerolinekey00009'), 0::bigint,
+  '14e: the malformed-rejection key was never persisted');
+
+-- 14f. TRUE zero-line saves: optional applied values ABSENT (== explicit null,
+-- as C.8 projects), explicit 0, and an empty / JSON-null applications array.
+SELECT lives_ok($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    pg_temp.zero_line_payload('zerolinekey00005') - 'discountAppliedAmount' - 'couponAppliedAmount') $$,
+  '14f: zero-line save with ABSENT discountAppliedAmount/couponAppliedAmount saves');
+SELECT is((SELECT (e.subtotal, e.tax_amount, e.discount_amount, e.total)::text FROM public.estimates e
+            WHERE e.dealer_id = pg_temp.uid('dealer_a') AND e.idempotency_key = 'zerolinekey00005'),
+  '(0,0,0,0)', '14f: absent-optional zero-line totals persisted verbatim as 0/0/0/0');
+SELECT lives_ok($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(jsonb_set(pg_temp.zero_line_payload('zerolinekey00006'), '{discountAppliedAmount}', '0'), '{couponAppliedAmount}', '0')) $$,
+  '14f: zero-line save with explicit 0 applied amounts saves');
+SELECT lives_ok($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00007'), '{couponIntent,applications}', '[]')) $$,
+  '14f: zero-line save with an EMPTY applications array saves');
+SELECT lives_ok($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(pg_temp.zero_line_payload('zerolinekey00008'), '{couponIntent,applications}', 'null')) $$,
+  '14f: zero-line save with JSON-null applications saves');
+
+-- 14g. PRICED lines are untouched by C.4c: an authored discount or a selected
+-- coupon with a coherent snapshot still saves exactly as before.
+SELECT lives_ok($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(jsonb_set(jsonb_set(pg_temp.payload('zerolinekey00010'),
+      '{discountIntent,mode}', '"fixed_amount"'), '{discountAppliedAmount}', '500'),
+      '{pricingSnapshot}', jsonb_build_object(
+        'currency','JPY','completeness','complete',
+        'subtotal',5000,'discountTotal',500,'couponTotal',0,'taxableSubtotal',4500,
+        'taxRatePercent',10,'taxTotal',450,'grandTotal',4950,
+        'warnings','[]'::jsonb,'errors','[]'::jsonb))) $$,
+  '14g: priced line with an authored fixed-amount discount still saves (C.4c confined to zero lines)');
+SELECT is((SELECT e.discount_amount = 500 FROM public.estimates e WHERE e.idempotency_key = 'zerolinekey00010'),
+  true, '14g: priced-line discountTotal persisted verbatim as discount_amount');
+SELECT lives_ok($$ SELECT pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+    jsonb_set(jsonb_set(jsonb_set(pg_temp.payload('zerolinekey00011'),
+      '{couponIntent,selectedCouponIds}', '["c-1"]'), '{couponIntent,status}', '"applied"'), '{couponAppliedAmount}', '100')) $$,
+  '14g: priced line with a selected coupon still saves (C.4c confined to zero lines)');
 RESET ROLE;
 
 SELECT * FROM finish();

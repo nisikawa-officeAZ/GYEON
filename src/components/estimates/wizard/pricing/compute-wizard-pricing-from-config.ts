@@ -111,23 +111,11 @@ export function computeWizardPricingFromConfig(
     const result = calculateEstimate(bundle.services, bundle.discounts, bundle.taxRate, catalog);
     const mapped = mapProductionResultToWizard(result, bundle);
 
-    // A selection exists but resolved to no priceable service, and nothing more specific was raised:
-    // surface NO_SERVICE_SELECTED. Build a fresh result — never mutate the bundle or `mapped` in place.
-    const refined =
-      bundle.hasSelection && bundle.services.length === 0 && mapped.errors.length === 0
-        ? {
-            ...mapped,
-            errors: [
-              ...mapped.errors,
-              {
-                code: WIZARD_PRICING_ERRORS.NO_SERVICE_SELECTED,
-                category: null,
-                sourceId: null,
-                message: "計算可能なサービスがありません。",
-              },
-            ],
-          }
-        : mapped;
+    // GDA-ESTIMATE-WIZARD-10-STEP-R1 zero-line policy: a Step-3 family selection with no item in the
+    // item steps is ZERO LINES, not an unpriced line, so NO_SERVICE_SELECTED is no longer raised for a
+    // family-only selection. A selected item that cannot be priced still surfaces its own specific
+    // error/unresolved item from the bundle and is never reinterpreted as an empty estimate.
+    const refined = mapped;
 
     // GDA-ESTIMATE-PR123-R2: final-review quantity/unit-price edits are applied on top of the
     // authoritative result through the SAME engine and helpers (identity edits reproduce it exactly).
