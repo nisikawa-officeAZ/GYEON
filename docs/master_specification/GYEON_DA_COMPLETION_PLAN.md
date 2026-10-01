@@ -2460,7 +2460,7 @@ not_authorized:
 
 ## 24. GDA-OCR-PDF-TEXT-LAYER-R2 — vehicle type recovery candidate
 
-**Status:** LOCAL CANDIDATE REVIEWED; EXACT NINE-PATH LOCAL COMMIT OWNER-AUTHORIZED; NOT PUSHED OR DEPLOYED. This is a narrow GYEON DA daily-workflow exception for a field-reported OCR regression; it does not resume or transfer any Studio inventory phase. Local E2 evidence is recorded in `GYEON_DA_PHASE_RESULTS.md`; production behavior remains unverified.
+**Status:** PAUSED BY OWNER ON 2026-10-01. The earlier local-candidate and commit-gate statements below describe the 2026-09-28 historical state, not permission to resume OCR now. Local E2 evidence is recorded in `GYEON_DA_PHASE_RESULTS.md`; production behavior remains unverified. This narrow GYEON DA daily-workflow exception does not resume or transfer any Studio inventory phase.
 
 **Objective:** For a selectable vehicle-registration PDF, use its text layer to identify the certificate's vehicle type (型式) separately from engine model (原動機の型式), type-designation number (型式指定番号), and classification number (類別区分番号). Never use an engine code as grade. Vehicle name and grade remain blank when the certificate does not establish them. Preserve leading zeros and human review. Image-only/scanned PDFs continue through the existing AI path without fabricated values.
 
@@ -2481,3 +2481,59 @@ not_authorized:
 **Acceptance:** Selectable synthetic kei and ordinary certificate PDFs recover only unambiguous, label-bound vehicle/type codes, including the real certificate layout where a row of labels is followed by a row of values aligned to those labels' columns; engine/model/grade are not conflated; scanned or ambiguous PDFs fall back to the existing path; unrelated fields, customer data, and manual review are unchanged. Run focused OCR tests, TypeScript check, production build, lockfile integrity check, and `git diff --check`. This yields only local E2 evidence, not field or production acceptance. The actual owner-provided registration PDF stays local and must not be transmitted to Anthropic; if locally inspected, report only non-personal field-level pass/fail evidence.
 
 **Stop rules:** No edit to `next.config.ts`, actions, UI, database, migrations, or any path outside the nine-path allowlist. All section 3.1 protected paths remain protected; `ScreensPreview.tsx` is metadata-only. If another path, a PDF engine configuration change, or customer data transmission becomes necessary, stop for a new Owner gate. The Owner separately authorized one exact nine-path local commit after the reviewed candidate; push, Ready conversion, merge, deployment, production database/provider action, and automatic release remain unauthorized.
+
+**Owner pause and handoff:** The Owner explicitly paused OCR and moved the active planning priority to `GDA-ESTIMATE-WIZARD-10-STEP-R1` on 2026-10-01. PR #141 was observed as OPEN/Draft with head `e46bc5f0e9cb3eeff5d8609d922640dee655a70c`; this observation does not establish field or production acceptance and supersedes the older `NOT PUSHED` snapshot only as a remote-state observation. Preserve its branch, commits, and E2 evidence. No further OCR source, dependency, PR, database, or release action occurs during the pause. Resumption requires a separate Owner decision and fresh identity/status verification.
+
+## 25. GDA-ESTIMATE-WIZARD-10-STEP-R1 — owner-approved phase switch and design
+
+**Status:** OWNER-AUTHORIZED LOCAL GOVERNANCE CANDIDATE; SOURCE IMPLEMENTATION NOT STARTED. OCR is paused, not closed. This section records the next active GYEON DA planning phase, not acceptance of the current seven-step wizard or permission to implement or release the ten-step version.
+
+**Reason for the change:** Field testing found that glass, wheel, resin, seat, and engine-room coatings had no clear estimate path; a visible `明細に追加／更新` control had no useful action; and quantity changes on fixed-quantity coating/PPF lines could make totals uncalculable. A dedicated step for each business decision makes optional work visible without weakening authoritative pricing and save checks.
+
+**Owner-approved ten-step flow:**
+
+| Step | Label | Decision and behavior |
+| --- | --- | --- |
+| 1 | 顧客登録 | Preserve existing customer flow. |
+| 2 | 車両登録 | Preserve existing vehicle/OCR review flow; this phase does not resume OCR R2. |
+| 3 | 作業内容選択 | Select relevant service families; PPF selection controls the upper PPF choices in Step 7. |
+| 4 | ボディコーティング | Body coating and layers; quantity is fixed at one vehicle. |
+| 5 | 追加作業 | Configurable work such as hard polish and iron removal. |
+| 6 | 追加コーティング | Glass, wheel, 樹脂コーティング, seat, engine-room, and future store-defined coatings. |
+| 7 | PPF施工 | Upper row: フロントフル and フルボディ only when PPF was selected in Step 3. Lower row: 部分PPF remains available independently. Full/front-full quantity is fixed at one; part quantity is editable. |
+| 8 | 値引き／クーポン | Preserve existing discount/coupon authority and calculation rules. |
+| 9 | 備考 | Preserve existing notes. |
+| 10 | 確認 | Review lines, quantities, prices, total, and save; label has no punctuation. |
+
+**Optional-step rule:** Steps 4–9 can be passed without selecting an item. Step 10 must still reject a zero-line estimate. A deliberately confirmed zero-yen line is distinct from a missing price; missing or malformed price must not silently become zero. Changes to selections, quantities, and unit prices update the draft and visible totals automatically. Remove the dead `明細に追加／更新` controls after verifying no required side effect remains. Saving remains an explicit Step-10 server-authoritative action with existing idempotency, edit/version, PDF, and tenant boundaries intact.
+
+**Initial tax-exclusive reference prices, store-editable and extensible (not fixed charges):**
+
+| Step | Item | Initial unit price | Quantity rule |
+| --- | --- | ---: | --- |
+| 5 | 鉄粉除去 | ¥7,000 | per vehicle, fixed one |
+| 5 | ハードポリッシュ | ¥30,000 | per vehicle, fixed one; no vehicle-size multiplier |
+| 5 | ガラスのウロコ除去・フロント／リア | ¥6,000 | per pane, editable positive integer |
+| 5 | ガラスのウロコ除去・サイド | ¥3,000 | per pane, editable positive integer |
+| 5 | ガラスのウロコ除去・ルーフ | ¥5,000 | per pane, editable positive integer |
+| 5 | ホイール脱着 | ¥2,000 | per wheel, editable positive integer |
+| 6 | ガラスコーティング・フロント | ¥8,000 | per pane, editable positive integer |
+| 6 | ガラスコーティング・リア | ¥6,000 | per pane, editable positive integer |
+| 6 | ガラスコーティング・サイド | ¥3,000 | per pane, editable positive integer |
+| 6 | ガラスコーティング・ルーフ | ¥7,000 | per pane, editable positive integer |
+| 6 | ホイールコーティング | ¥6,000 | per wheel, editable positive integer |
+| 6 | 樹脂コーティング | ¥16,000 | per vehicle, fixed one |
+| 6 | ファブリックシートコーティング | ¥5,000 | per seat, editable positive integer |
+| 6 | レザーシートコーティング | ¥16,000 | per seat, editable positive integer |
+| 6 | エンジンルームコーティング | ¥20,000 | per vehicle, fixed one |
+
+Store settings must permit changing prices, enabling/disabling items, and adding future items without code-defined display branches for each item. Do not add light or middle polish defaults. The distinction between `追加作業` and `追加コーティング` requires explicit persistence/category authority and a separately reviewed database migration; do not collapse both into the legacy `other` category or silently apply schema changes to production. Existing authoritative totals, tax, coupon, estimate-to-PDF, and saved-version semantics remain the baseline until separately approved changes are proved.
+
+**Fixed governance base:** Detached clean worktree `work/dealeros-estimate-wizard-10-step-prep`, commit `e46bc5f0e9cb3eeff5d8609d922640dee655a70c`, tree `206937b6568573482828b355e94d789d352dff4d`. This base contains the OCR PR #141 head for design compatibility only; it does not merge, resume, or accept the OCR phase.
+
+**Current literal write allowlist — exactly two documents:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Responsibility and next gates:** Office AZ owns business decisions; MacBook Codex owns specification and independent acceptance; Claude Fable high may diagnose/implement a later bounded repository packet only after canonical governance delivery, a dedicated Draft PR with a read-only diagnosis instruction, a fresh literal source/SQL/test allowlist, and separate Owner authorization. The prior tool-disabled Claude design result is technical input only, not accepted phase evidence. Sending SQL source to Anthropic is **not authorized** by the earlier app-code-only permission and requires a separate Owner answer. Studio's inventory work is untouched. The current two-document edit authorizes no source, test, SQL, migration, DB/Supabase, browser, environment, production, stage, commit, push, PR/comment, Ready, merge, or deployment action. Each delivery and environment gate remains separate. Protected paths in section 3.1 remain metadata-only, especially `ScreensPreview.tsx`.
