@@ -92,14 +92,22 @@ test("2. PKCE callback converges a verified signup to /signup/pending?confirm=0 
   assert.doesNotMatch(source, /redirect\(`\$\{origin\}\/login`\)/);
 });
 
-test("3. token_hash confirm converges a verified signup to the same pending-approval state", () => {
+test("3. token_hash confirm converges a verified signup (type signup | email) to the same pending-approval state", () => {
   const source = read(CONFIRM_ROUTE);
   const verifyAt  = source.indexOf("supabase.auth.verifyOtp({ type, token_hash })");
   const resetAt   = source.indexOf('type === "recovery" || type === "invite"');
-  const signupAt  = source.indexOf('if (type === "signup")');
+  const signupAt  = source.indexOf("if (isSignupConfirmType(type))");
   const createAt  = source.indexOf("await createPendingDealer()", signupAt);
   const pendingAt = source.indexOf("/signup/pending?confirm=0`", createAt);
   assert.ok(verifyAt >= 0 && resetAt > verifyAt && signupAt > resetAt && createAt > signupAt && pendingAt > createAt);
+  // Preview UAT 2026-09-24: the live template emits type=email. Every
+  // signup-only decision goes through the ONE shared predicate (signup | email);
+  // no literal `type === "signup"` comparison may silently exclude the alias.
+  assert.match(source, /import \{[^}]*\bisSignupConfirmType\b[^}]*\} from "@\/lib\/auth\/confirm-signup-redirect"/);
+  assert.doesNotMatch(source, /type [!=]== "signup"/, "signup-only decisions use isSignupConfirmType");
+  assert.doesNotMatch(source, /type [!=]== "email"/, "the alias is never special-cased outside the predicate");
+  // The original type is what is verified and bound: never rewritten to signup.
+  assert.doesNotMatch(source, /type\s*=\s*"signup"/, "type is never normalised before verifyOtp / binding");
   assert.match(source, /\/signup\/pending\?confirm=0&setup_error=1/);
   assert.doesNotMatch(source, /createPendingDealer\([^)]+\)/);
   assert.doesNotMatch(source, /\/signup\/pending\?confirm=1/);
